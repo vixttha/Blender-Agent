@@ -1,0 +1,102 @@
+name: Publish Blender-Agent v0.0.2
+
+on:
+  push:
+    branches: [ci/publish-v0.0.2]
+    paths: ['.github/workflows/publish-v0.0.2.yml']
+
+permissions: {}
+
+concurrency:
+  group: blender-agent-publish-v0.0.2
+  cancel-in-progress: false
+
+env:
+  RELEASE_SHA: cb945bd8531ee425615c1968612ab6503849369d
+  RELEASE_TAG: v0.0.2
+  CI_RUN_ID: '44438741759'
+
+jobs:
+  verify:
+    name: Verify final CI and README quick start
+    if: github.repository == 'vixttha/Blender-Agent' && github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Verify the seven checks on the exact merged SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID" \
+            | jq -e --arg sha "$RELEASE_SHA" '.head_sha == $sha and .head_branch == "main" and .event == "push" and .conclusion == "success"'
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$CI_RUN_ID/jobs" \
+            | jq -e '.total_count == 7 and all(.jobs[]; .conclusion == "success")'
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.11"
+      - name: Verify the README pin and run its CLI example
+        shell: bash
+        run: |
+          [[ "$(git rev-parse HEAD)" == "$RELEASE_SHA" ]]
+          source_sha=$(sed -nE 's/^git checkout --detach ([0-9a-f]{40})$/\1/p' README.md)
+          [[ "$source_sha" == 2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b ]]
+          git merge-base --is-ancestor "$source_sha" HEAD
+          git diff --exit-code "$source_sha" -- pyproject.toml src
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install .
+          blender-agent version > version.json
+          python -c "from pathlib import Path; p = Path('readme-demo'); p.mkdir(); (p / 'triangle.obj').write_text('v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n', encoding='utf-8')"
+          blender-agent --workspace readme-demo inspect triangle.obj > report.json
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          version = json.loads(Path("version.json").read_text())
+          report = json.loads(Path("report.json").read_text())
+          assert version == {"version": "0.0.2"}, version
+          assert report["vertices"] == 3 and report["faces"] == 1, report
+          assert report["bounds"] == {"min": [0, 0, 0], "max": [1, 1, 0]}, report
+          assert report["sha256"] == hashlib.sha256(Path("readme-demo/triangle.obj").read_bytes()).hexdigest()
+          print("README install, version, triangle counts, bounds and digest passed.")
+          PY
+
+  publish:
+    name: Publish the authorized pre-release
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the exact verified source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/heads/main" --jq .object.sha)" == "$RELEASE_SHA" ]]
+          existing_tags=$(gh api "repos/$GITHUB_REPOSITORY/git/matching-refs/tags/$RELEASE_TAG")
+          jq -e --arg ref "refs/tags/$RELEASE_TAG" 'all(.[]; .ref != $ref)' <<< "$existing_tags"
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --target "$RELEASE_SHA" --title "Blender-Agent v0.0.2" --prerelease --notes-file - <<'EOF'
+          Blender-Agent v0.0.2 is the first published pre-alpha release. It provides a Python CLI and optional MCP stdio adapter for 3D asset inspection and a small set of headless Blender operations.
+
+          - Inspect STL and OBJ geometry, create primitives, convert assets, and perform limited mesh cleanup in a trusted workspace.
+          - Atomic default output publication protects existing destinations. Runtime, captured logs, input sizes, and published output are bounded.
+          - GitHub-hosted CI covers Python 3.11 and 3.12 on Linux and Windows, real MCP stdio on both platforms, and Blender 4.5.0 format roundtrips and repair on Ubuntu.
+          - The public README comes from README HQ and includes a tested quick start.
+
+          See the [README](https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/README.md), [changelog](https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/CHANGELOG.md), and [CI results](https://github.com/vixttha/Blender-Agent/actions/runs/44438741759).
+          EOF
+          [[ "$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq .object.sha)" == "$RELEASE_SHA" ]]
+          gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft,isPrerelease,url \
+            | jq -e 'select(.isDraft == false and .isPrerelease == true) | .url'
