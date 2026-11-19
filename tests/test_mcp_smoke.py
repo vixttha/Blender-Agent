@@ -100,7 +100,7 @@ async def blender_roundtrip(session, workspace):
     for name, content in snapshots.items():
         assert (workspace / name).read_bytes() == content, name
 
-    print("MCP workflow: all four tools, STL → GLB → STL geometry, and repair passed.")
+    print("MCP workflow: all four tools, STL -> GLB -> STL geometry, and repair passed.")
     print("MCP repair: split-edge fixture welded 6 vertices to 4 and kept both faces.")
     print("MCP file safety: in-place repair and destination overwrite denied; original bytes unchanged.")
 
