@@ -10,6 +10,9 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 
+FINAL_RELEASE_TAG = re.compile(r"v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
+
+
 def validate_dispatch(event, env, version):
     owner = event["repository"]["owner"]
     default_branch = event["repository"]["default_branch"]
@@ -25,7 +28,7 @@ def validate_dispatch(event, env, version):
     if any(event["inputs"].get(key) != value for key, value in approval.items()):
         raise ValueError("Release inputs differ from the owner's dispatch.")
     tag, sha, run_id = approval.values()
-    if not re.fullmatch(r"v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)", tag):
+    if not FINAL_RELEASE_TAG.fullmatch(tag):
         raise ValueError("Release tag must use the final vMAJOR.MINOR.PATCH form.")
     if tag != f"v{version}":
         raise ValueError("The approved tag does not match the package version.")
