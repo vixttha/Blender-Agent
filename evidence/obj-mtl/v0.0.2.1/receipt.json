@@ -1,0 +1,68 @@
+{
+  "schema_version": 1,
+  "template_version": "v0.0.8",
+  "repository": "vixttha/Blender-Agent",
+  "source_commit": "d7886009b5121fc8a94f4f56d8209c3d04800d54",
+  "pull_request": {
+    "number": 17,
+    "source_branch": "fix/obj-material-export"
+  },
+  "scope": "feature-evidence",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "0c092b37e8bdc5bcd970cb450ebd4a1e6529f23813ed0d3c18a1b0dd66e23570",
+  "nodes": 34,
+  "edges": 61,
+  "feature_links": {
+    "feature:continued-source-material": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 1,
+      "implemented_in": 3
+    },
+    "feature:destination-collisions": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 1,
+      "implemented_in": 2
+    },
+    "feature:material-roundtrip": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 2,
+      "implemented_in": 3
+    },
+    "feature:missing-library": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 1,
+      "implemented_in": 1
+    },
+    "feature:publication-rollback": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 2,
+      "implemented_in": 2
+    }
+  },
+  "source_files": [
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "docs/HARNESS.md",
+    "src/blender_agent/blender_worker.py",
+    "src/blender_agent/jobs.py",
+    "src/blender_agent/obj_records.py",
+    "tests/test_jobs.py",
+    "tests/test_mcp_smoke.py"
+  ],
+  "source_sha256": {
+    ".github/workflows/ci.yml": "2e035adce65a9b20bdfb170823b155906068199500eb3975195021f747f705af",
+    "CHANGELOG.md": "6ecff3a7ef1561c037c18ae5f0b2412c952404c9b59b071049e059f25c726a7c",
+    "docs/HARNESS.md": "34742e324632d71c26546c8935eacaf8484402049ed4f67340c75c8f22752ea0",
+    "src/blender_agent/blender_worker.py": "0c13cb5176d69b32162105357fd02b5d13ad0266b10fa3acf8c5d06ad6280a8e",
+    "src/blender_agent/jobs.py": "569f3637b8579fba2e5b755af29c7c34f6e5289234bdabec8cce73b5bdbcbeb7",
+    "src/blender_agent/obj_records.py": "7cb3b1f70aa01252943fe0f70954a4c75a88a02ce84e9e451c7c6ba704e35a24",
+    "tests/test_jobs.py": "f3831c033196f215e182469fc16e435d627a1b179389541070cb3d38fa580eb8",
+    "tests/test_mcp_smoke.py": "39973e3bf258c2c1db8919bc36c62970da74250f0a4d026190baa178dead9889"
+  },
+  "mcp_verified": true
+}

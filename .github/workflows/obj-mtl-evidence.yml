@@ -69,20 +69,4 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           kit="$RUNNER_TEMP/versions/v0.0.8"
-          if [[ -f "$EVIDENCE_PATH/graph.json" && -f "$EVIDENCE_PATH/receipt.json" ]]; then
-            python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$EVIDENCE_PATH" --verify-pr --check
-          else
-            out="$RUNNER_TEMP/obj-mtl-evidence"
-            python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$out" --verify-pr
-            python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$out" --check
-            python - "$out" <<'PY'
-          import base64
-          import sys
-          from pathlib import Path
-
-          for name in ("graph.json", "receipt.json"):
-              data = base64.b64encode((Path(sys.argv[1]) / name).read_bytes()).decode("ascii")
-              for index, offset in enumerate(range(0, len(data), 1024)):
-                  print(f"OBJ_MTL_EXPORT {name} {index} {data[offset:offset + 1024]}")
-          PY
-          fi
+          python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$EVIDENCE_PATH" --verify-pr --check

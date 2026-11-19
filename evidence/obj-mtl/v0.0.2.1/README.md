@@ -14,7 +14,7 @@ release snapshots remain in the [version archive](../../../versions/README.md).
 | Behavior | Exact source and regression | Executed evidence |
 | --- | --- | --- |
 | Publish the matching MTL and return its path. Blender re-import preserves the assigned material and red color. | [MCP material roundtrip](https://github.com/vixttha/Blender-Agent/blob/d7886009b5121fc8a94f4f56d8209c3d04800d54/tests/test_mcp_smoke.py#L103) | [Blender 4.5.0 on Ubuntu](https://github.com/vixttha/Blender-Agent/actions/runs/44449976785/job/135311249138) |
-| Reject an existing destination OBJ or MTL independently, preserving its bytes and leaving no partial output. | [MCP collision assertions](https://github.com/vixttha/Blender-Agent/blob/d7886009b5121fc8a94f4f56d8209c3d04800d54/tests/test_mcp_smoke.py#L131) | [Blender 4.5.0 on Ubuntu](https://github.com/vixttha/Blender-Agent/actions/runs/44449976785/job/135311249138) |
+| Reject an existing destination OBJ or MTL independently, preserving its bytes and leaving no partial output. | [MCP collision assertions](https://github.com/vixttha/Blender-Agent/blob/d7886009b5121fc8a94f4f56d8209c3d04800d54/tests/test_mcp_smoke.py#L132) | [Blender 4.5.0 on Ubuntu](https://github.com/vixttha/Blender-Agent/actions/runs/44449976785/job/135311249138) |
 | Reject a missing staged MTL. If OBJ publication raises, remove the newly written MTL or restore its previous contents after explicit overwrite. | [Publication regressions](https://github.com/vixttha/Blender-Agent/blob/d7886009b5121fc8a94f4f56d8209c3d04800d54/tests/test_jobs.py#L44) | [Python matrix and logs](https://github.com/vixttha/Blender-Agent/actions/runs/44449976785) |
 | Protect a source MTL referenced by either a single-line or continued `mtllib` directive when CLI overwrite is requested. | [Source-preservation regression](https://github.com/vixttha/Blender-Agent/blob/d7886009b5121fc8a94f4f56d8209c3d04800d54/tests/test_jobs.py#L86) | [Clean-wheel Blender 4.5.0 test](https://github.com/vixttha/Blender-Agent/actions/runs/44450065811/job/135311543740) |
 
@@ -50,3 +50,5 @@ with Graphify 0.9.109. It reads application blobs at the pinned source SHA,
 checks GitHub PR membership, reads the resulting map through Graphify MCP,
 and compares the graph and receipt byte for byte. The graph's `tested_by`
 links identify test definitions. The job links above record test execution.
+
+The [generation run](https://github.com/vixttha/Blender-Agent/actions/runs/44454140445/job/135324955519) verified 34 nodes and 61 links through Graphify MCP.
