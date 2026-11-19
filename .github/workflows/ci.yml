@@ -50,6 +50,9 @@ jobs:
           [[ "$rejected" == 'Release approval rejected. Release approval requires a manual workflow dispatch.' ]]
       - name: CLI version
         run: python -m blender_agent version
+      - name: Verify the published README walkthrough
+        if: matrix.python-version == '3.12'
+        run: python tools/check_readme_walkthrough.py
       - name: Build and verify a wheel with the minimum setuptools version
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
         shell: bash
