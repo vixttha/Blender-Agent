@@ -20,6 +20,8 @@ from graphify.export import to_json
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+from traceability import resolve_features, validate_features
+
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = ROOT / "catalog" / "versions.json"
 ARCHIVES = ROOT / "versions"
@@ -74,7 +76,8 @@ def validate_catalog(catalog: object) -> list[dict]:
         raise ValueError("Catalog versions must be a list")
     previous = None
     for item in records:
-        if not isinstance(item, dict) or set(item) != {"version", "source_commit", "release_tag", "source_files"}:
+        fields = {"version", "source_commit", "release_tag", "source_files"}
+        if not isinstance(item, dict) or set(item) - {"features"} != fields:
             raise ValueError("Unexpected version record fields")
         name, sha, tag, paths = (item[k] for k in ("version", "source_commit", "release_tag", "source_files"))
         if not isinstance(name, str) or not isinstance(tag, str):
@@ -93,7 +96,19 @@ def validate_catalog(catalog: object) -> list[dict]:
             check_path(path)
         if paths != sorted(paths):
             raise ValueError("Source paths must be lexicographically sorted")
+        if "features" in item:
+            validate_features(item["features"], paths)
     return records
+
+
+def read_source(sha: str, path: str) -> str:
+    try:
+        data = git("show", sha + ":" + path)
+    except subprocess.CalledProcessError as exc:
+        raise ValueError("File missing from source commit: " + path) from exc
+    if not 0 < len(data) <= MAX_SOURCE_BYTES:
+        raise ValueError("Source file exceeds size bounds: " + path)
+    return data.decode("utf-8")
 
 
 def read_sources(item: dict) -> dict[str, str]:
@@ -106,16 +121,7 @@ def read_sources(item: dict) -> dict[str, str]:
             raise ValueError("Source SHA does not identify a commit")
     except subprocess.CalledProcessError as exc:
         raise ValueError("Missing source commit or matching release tag") from exc
-    docs = {}
-    for path in item["source_files"]:
-        try:
-            data = git("show", sha + ":" + path)
-        except subprocess.CalledProcessError as exc:
-            raise ValueError("Document missing from source commit: " + path) from exc
-        if not 0 < len(data) <= MAX_SOURCE_BYTES:
-            raise ValueError("Source document exceeds size bounds: " + path)
-        docs[path] = data.decode("utf-8")
-    return docs
+    return {path: read_source(sha, path) for path in item["source_files"]}
 
 
 def reference_path(source: str, raw: str) -> str | None:
@@ -147,7 +153,11 @@ def prose_lines(body: str):
         if fence is None:
             yield line_number, line
 
-def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bool = False, candidate: bool = False) -> dict:
+
+def make_map(
+    tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bool = False,
+    candidate: bool = False, features: list[dict] | None = None,
+) -> dict:
     nodes: dict[str, dict] = {}
     edges: dict[tuple, dict] = {}
     outlines: dict[str, list[tuple[str, str]]] = {}
@@ -201,6 +211,32 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
                 add_node(target_id, dest, "concept")
             add_edge(doc_id, target_id, "links_to", path)
 
+    trace_sources = {}
+    resolved_features = []
+    if features:
+        def read_trace_source(path: str) -> str:
+            body = docs[path] if path in docs else read_source(sha, path)
+            trace_sources[path] = blob_sha1(body.encode("utf-8"))
+            return body
+
+        resolved_features = resolve_features(features, read_trace_source)
+        for feature in resolved_features:
+            feature_id = "feature:" + feature["id"]
+            path = feature["document"]
+            add_node(feature_id, feature["label"], "concept", path, 1)
+            add_edge("version:" + tag, feature_id, "contains_feature", path, 1)
+            add_edge(feature_id, "document:" + path, "documented_in", path, 1)
+            change = feature["change"]
+            change_id = f"change:{change['path']}:L{change['line']}"
+            add_node(change_id, change["text"][2:], "concept", change["path"], change["line"])
+            add_edge(feature_id, change_id, "changed_in", change["path"], change["line"])
+            add_edge(change_id, "document:" + change["path"], "recorded_in", change["path"], change["line"])
+            for test in feature["tests"]:
+                test_id = f"test:{test['path']}:L{test['line']}"
+                label = test["text"].split("def ", 1)[1].split("(", 1)[0]
+                add_node(test_id, label, "code", test["path"], test["line"])
+                add_edge(feature_id, test_id, "tested_by", test["path"], test["line"])
+
     graph = build_from_json(
         {"nodes": list(nodes.values()), "edges": list(edges.values())},
         directed=True, dedup=False,
@@ -226,6 +262,11 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
         "synthetic_fixture": fixture,
         "archive_status": "candidate" if candidate else "fixture" if fixture else "approved",
     }
+    if features:
+        receipt["traceability"] = {
+            "features": [feature["id"] for feature in sorted(features, key=lambda feature: feature["id"])],
+            "source_blobs": dict(sorted(trace_sources.items())),
+        }
     (folder / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     lines = [
         "# Blender-Agent " + tag, "",
@@ -237,6 +278,23 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
             "**Candidate only — NOT an approved or published Blender-Agent release.**", "",
             "Approval, an immutable release tag, and promotion into the approved catalog are pending.", "",
         ])
+    if resolved_features:
+        def source_link(path: str, line: int, label: str) -> str:
+            return f"[{label}](https://github.com/{REPOSITORY}/blob/{sha}/{path}#L{line})"
+
+        lines.extend(["## Feature traceability", ""])
+        for feature in resolved_features:
+            change = feature["change"]
+            sources = [
+                source_link(feature["document"], 1, "Documentation"),
+                source_link(change["path"], change["line"], "Changelog"),
+            ]
+            sources.extend(
+                source_link(test["path"], test["line"], test["text"].split("def ", 1)[1].split("(", 1)[0])
+                for test in feature["tests"]
+            )
+            lines.append("- **" + feature["label"] + "** · " + " · ".join(sources))
+        lines.append("")
     for path, headings in outlines.items():
         lines.extend(["## " + path, "", "Source document at the pinned release commit:", ""])
         lines.append(
@@ -270,6 +328,13 @@ async def verify_mcp(graph_file: Path, receipt: dict) -> None:
                 response = "\n".join(item.text for item in result.content if item.type == "text")
                 if result.is_error or ("Source: " + path + " L1") not in response:
                     raise ValueError("Graphify MCP document lookup failed: " + path)
+            for feature in receipt.get("traceability", {}).get("features", []):
+                node_id = "feature:" + feature
+                result = await session.call_tool("get_neighbors", {"node_id": node_id})
+                response = "\n".join(item.text for item in result.content if item.type == "text")
+                expected = {"[contains_feature]", "[documented_in]", "[changed_in]", "[tested_by]"}
+                if result.is_error or not all(relation in response for relation in expected):
+                    raise ValueError("Graphify MCP feature relationships missing: " + feature)
 
 
 def write_index(records: list[dict], output: Path) -> None:
@@ -367,7 +432,10 @@ def main() -> None:
         write_index(records, output)
         for record in records:
             name = record["version"]
-            receipt = make_map(name, record["source_commit"], read_sources(record), output / name)
+            receipt = make_map(
+                name, record["source_commit"], read_sources(record), output / name,
+                features=record.get("features"),
+            )
             asyncio.run(verify_mcp(output / name / "graph.json", receipt))
             print(name + ": read-only Graphify MCP verification PASS")
         if args.check:

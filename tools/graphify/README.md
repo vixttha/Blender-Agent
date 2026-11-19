@@ -24,11 +24,12 @@ Example record for a *future approved release only* (not part of the active cata
 
 ## Generate, validate, and browse
 
-Use Python 3.12 and tools/graphify/requirements.txt. The dependencies are pinned to the independently validated AlderVale Graphify environment, including graphifyy 0.9.109 and MCP 2.3.0.
+Use CPython 3.12 on Linux x86-64. The requirements lock pins each wheel by SHA-256, including Graphify 0.9.109 and MCP 2.3.0.
 
 On a checkout of graphify-hq with complete Git history and release tags:
 
-    python -m pip install --only-binary=:all: --no-deps -r tools/graphify/requirements.txt
+    python -m pip install --require-hashes --only-binary=:all: --no-deps -r tools/graphify/requirements.txt
+    python -m pip check
     python tools/graphify/version_maps.py --self-test
     python tools/graphify/version_maps.py --generate
     python tools/graphify/version_maps.py --check
@@ -43,14 +44,20 @@ Only run that example after v1.0.0 has genuinely been approved and archived. The
 
 ## Public-runner policy
 
-.github/workflows/graphify-hq.yml runs on push or PR targeting graphify-hq, using standard GitHub-hosted ubuntu-latest and read-only permissions. It installs the locked Graphify dependencies, runs a deterministic self-test, and checks all committed version archives. It does not publish artifacts automatically, merge, release, call a private service, or depend on local hardware.
-
-Because the catalog is intentionally empty at bootstrap, the initial runner checks the real template with a **synthetic fixture only**. It does not misrepresent that sample as an approved Blender-Agent release.
+.github/workflows/graphify-hq.yml runs on push or PR targeting graphify-hq, using standard GitHub-hosted ubuntu-latest and read-only permissions. It verifies each installed wheel against the hash lock and checks both the synthetic fixture and the committed archives.
 
 ## Unapproved release candidates
 
 Unmerged or draft PRs go into catalog/candidates.json, **not** catalog/versions.json. A candidate records its exact full source commit, public PR number, source branch, and sorted Markdown documents. Its graph and receipt are generated under candidates/vX.Y.Z with `archive_status: candidate` and `release_tag: null`. A candidate is **not** evidence of an approved release.
 
-`python tools/graphify/candidate_maps.py --emit` builds and verifies the Graphify MCP graph, then emits bounded JSON chunks into public runner logs for review and commit. After the snapshot is committed, `python tools/graphify/candidate_maps.py --check` independently rebuilds and compares every byte. GitHub Actions should run `--check` during ordinary ongoing maintenance.
+`python tools/graphify/candidate_maps.py --generate` writes the candidate archive after validating source provenance and MCP read-back. Use `--emit` to print generated files as bounded JSON chunks. After committing the snapshot, `--check` independently rebuilds and compares every byte.
+
+Candidate verification checks the GitHub-reported PR number, source branch, repository and commit. A historical commit must appear in the PR's GitHub commit list. The workflow run summary records the current PR state, PR head, merge commit when present, and the count of review approvals on the archived SHA. This live observation stays in CI so the historical graph and receipt retain stable bytes as reviews and PR state change. The review count is informational; promotion still requires the approved release and matching tag.
+
+## Feature traceability
+
+Either catalog can add a `features` list to a version record. Each entry supplies an ID, a label, a documentation path already in `source_files`, an exact changelog bullet, and one or more test references. A test reference contains the test file path and its complete declaration line with indentation removed. Git resolves those citations from the pinned commit. Missing or ambiguous declarations fail generation.
+
+Graphify links each version to features and each feature to its documentation, changelog entry and tests. The receipt hashes the referenced source blobs. These links identify relevant test code. Test results belong to the application CI run for the source commit.
 
 Promotion requires a separately approved and immutable main-line release: update catalog/versions.json with the real release commit and matching tag, generate the approved map under versions/vX.Y.Z, and independently verify it. Never rename or silently relabel the candidate receipt as approved.
