@@ -34,3 +34,11 @@ the event payload to identify repository visibility. Unknown visibility stops ve
 Candidate graph and receipt payloads are emitted in public Actions logs only. For a
 local candidate, use `--candidate-output PATH` to retain both files and
 `--repository OWNER/REPO` if the checkout has no GitHub origin.
+
+### Candidate publication recovery
+
+On the supported Linux filesystem, the candidate takes a process-scoped lock
+on the output directory and stages both evidence files before replacement.
+A publish or `--check` on that directory automatically rolls back an interrupted
+replacement before proceeding. Use the CLI to recover the pair before reading
+it after an interrupted write.
