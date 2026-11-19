@@ -1,0 +1,36 @@
+{
+  "schema_version": 2,
+  "project": "Example project",
+  "source_repository": "OWNER/REPO",
+  "source_ref": "refs/heads/main",
+  "source_commit": "0000000000000000000000000000000000000000",
+  "template_commit": "1111111111111111111111111111111111111111",
+  "required_paths": [
+    "src/main.py"
+  ],
+  "reviewed_paths": {},
+  "overrides": {},
+  "technologies": [
+    {
+      "name": "Python",
+      "status": "active",
+      "basis": "language",
+      "role": "Application entrypoint",
+      "evidence": [
+        "S1"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "S1",
+      "kind": "repo-file",
+      "url": "https://github.com/OWNER/REPO/blob/0000000000000000000000000000000000000000/src/main.py",
+      "claim": "The tracked application entrypoint uses Python.",
+      "review": "unchecked",
+      "path": "src/main.py",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ],
+  "source_checks": {}
+}

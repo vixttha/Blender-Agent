@@ -3,7 +3,8 @@ name: Validate Code Stack template
 on:
   push:
     branches: [code-stack-template]
-  workflow_dispatch:
+  pull_request:
+    branches: [code-stack-template]
 
 permissions:
   contents: read
@@ -17,17 +18,15 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
-      - name: Test template with a synthetic multi-language repository
-        run: python3 v0.0.1/tools/test_audit.py -v
-      - name: Verify the portable release files
+      - name: Record exact checkout and runner
+        env:
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          python3 v0.0.1/tools/audit.py --help
-          for item in README.md LICENSE STACK.md STACK_MEMORY.md AUDIT.md PROPOSAL.md registry.example.json; do
-            test -s "v0.0.1/$item"
-          done
-          {
-            echo '### Code Stack template v0.0.1'
-            echo "Validated template commit: $GITHUB_SHA"
-            echo 'Portable inventory tested with a synthetic Python and TypeScript Git repository.'
-          } >> "$GITHUB_STEP_SUMMARY"
+          printf 'Checkout %s\nPR head %s\nPR base %s\nRunner %s %s\n' \
+            "$GITHUB_SHA" "$PR_HEAD" "$PR_BASE" "$RUNNER_ENVIRONMENT" "$RUNNER_OS"
+      - name: Recheck the archived v0.0.1 fixture
+        run: python3 v0.0.1/tools/test_audit.py -v
+      - name: Validate v0.0.2 and copy it into an unrelated project layout
+        run: python3 v0.0.2/tools/test_audit.py -v
