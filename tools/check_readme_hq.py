@@ -22,6 +22,10 @@ REQUIRED = (
     "workspace/v0.0.1/DRAFT.md",
     "workspace/v0.0.1/CHANGELOG.md",
     "workspace/v0.0.1/REVIEW.md",
+    "workspace/v0.0.3/README.md",
+    "workspace/v0.0.3/DRAFT.md",
+    "workspace/v0.0.3/CHANGELOG.md",
+    "workspace/v0.0.3/REVIEW.md",
     "graphify/README.md",
     ".github/workflows/readme-hq.yml",
 )
@@ -55,8 +59,8 @@ def validate(root: Path) -> list[str]:
     if "Draft" not in (root / "versions/README.md").read_text(encoding="utf-8"):
         errors.append("public version index must say the current homepage is a draft")
 
-    # Validate navigation on HQ source pages. The candidate homepage is intentionally
-    # excluded: its relative links target the implementation branch's future main tree.
+    # The legacy draft uses links relative to a future application checkout.
+    # The v0.0.3 draft uses canonical application links and can be scanned here.
     for rel in REQUIRED:
         if not rel.endswith(".md") or rel.startswith("workspace/v0.0.1/DRAFT.md"):
             continue
