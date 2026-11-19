@@ -135,12 +135,13 @@ jobs:
                   fixture = work / "test_mcp_smoke.py"
                   body = fixture.read_text(encoding="utf-8")
                   original = "    result = await session.call_tool(name, arguments)"
-                  assert body.count(original) == 1
+                  assert original in body, "MCP tool helper is missing"
                   body = body.replace(
                       original,
                       '    print(f"AUDIT_MCP_CALL {name} {arguments}", flush=True)\n'
                       '    result = await asyncio.wait_for(session.call_tool(name, arguments), timeout=30)\n'
                       '    print(f"AUDIT_MCP_REPLY {name} error={result.isError}", flush=True)',
+                      1,
                   )
                   fixture.write_text(body, encoding="utf-8")
                   probe("mcp-original-wheel", python, str(fixture), "--blender", str(blender))
