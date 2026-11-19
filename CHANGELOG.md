@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.19 — v0.0.3 development checkpoint
+
+- Add a read-only owner-dispatch check that binds the final release tag and SHA to successful exact-commit application CI (#29).
+
 ## v0.0.2.18 — v0.0.3 development checkpoint
 
 - Detach the Blender child from the host stdin pipe and verify the installed-wheel MCP workflow with tool-level evidence on the Windows runner (#33).
