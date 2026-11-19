@@ -17,6 +17,7 @@ REQUIRED = (
     "v0.0.1/README.md",
     "v0.0.1/CHATGPT_PROJECT_INSTRUCTIONS.md",
     "v0.0.1/ACCEPTANCE.md",
+    "v0.0.1/VERIFICATION.md",
     "graphify/README.md",
     "graphify/versions.json",
     "graphify/versions.mmd",

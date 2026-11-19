@@ -9,6 +9,7 @@
 
 - [CHATGPT_PROJECT_INSTRUCTIONS.md](CHATGPT_PROJECT_INSTRUCTIONS.md) — copy-ready instructions for the Blender-Agent ChatGPT.com Project.
 - [ACCEPTANCE.md](ACCEPTANCE.md) — evidence checklist and fresh-chat smoke tests.
+- [VERIFICATION.md](VERIFICATION.md) — public-runner evidence, scope, and known unverified integration checks.
 - [../graphify/versions.json](../graphify/versions.json) — version lineage and graph handoff.
 
 ## Install / trial

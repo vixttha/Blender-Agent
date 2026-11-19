@@ -9,7 +9,7 @@ This is **Archivewright's dedicated instructions-version graph** for Blender-Age
 
 The graph is a Git-tracked handoff manifest, **not an output from Graphify MCP**. Use `$graphify` when accessible to index actual code and version history; preserve the Graphify tool version, extraction scope, exact source SHA, artifact checksum, and real workflow/MCP receipt separately. Never mark `mcp_verified=true` unless a Graphify invocation actually succeeds.
 
-The standard public-runner job validates the manifest against real version folders, derives a checksum, and prints the graph and SHA-bound receipt into Actions logs and the job summary without credentials or a paid Graphify account. The runner's graph validation is **not** an MCP invocation.
+The standard public-runner job validates the manifest against real version folders, derives a checksum, and prints the graph summary and SHA-bound receipt into Actions logs and the job summary without credentials or a paid Graphify account. The runner's graph validation is **not** an MCP invocation.
 
 ## Update contract
 

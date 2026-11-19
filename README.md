@@ -4,7 +4,7 @@
 **Repository:** https://github.com/vixttha/Blender-Agent  
 **Scope:** versioned, reusable ChatGPT.com project instructions; not the application's product README.
 
-This branch is the long-lived instructions library. It is intentionally separate from `main`, so instruction revisions do not interrupt Blender-Agent feature delivery. Start with the [v0.0.1 instructions](v0.0.1/CHATGPT_PROJECT_INSTRUCTIONS.md), then see its [release notes and setup](v0.0.1/README.md) and [acceptance criteria](v0.0.1/ACCEPTANCE.md).
+This branch is the long-lived instructions library. It is intentionally separate from `main`, so instruction revisions do not interrupt Blender-Agent feature delivery. Start with the [v0.0.1 instructions](v0.0.1/CHATGPT_PROJECT_INSTRUCTIONS.md), then see its [release notes and setup](v0.0.1/README.md) [acceptance criteria](v0.0.1/ACCEPTANCE.md), and [verification receipt](v0.0.1/VERIFICATION.md).
 
 ## Steward identity
 
@@ -28,7 +28,7 @@ These are delivery controls, not restrictions on overall ambition. The project c
 
 This branch contains [self-contained Actions CI](.github/workflows/instructions-archive.yml). It uses a standard `ubuntu-latest` GitHub-hosted runner, the public repository, Python's standard library, read-only permissions, and no marketplace actions, paid runners, self-hosted workers, credentials, or outside services.
 
-The workflow validates archive structure, owner-independent wording, manifest links, scoped workflow rules, and the Graphify handoff map. It prints a SHA-bound verification receipt and graph summary to the GitHub Actions log and job summary. See [Graphify handoff](graphify/README.md).
+The workflow validates archive structure, required instruction rules, manifest links, scoped workflow checks, and the Graphify handoff map. It prints a SHA-bound verification receipt and graph summary to the GitHub Actions log and job summary. See [Graphify handoff](graphify/README.md).
 
 **Important:** CI evidence is separate from saving text in ChatGPT Project settings. A fresh-chat smoke test and any Graphify MCP operation must be recorded as independently verified events, never assumed from a file or passing workflow.
 
