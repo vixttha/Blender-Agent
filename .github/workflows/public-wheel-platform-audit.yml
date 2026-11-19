@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12", checkpoint: "0.0.2.13", ref: "9bfb70912c048192d926085c2e0d97f4d21f2ac0"}
+          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12", checkpoint: "0.0.2.1 repaired PR head", ref: "d7886009b5121fc8a94f4f56d8209c3d04800d54"}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 18
     steps:
