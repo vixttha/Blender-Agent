@@ -18,3 +18,19 @@ commit, and queries the rebuilt graph through Graphify MCP.
 
 Use a new version folder when changing a published kit. Keep each archived
 graph, receipt, and source pin together in the version catalog.
+
+## Execution modes
+
+The verifier selects its mode from the execution context.
+
+| Context | Runner and behavior |
+| --- | --- |
+| Local checkout | Run `python tools/verify_archive.py` from the template root with CPython 3.12 on Linux x86-64. Archive checks require the pinned Git history and use the historical repository identity from the catalog. |
+| Public GitHub repository | Standard GitHub-hosted Ubuntu runs verification automatically on template-branch pushes and pull requests. |
+| Private or internal GitHub repository | A trusted template-branch push runs on a self-hosted Linux x64 runner labeled `graphify-hq` when repository variable `GRAPHIFY_PRIVATE_SELF_HOSTED` is `true`. Configure that runner and restrict who can push to the branch before enabling the variable. |
+
+Private pull requests do not execute on the self-hosted runner. GitHub Actions uses
+the event payload to identify repository visibility. Unknown visibility stops verification.
+Candidate graph and receipt payloads are emitted in public Actions logs only. For a
+local candidate, use `--candidate-output PATH` to retain both files and
+`--repository OWNER/REPO` if the checkout has no GitHub origin.
