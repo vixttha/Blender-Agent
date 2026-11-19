@@ -16,8 +16,17 @@ env:
 jobs:
   verify:
     name: Test template and verify its Graphify archive
-    if: github.event.repository.private == false
-    runs-on: ubuntu-latest
+    if: >-
+      (toJSON(github.event.repository.private) == 'false' &&
+       contains(fromJSON('["","public"]'), github.event.repository.visibility || '')) ||
+      ((toJSON(github.event.repository.private) == 'true' ||
+        contains(fromJSON('["private","internal"]'), github.event.repository.visibility)) &&
+       github.event_name == 'push' &&
+       vars.GRAPHIFY_PRIVATE_SELF_HOSTED == 'true')
+    runs-on: >-
+      ${{ (toJSON(github.event.repository.private) == 'false' &&
+           contains(fromJSON('["","public"]'), github.event.repository.visibility || '')) &&
+          'ubuntu-latest' || fromJSON('["self-hosted","linux","x64","graphify-hq"]') }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -29,4 +38,6 @@ jobs:
         with:
           python-version: '3.12'
       - name: Test and rebuild version evidence
-        run: python tools/verify_archive.py
+        run: |
+          python -m unittest discover -s tools -p 'test_verify_archive.py' -v
+          python tools/verify_archive.py
