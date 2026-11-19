@@ -3,7 +3,10 @@ flowchart TD
   B["Instructions archive"]
   V1["v0.0.1 candidate"]
   V2["v0.0.2 candidate"]
+  V3["v0.0.3 candidate"]
   M -->|branched from| B
   B -->|contains| V1
   B -->|contains| V2
+  B -->|contains| V3
+  V3 -->|proposes successor to| V2
   V2 -->|proposes successor to| V1

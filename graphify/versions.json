@@ -8,7 +8,7 @@
     "archive_branch": "chatgpt-project-instructions",
     "generator": "manual archive handoff (not Graphify MCP)",
     "mcp_verified": false,
-    "active_version": "v0.0.2"
+    "active_version": "v0.0.3"
   },
   "nodes": [
     {
@@ -34,6 +34,14 @@
       "label": "v0.0.2 — candidate",
       "kind": "instructions-version",
       "directory": "v0.0.2",
+      "status": "candidate",
+      "frozen_at": "388ddccdf6d84d302ce66392942873ab6c4347aa"
+    },
+    {
+      "id": "version:v0.0.3",
+      "label": "v0.0.3 — candidate",
+      "kind": "instructions-version",
+      "directory": "v0.0.3",
       "status": "candidate"
     }
   ],
@@ -56,6 +64,16 @@
     {
       "source": "version:v0.0.2",
       "target": "version:v0.0.1",
+      "relation": "proposes-successor"
+    },
+    {
+      "source": "branch:chatgpt-project-instructions",
+      "target": "version:v0.0.3",
+      "relation": "contains"
+    },
+    {
+      "source": "version:v0.0.3",
+      "target": "version:v0.0.2",
       "relation": "proposes-successor"
     }
   ]
