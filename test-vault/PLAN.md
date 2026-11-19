@@ -4,7 +4,7 @@
 
 The project Test Vault adopts the [starter shipped in Lydite v0.0.4](https://github.com/vixttha/Lydite-Test-Vault-Template/tree/87d25d80d3154d295052412b64b29a0f0f152c27/starter). Starter acceptance covers the catalog, case-plan-bound receipts and preservation of the existing project cases. The [upstream release run](https://github.com/vixttha/Lydite-Test-Vault-Template/actions/runs/44506598515) covers the template's adoption rehearsal. Project results come from this repository's public workflows.
 
-The next application test task is **BLENDER-001** for [issue #55](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/55). The existing fixture reproduced the multi-scene geometry mismatch on all three real Blender jobs in PR #60. The planned repair owns the next case-specific pass.
+The next application test task is **BLENDER-001** for [issue #55](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/55). The existing fixture reproduced the multi-scene geometry mismatch on all three real Blender jobs in PR #60. The repair measures the active scene for mesh exports. The same fixture verifies that the counts now agree with the active mesh in the exported STL.
 
 ## Test languages
 
@@ -39,8 +39,7 @@ Earlier push evidence above comes from `38e8f63c3fe2e372784276acdbb602cb7409b100
 
 1. Use the exact candidate checkout with the existing installed-wheel MCP Blender jobs on standard public Ubuntu and Windows runners.
 2. Convert the synthetic two-scene BLEND to STL over MCP. The expected scene response is one object, three vertices, and one face. Read back the artifact separately and expect one triangle. Compare the source bytes before and after conversion.
-3. Record the actual counts. The draft fixture allows the smoke job to continue on the known file-wide signature of two objects, eleven vertices, and seven faces with one exported triangle. Record that signature as a **case failure** even when the job is green. A different failure needs its own diagnosis.
-4. Verify the repair on its own checkout when it is ready. The same fixture must then pass, and a geometry mismatch must fail the job.
+3. Record the geometry and artifact results. Keep the historic file-wide mismatch in the earlier receipts. The current regression requires the correct active-scene counts and fails the job if they regress.
 
 ## Remaining build order
 
