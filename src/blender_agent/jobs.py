@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import tempfile
 import threading
+from contextlib import contextmanager
 from pathlib import Path
 
 from .inspect import MAX_PREVIEW_BYTES, inspect_mesh
@@ -110,8 +111,85 @@ def _material_libraries(obj: Path):
                 )
 
 
+@contextmanager
+def _obj_lock(path: Path):
+    if path.is_symlink():
+        raise ValueError("OBJ publication lock must be a regular file.")
+    with path.open("ab") as stream:
+        try:
+            if os.name == "nt":
+                import msvcrt
+
+                stream.seek(0)
+                msvcrt.locking(stream.fileno(), msvcrt.LK_NBLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(stream.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except OSError as exc:
+            raise FileExistsError("Destination already exists or another OBJ export is publishing it.") from exc
+        yield
+
+
+def _same_file(path: Path, reference: Path) -> bool:
+    if path.is_symlink() or reference.is_symlink():
+        return False
+    try:
+        return path.samefile(reference)
+    except FileNotFoundError:
+        return False
+
+
+def _clear_obj_journal(journal: Path) -> None:
+    # Remove the ready record first so interrupted cleanup can be retried.
+    for name in ("output.json", "next.json", "candidate.obj", "candidate.mtl", "previous.mtl", "restore.mtl"):
+        (journal / name).unlink(missing_ok=True)
+    journal.rmdir()
+
+
+def _recover_obj(journal: Path, material: Path) -> None:
+    if journal.is_symlink():
+        raise ValueError("OBJ publication journal must be a regular directory.")
+    if not journal.exists():
+        return
+    record = journal / "output.json"
+    if not record.exists():
+        _clear_obj_journal(journal)
+        return
+    info = json.loads(record.read_text(encoding="utf-8"))
+    name = info["name"]
+    if Path(name).name != name or Path(name).suffix.lower() != ".obj":
+        raise RuntimeError("OBJ publication journal contains an invalid output name.")
+    output = material.with_name(name)
+    if output.with_suffix(".mtl").name.casefold() != material.name.casefold():
+        raise RuntimeError("OBJ publication journal does not match this destination.")
+    material = output.with_suffix(".mtl")
+    candidate, sidecar = journal / "candidate.obj", journal / "candidate.mtl"
+    backup = journal / "previous.mtl"
+    required = (candidate, sidecar, backup) if info["replaced_material"] else (candidate, sidecar)
+    if any(not entry.is_file() or entry.is_symlink() for entry in required):
+        raise RuntimeError("OBJ publication journal is incomplete. Retain it for manual recovery.")
+
+    if _same_file(output, candidate):
+        if not _same_file(material, sidecar):
+            raise RuntimeError("The published OBJ material changed. Retain the journal for manual recovery.")
+    elif _same_file(material, sidecar):
+        if info["replaced_material"]:
+            restore = journal / "restore.mtl"
+            if not restore.exists():
+                os.link(backup, restore)
+            elif not _same_file(restore, backup):
+                raise RuntimeError("The material backup changed. Retain the journal for manual recovery.")
+            os.replace(restore, material)
+        else:
+            material.unlink()
+    elif info["replaced_material"] and not _same_file(material, backup):
+        raise RuntimeError("The destination material changed. Retain the journal for manual recovery.")
+    _clear_obj_journal(journal)
+
+
 def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool) -> Path:
-    """Publish the material library first and undo that change if publishing the OBJ fails."""
+    """Publish an OBJ pair with filesystem-backed recovery from an interrupted process."""
     material = final.with_suffix(".mtl")
     staged = temp.with_suffix(".mtl")
     size = _validate_publication(temp, final, root)
@@ -122,18 +200,15 @@ def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, ov
     if next(_material_libraries(temp), None) != material.name:
         raise RuntimeError("OBJ does not reference its matching material library.")
 
-    # Serialize publication by material filename, including explicit CLI replacements.
     key = hashlib.sha256(os.fsencode(material.name.casefold())).hexdigest()
     lock = final.parent / f".blender-agent-obj-{key}.lock"
-    try:
-        lock.mkdir()
-    except FileExistsError as exc:
-        raise FileExistsError("Destination already exists or another OBJ export is publishing it.") from exc
-    try:
+    journal = lock.with_suffix(".pending")
+    with _obj_lock(lock):
+        _recover_obj(journal, material)
         _validate_publication(temp, final, root)
         _validate_publication(staged, material, root)
-        backup = None
-        if material.exists():
+        replaced_material = material.exists()
+        if replaced_material:
             if not overwrite or not material.is_file():
                 raise FileExistsError("Destination already exists: OBJ material library.")
             if source is not None and source.suffix.lower() == ".obj":
@@ -141,22 +216,20 @@ def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, ov
                     (source.parent / name).resolve() == material for name in _material_libraries(source)
                 ):
                     raise ValueError("Source material libraries cannot be modified in place.")
-            backup = temp.parent / "previous-material"
-            os.link(material, backup)
 
-        published = staged.stat()
-        _publish(staged, material, root, overwrite=backup is not None)
+        journal.mkdir()
         try:
+            os.link(temp, journal / "candidate.obj")
+            os.link(staged, journal / "candidate.mtl")
+            if replaced_material:
+                os.link(material, journal / "previous.mtl")
+            record = journal / "next.json"
+            record.write_text(json.dumps({"name": final.name, "replaced_material": replaced_material}), encoding="utf-8")
+            os.replace(record, journal / "output.json")
+            _publish(staged, material, root, overwrite=replaced_material)
             _publish(temp, final, root, overwrite=overwrite)
-        except (OSError, ValueError, RuntimeError):
-            if material.exists() and os.path.samestat(published, material.stat()):
-                if backup is None:
-                    material.unlink()
-                else:
-                    os.replace(backup, material)
-            raise
-    finally:
-        lock.rmdir()
+        finally:
+            _recover_obj(journal, material)
     return material
 
 

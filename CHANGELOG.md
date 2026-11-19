@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.13 — v0.0.3 development checkpoint
+
+- Recover interrupted OBJ and MTL publication with an OS-backed lock and a retained material backup, preserving unrelated files (#23).
+
 ## v0.0.2.12 — v0.0.3 development checkpoint
 
 - Run the MCP matrix and real Blender fixture from clean wheel installs with a pinned SDK and recorded platform details (#15).

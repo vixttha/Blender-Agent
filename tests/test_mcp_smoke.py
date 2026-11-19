@@ -250,7 +250,7 @@ async def verify_blender_scheduling(cli, blender, host_directory, workspace, env
                 kind="cube", output="timed-out.stl",
             )
             assert not (workspace / "timed-out.stl").exists()
-            assert not list(workspace.glob(".blender-agent-*"))
+            assert not any(path.is_dir() for path in workspace.glob(".blender-agent-*"))
     print("MCP scheduling: inspection replied during a blocked job, one Blender ran at a time, and timeout cleaned up.")
 
 

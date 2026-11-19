@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -9,7 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from blender_agent.jobs import (
-    MAX_INPUT_BYTES, MAX_LOG_BYTES, MAX_OUTPUT_BYTES, _publish, _run_blender, execute,
+    MAX_INPUT_BYTES, MAX_LOG_BYTES, MAX_OUTPUT_BYTES, _obj_lock, _publish, _run_blender, execute,
 )
 
 TRIANGLE_STL = (
@@ -17,6 +18,34 @@ TRIANGLE_STL = (
     b"vertex 0 1 0\nendloop\nendfacet\nendsolid triangle\n"
 )
 TRIANGLE_OBJ = b"v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"
+
+INTERRUPT_OBJ_PUBLICATION = """\
+import json
+import os
+import sys
+from pathlib import Path
+from unittest.mock import patch
+from blender_agent import jobs
+
+def fixture(command, *, cwd, timeout):
+    job = json.loads(Path(command[-1]).read_text())
+    output = Path(job["output"])
+    output.write_text("mtllib out.mtl\\nv 0 0 0\\nv 1 0 0\\nv 0 1 0\\nf 1 2 3\\n")
+    output.with_suffix(".mtl").write_bytes(b"interrupted material")
+    Path(job["report"]).write_text('{"mesh_objects": 1, "vertices": 3, "faces": 1}')
+
+publish = jobs._publish
+def interrupt_after_material(temporary, final, root, *, overwrite):
+    publish(temporary, final, root, overwrite=overwrite)
+    if final.suffix == ".mtl":
+        os._exit(37)
+
+with patch.object(jobs.shutil, "which", return_value="/bin/blender"), \\
+     patch.object(jobs, "_run_blender", side_effect=fixture), \\
+     patch.object(jobs, "_publish", side_effect=interrupt_after_material):
+    jobs.execute("convert", workspace=sys.argv[1], source="input.stl", output="out.obj",
+                 overwrite=sys.argv[2] == "overwrite")
+"""
 
 
 class JobTests(unittest.TestCase):
@@ -101,6 +130,74 @@ class JobTests(unittest.TestCase):
                 execute("convert", workspace=self.root, source="input.obj", output="out.obj", overwrite=True)
         self.assertEqual(material.read_bytes(), b"source material")
         self.assertFalse((self.root / "out.obj").exists())
+
+    def interrupt_obj_publication(self, overwrite=False):
+        result = subprocess.run(
+            [sys.executable, "-c", INTERRUPT_OBJ_PUBLICATION, str(self.root),
+             "overwrite" if overwrite else "new"],
+            capture_output=True, timeout=15,
+        )
+        self.assertEqual(result.returncode, 37, result.stderr.decode(errors="replace"))
+        self.assertEqual((self.root / "out.mtl").read_bytes(), b"interrupted material")
+        self.assertEqual(len(list(self.root.glob(".blender-agent-obj-*.pending"))), 1)
+
+    def test_obj_retries_after_process_dies_between_publications(self):
+        self.interrupt_obj_publication()
+        self.assertFalse((self.root / "out.obj").exists())
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+            result = execute("create", workspace=self.root, output="out.obj", kind="cube")
+        self.assertTrue(result["ok"])
+        self.assertEqual((self.root / "out.mtl").read_bytes(), b"new material")
+        self.assertFalse(list(self.root.glob(".blender-agent-obj-*.pending")))
+
+    def test_obj_publication_respects_an_active_process_lock(self):
+        lock = self.root / "export.lock"
+        script = (
+            "import sys\nfrom pathlib import Path\nfrom blender_agent.jobs import _obj_lock\n"
+            "with _obj_lock(Path(sys.argv[1])):\n    raise SystemExit(0)\n"
+        )
+        with _obj_lock(lock):
+            result = subprocess.run(
+                [sys.executable, "-c", script, str(lock)], capture_output=True, timeout=15,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b"another OBJ export is publishing", result.stderr)
+            self.assertTrue(lock.is_file())
+
+    def test_interrupted_obj_overwrite_restores_previous_pair_without_overwriting_unrelated_files(self):
+        obj = self.root / "out.obj"
+        material = self.root / "out.mtl"
+        obj.write_bytes(b"previous OBJ")
+        material.write_bytes(b"previous MTL")
+        self.interrupt_obj_publication(overwrite=True)
+        replace = os.replace
+
+        def fail_if_replacing_obj(source, destination):
+            if destination == obj:
+                raise PermissionError("cannot replace OBJ")
+            return replace(source, destination)
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj), \
+             patch("blender_agent.jobs.os.replace", side_effect=fail_if_replacing_obj):
+            with self.assertRaisesRegex(PermissionError, "cannot replace OBJ"):
+                execute("convert", workspace=self.root, source="input.stl", output="out.obj", overwrite=True)
+        self.assertEqual(obj.read_bytes(), b"previous OBJ")
+        self.assertEqual(material.read_bytes(), b"previous MTL")
+
+        self.interrupt_obj_publication(overwrite=True)
+        unrelated = self.root / "unrelated.mtl"
+        unrelated.write_bytes(b"unrelated material")
+        os.replace(unrelated, material)
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+            with self.assertRaisesRegex(RuntimeError, "Retain the journal"):
+                execute("convert", workspace=self.root, source="input.stl", output="out.obj", overwrite=True)
+        self.assertEqual(obj.read_bytes(), b"previous OBJ")
+        self.assertEqual(material.read_bytes(), b"unrelated material")
+        pending, = self.root.glob(".blender-agent-obj-*.pending")
+        self.assertEqual((pending / "previous.mtl").read_bytes(), b"previous MTL")
 
     def test_create_promotes_checked_output(self):
         with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
