@@ -8,31 +8,18 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from check_readme_hq import validate  # noqa: E402
+from check_readme_hq import REQUIRED, validate  # noqa: E402
 
 
 class ReadmeHQTests(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.root = Path(self.tmp.name)
-        paths = (
-            "README.md", "readme-hq/README.md", "readme-hq/versions/README.md",
-            "readme-hq/versions/v0.0.1/README.md",
-            "readme-hq/versions/v0.0.1/GUIDE.md",
-            "readme-hq/versions/v0.0.1/CHANGELOG.md",
-            "readme-hq/workspace/README.md",
-            "readme-hq/workspace/v0.0.1/README.md",
-            "versions/README.md", "workspace/README.md",
-            "workspace/v0.0.1/README.md",
-            "workspace/v0.0.1/DRAFT.md",
-            "workspace/v0.0.1/CHANGELOG.md",
-            "workspace/v0.0.1/REVIEW.md",
-            "graphify/README.md", ".github/workflows/readme-hq.yml",
-        )
-        for rel in paths:
+        for rel in REQUIRED:
             target = self.root / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, target)
+        shutil.copytree(ROOT / "versions", self.root / "versions", dirs_exist_ok=True)
 
     def tearDown(self):
         self.tmp.cleanup()
