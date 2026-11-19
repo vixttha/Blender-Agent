@@ -34,10 +34,11 @@ class InstructionsTests(unittest.TestCase):
 
     def test_new_versions_require_the_canonical_repository(self):
         legacy, current = "vixttha/Blender-Agent", "vixttha/Blender-Agent-Refinement-Toolkit"
-        canonical = self.draft.replace(legacy, current)
+        archived = Path("v0.0.2", "CHATGPT_PROJECT_INSTRUCTIONS.md").read_text()
+        canonical = archived.replace(legacy, current)
         validate_instructions(canonical, "v0.0.3")
         with self.assertRaisesRegex(ValueError, "Missing instruction policy"):
-            validate_instructions(self.draft, "v0.0.3")
+            validate_instructions(archived, "v0.0.3")
 
 
 class ProvenanceTests(unittest.TestCase):
