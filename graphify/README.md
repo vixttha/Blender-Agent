@@ -4,6 +4,7 @@
 | --- | --- | --- | --- |
 | v0.0.1 | [Template](../v0.0.1/) | [Map](v0.0.1/graph.json) | [Receipt](v0.0.1/receipt.json) |
 | v0.0.2 | [Template](../v0.0.2/) | [Map](v0.0.2/graph.json) | [Receipt](v0.0.2/receipt.json) |
+| v0.0.3 | [Template](../v0.0.3/) | [Map](v0.0.3/graph.json) | [Receipt](v0.0.3/receipt.json) |
 
 Use [the comparison](../VERSION_HISTORY.md) for the differences between versions. The maps are kept beside the kits so copying a version folder installs just the template. This archive uses the [Blender-Agent Graphify HQ](https://github.com/vixttha/Blender-Agent/tree/graphify-hq) pattern and indexes Code Stack itself.
 
