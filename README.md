@@ -18,3 +18,7 @@ commit, and queries the rebuilt graph through Graphify MCP.
 
 Use a new version folder when changing a published kit. Keep each archived
 graph, receipt, and source pin together in the version catalog.
+
+## Graphify HQ Test Vault
+
+Open the [Graphify HQ Test Vault](test-vault/) for the Lydite starter, adoption audit, and project case catalog.
