@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "version": "v0.0.3",
+  "scope": "code_stack_template",
+  "source_repository": "vixttha/Blender-Agent",
+  "source_commit": "8dd56cdd53897b5a78f3a59d9ca2549f1c08f885",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "e4036291c5474a1a8bf76284febda5d33356874cdc3e356ce481a757e3de9415",
+  "nodes": 121,
+  "edges": 162,
+  "source_blobs": {
+    "v0.0.3/AUDIT.md": "76a88c8cadce22539e91eac0f34edbf27022770e",
+    "v0.0.3/LICENSE": "3a31b6b1dcedea9bb0ca27243d3d7b0cb504a4f5",
+    "v0.0.3/MIGRATION.md": "780b2534e69dd2fa3dbcccf042bc2ad19b3e66e3",
+    "v0.0.3/PROPOSAL.md": "66e0837336a198d0c1f0c4da4f6fa2582d787ac8",
+    "v0.0.3/README.md": "3c5d4ba180550848642120f00da1badaa3b78911",
+    "v0.0.3/SCOPE.md": "b423ea90efa7d066408ed5467c27e1881f1ea566",
+    "v0.0.3/STACK.md": "d67ca1f88699e1216d724875bd79abcbb10994cd",
+    "v0.0.3/STACK_MEMORY.md": "b4da9da9f21e24d3e508230d33c975904c18108e",
+    "v0.0.3/registry.example.json": "bc2f20717097dd94e49d3650358994e2565599b8",
+    "v0.0.3/tools/audit.py": "19b16c2c4e2a0d5122c455aaebfe230e91292f00",
+    "v0.0.3/tools/language_profiles.py": "4e9075322effa437f980388ecd7197466e9b410e",
+    "v0.0.3/tools/scan.py": "c7e10e72efdf59880bb9de6040af712dcc333250",
+    "v0.0.3/tools/stack.py": "ecf8ee218239de43db74d699edee4ec7433a2d2d",
+    "v0.0.3/tools/test_audit.py": "3c2a679571089203951c2466da78e540a5489037",
+    "v0.0.3/tools/test_stack.py": "8e0d76207e267e2c2ce5209488bbaed31af2c69d",
+    "v0.0.3/workflow.example.yml": "106cb4d2d0f397672fb88a519f36c2f6e22b9d4a"
+  }
+}
