@@ -6,6 +6,10 @@ The lineage manifest is a manually maintained catalog of ChatGPT instructions ve
 
 For a new instructions version, update the catalog and lineage, point `active_version` to the candidate, and keep its documents in a new version folder. Use a `proposes-successor` link until maintainer acceptance. To preserve a version, set `frozen_at` to the full commit that contains its exact directory and leave that folder intact. Keep ChatGPT connector access and installed-settings evidence explicit in their respective receipts.
 
+## v0.0.3 instructions graph
+
+See the [v0.0.3 verification record](../v0.0.3/VERIFICATION.md) for candidate evidence. The archive workflow generates the graph for the exact candidate checkout and verifies it through Graphify MCP. After the candidate reaches Instructions HQ, the branch push exports the graph and receipt for archival.
+
 ## v0.0.2 instructions graph
 
 [Generated graph](instructions/v0.0.2/graph.json) · [Graphify source and MCP receipt](instructions/v0.0.2/receipt.json) · [Verification history](../v0.0.2/VERIFICATION.md)
