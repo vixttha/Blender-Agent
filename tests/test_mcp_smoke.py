@@ -1,9 +1,9 @@
-"""Actual MCP stdio initialization, discovery and invocation test.
-
-Run only in the optional-MCP CI job with pip install -e ".[mcp]".
-"""
+"""Exercise the installed MCP launcher with an optional real Blender roundtrip."""
+import argparse
 import asyncio
+import hashlib
 import json
+import math
 import os
 import shutil
 import sysconfig
@@ -11,7 +11,95 @@ import tempfile
 from pathlib import Path
 
 
-async def smoke():
+async def call_tool(session, name, **arguments):
+    result = await session.call_tool(name, arguments)
+    assert not result.isError, (name, arguments, result)
+    payload = result.structuredContent
+    if payload is None:
+        payload = json.loads(result.content[0].text)
+    assert isinstance(payload, dict), (name, payload)
+    return payload
+
+
+async def expect_error(session, name, message, **arguments):
+    result = await session.call_tool(name, arguments)
+    assert result.isError, (name, arguments, result)
+    assert any(
+        content.type == "text" and message in content.text
+        for content in result.content
+    ), (name, arguments, result)
+
+
+async def publish(session, workspace, tool, operation, *, output, **arguments):
+    payload = await call_tool(session, tool, output=output, **arguments)
+    assert payload["ok"] is True and payload["operation"] == operation, payload
+    assert Path(payload["output"]) == Path(output), payload
+    content = (workspace / output).read_bytes()
+    assert 0 < len(content) == payload["size_bytes"], payload
+    geometry = payload["geometry"]
+    assert geometry["mesh_objects"] == 1 and geometry["faces"] > 0, payload
+    return content, geometry
+
+
+async def blender_roundtrip(session, workspace):
+    workflow = (
+        ("create_primitive", "create", "cube.stl", {"kind": "cube", "size": 1.0}),
+        ("convert_model", "convert", "cube.glb", {"source": "cube.stl"}),
+        ("convert_model", "convert", "roundtrip.stl", {"source": "cube.glb"}),
+        ("repair_mesh", "repair", "repaired.stl", {"source": "roundtrip.stl"}),
+    )
+    snapshots = {}
+    for tool, operation, output, arguments in workflow:
+        content, _ = await publish(
+            session, workspace, tool, operation, output=output, **arguments,
+        )
+        snapshots[output] = content
+
+    for name, content in snapshots.items():
+        info = await call_tool(session, "inspect_model", path=name)
+        assert info["name"] == name and info["size_bytes"] == len(content), info
+        assert info["sha256"] == hashlib.sha256(content).hexdigest(), info
+        if name.endswith(".stl"):
+            assert info["format"] == "stl" and info["triangles"] == 12, info
+            for key, expected in (("min", -0.5), ("max", 0.5)):
+                bounds = info["bounds"][key]
+                assert len(bounds) == 3 and all(
+                    math.isclose(value, expected, rel_tol=0, abs_tol=0.005)
+                    for value in bounds
+                ), (name, info)
+        else:
+            assert info["format"] == "glb" and content.startswith(b"glTF"), info
+
+    # Two adjacent triangles whose shared edge is split by less than the weld distance.
+    seam = b"v 0 0 0\nv 1 0 0\nv 0 1 0\nv 1.00005 0 0\nv 0.00005 1 0\nv 1 1 0\nf 1 2 3\nf 4 6 5\n"
+    (workspace / "split-edge.obj").write_bytes(seam)
+    snapshots["split-edge.obj"] = seam
+    _, before = await publish(
+        session, workspace, "convert_model", "convert", source="split-edge.obj", output="split-edge.stl",
+    )
+    _, after = await publish(
+        session, workspace, "repair_mesh", "repair", source="split-edge.obj", output="welded.stl",
+    )
+    assert before["vertices"] == 6 and after["vertices"] == 4, (before, after)
+    assert before["faces"] == after["faces"] == 2, (before, after)
+
+    await expect_error(
+        session, "repair_mesh", "Source files cannot be modified in place.",
+        source="roundtrip.stl", output="roundtrip.stl",
+    )
+    await expect_error(
+        session, "create_primitive", "Destination already exists",
+        kind="cube", size=2.0, output="repaired.stl",
+    )
+    for name, content in snapshots.items():
+        assert (workspace / name).read_bytes() == content, name
+
+    print("MCP workflow: all four tools, STL → GLB → STL geometry, and repair passed.")
+    print("MCP repair: split-edge fixture welded 6 vertices to 4 and kept both faces.")
+    print("MCP file safety: in-place repair and destination overwrite denied; original bytes unchanged.")
+
+
+async def smoke(blender):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
@@ -31,12 +119,16 @@ async def smoke():
         source = workspace / "mesh.obj"
         source.write_text(mesh, encoding="utf-8")
         (host_directory / "outside.obj").write_text(mesh, encoding="utf-8")
+        env = {**os.environ, "BLENDER_AGENT_WORKSPACE": str(workspace)}
+        if blender is not None:
+            env["BLENDER_AGENT_BLENDER"] = str(blender.resolve(strict=True))
         params = StdioServerParameters(
             command=launcher,
             cwd=host_directory,
-            env={**os.environ, "BLENDER_AGENT_WORKSPACE": str(workspace)},
+            env=env,
         )
-        async with asyncio.timeout(60), stdio_client(params) as (reader, writer):
+        timeout = 180 if blender is not None else 60
+        async with asyncio.timeout(timeout), stdio_client(params) as (reader, writer):
             async with ClientSession(reader, writer) as session:
                 initialized = await session.initialize()
                 assert initialized.serverInfo.name == "blender-agent", initialized
@@ -48,23 +140,19 @@ async def smoke():
                     assert set(schemas[name]["required"]) == expected, schemas[name]
                     assert "overwrite" not in schemas[name]["properties"], schemas[name]
 
-                failure = await session.call_tool("inspect_model", {"path": "../outside.obj"})
-                assert failure.isError, failure
-                assert any(
-                    content.type == "text"
-                    and "Path must remain inside the configured workspace." in content.text
-                    for content in failure.content
-                ), failure
-
-                result = await session.call_tool("inspect_model", {"path": "mesh.obj"})
-                assert not result.isError, result
-                payload = result.structuredContent
-                if payload is None:
-                    payload = json.loads(result.content[0].text)
+                await expect_error(
+                    session, "inspect_model", "Path must remain inside the configured workspace.",
+                    path="../outside.obj",
+                )
+                payload = await call_tool(session, "inspect_model", path="mesh.obj")
                 assert payload["faces"] == 1, payload
                 assert source.read_text(encoding="utf-8") == mesh
                 print("Installed MCP launcher handshake, tool schemas and workspace isolation: PASS")
+                if blender is not None:
+                    await blender_roundtrip(session, workspace)
 
 
 if __name__ == "__main__":
-    asyncio.run(smoke())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--blender", type=Path, help="Path to a real Blender executable for the roundtrip")
+    asyncio.run(smoke(parser.parse_args().blender))
