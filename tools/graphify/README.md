@@ -46,3 +46,11 @@ Only run that example after v1.0.0 has genuinely been approved and archived. The
 .github/workflows/graphify-hq.yml runs on push or PR targeting graphify-hq, using standard GitHub-hosted ubuntu-latest and read-only permissions. It installs the locked Graphify dependencies, runs a deterministic self-test, and checks all committed version archives. It does not publish artifacts automatically, merge, release, call a private service, or depend on local hardware.
 
 Because the catalog is intentionally empty at bootstrap, the initial runner checks the real template with a **synthetic fixture only**. It does not misrepresent that sample as an approved Blender-Agent release.
+
+## Unapproved release candidates
+
+Unmerged or draft PRs go into catalog/candidates.json, **not** catalog/versions.json. A candidate records its exact full source commit, public PR number, source branch, and sorted Markdown documents. Its graph and receipt are generated under candidates/vX.Y.Z with `archive_status: candidate` and `release_tag: null`. A candidate is **not** evidence of an approved release.
+
+`python tools/graphify/candidate_maps.py --emit` builds and verifies the Graphify MCP graph, then emits bounded JSON chunks into public runner logs for review and commit. After the snapshot is committed, `python tools/graphify/candidate_maps.py --check` independently rebuilds and compares every byte. GitHub Actions should run `--check` during ordinary ongoing maintenance.
+
+Promotion requires a separately approved and immutable main-line release: update catalog/versions.json with the real release commit and matching tag, generate the approved map under versions/vX.Y.Z, and independently verify it. Never rename or silently relabel the candidate receipt as approved.

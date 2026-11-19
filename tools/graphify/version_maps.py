@@ -129,7 +129,7 @@ def reference_path(source: str, raw: str) -> str | None:
     return candidate
 
 
-def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bool = False) -> dict:
+def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bool = False, candidate: bool = False) -> dict:
     nodes: dict[str, dict] = {}
     edges: dict[tuple, dict] = {}
     outlines: dict[str, list[tuple[str, str]]] = {}
@@ -186,14 +186,14 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
         {"nodes": list(nodes.values()), "edges": list(edges.values())},
         directed=True, dedup=False,
     )
-    graph.graph.update(template_version=tag, scope="blender_agent_release")
+    graph.graph.update(template_version=tag, scope="blender_agent_release_candidate" if candidate else "blender_agent_release")
     folder.mkdir(parents=True, exist_ok=True)
     graph_path = folder / "graph.json"
     to_json(graph, {0: list(graph)}, str(graph_path), built_at_commit="")
     receipt = {
         "schema_version": 1,
         "version": tag,
-        "release_tag": tag if not fixture else None,
+        "release_tag": tag if not (fixture or candidate) else None,
         "source_repository": REPOSITORY,
         "source_commit": sha,
         "graphify_version": package_version("graphifyy"),
@@ -205,6 +205,7 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
             for path, body in sorted(docs.items())
         },
         "synthetic_fixture": fixture,
+        "archive_status": "candidate" if candidate else "fixture" if fixture else "approved",
     }
     (folder / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     lines = [
@@ -212,6 +213,11 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
         "[Graphify map](graph.json) · [Source receipt](receipt.json) · [All versions](../README.md)", "",
         "**Source commit:** " + sha, "",
     ]
+    if candidate:
+        lines.extend([
+            "**Candidate only — NOT an approved or published Blender-Agent release.**", "",
+            "Approval, an immutable release tag, and promotion into the approved catalog are pending.", "",
+        ])
     for path, headings in outlines.items():
         lines.extend(["## " + path, "", "Source document at the pinned release commit:", ""])
         lines.append(

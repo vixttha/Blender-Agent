@@ -14,6 +14,7 @@ This branch is intentionally sparse. It is not the Blender add-on/runtime, a dis
 | --- | --- |
 | [Version catalog](catalog/versions.json) | Approved Blender-Agent releases and their immutable source commits. |
 | [Version archive](versions/README.md) | One graph, navigable outline, and evidence receipt per approved release. |
+| [Release candidates](candidates/README.md) | Provisional source-pinned maps; never treated as approved releases. |
 | [Graphify workflow guide](tools/graphify/README.md) | How to build, query, review, and reproduce each version map. |
 | [Public-runner validation](.github/workflows/graphify-hq.yml) | Read-only verification on standard GitHub-hosted Ubuntu runners. |
 | [Security and operating rules](SECURITY.md) | No credentials, local execution requirements, or public personal details. |
@@ -37,4 +38,4 @@ The version graph is a documentation and version-discovery aid, not a claim that
 - Store no personal information, credentials, private repositories, machine-specific paths, or invented version history.
 - The checked-in workflow validates artifacts but never automatically creates a release, promotes a tag, merges branches, or writes to the repository.
 
-**Current archive:** no approved Blender-Agent versions have been registered.
+**Current archive:** no approved Blender-Agent versions have been registered. The proposed v0.0.1 foundation has a separate candidate catalog, pending validation and release approval.

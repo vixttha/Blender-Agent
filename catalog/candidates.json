@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "repository": "vixttha/Blender-Agent",
+  "candidates": [
+    {
+      "version": "v0.0.1",
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_branch": "feature/v0.0.1-foundation",
+      "source_pr": 1,
+      "source_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/HARNESS.md",
+        "docs/ROADMAP.md",
+        "docs/SKILL_POLICY.md",
+        "skills/asset-conversion/SKILL.md",
+        "skills/asset-inspection/SKILL.md",
+        "skills/mesh-repair/SKILL.md",
+        "skills/procedural-primitives/SKILL.md"
+      ]
+    }
+  ]
+}
