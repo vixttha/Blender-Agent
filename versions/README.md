@@ -1,9 +1,8 @@
 # Public README version history
 
-**No public README v0.0.1 has been approved or published through this HQ yet.**
+The approved archive starts with the first accepted public README. The [v0.0.1 draft](https://github.com/vixttha/Blender-Agent/pull/2) is currently under review. [Public README workspaces](../workspace/README.md)
 
-| Candidate | Status | Workspace |
-| --- | --- | --- |
-| v0.0.1 | Draft; publication blocked on matching code and approval | [Draft and review record](../workspace/v0.0.1/README.md) |
+| Version | Date | Summary | Files |
+| --- | --- | --- | --- |
 
-When the first public README is approved, freeze the exact accepted text in `versions/v0.0.1/README.md` with a changelog. Retain the public source commit, review evidence, and publication PR. Do not confuse a README version with a software release.
+List each archived version once. Keep its accepted README and changelog in its version folder.

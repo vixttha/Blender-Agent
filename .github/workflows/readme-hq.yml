@@ -16,12 +16,45 @@ jobs:
     name: Archived pages, links, draft gates and regression checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      HQ_BASELINE: ${{ github.event.pull_request.base.sha || github.event.before || '' }}
     steps:
       - name: Checkout pinned action
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
+          fetch-depth: 0
       - name: Validate README HQ
-        run: python3 tools/check_readme_hq.py
+        run: python3 tools/check_readme_hq.py --baseline "$HQ_BASELINE"
       - name: Negative regression tests
         run: python3 -m unittest discover -s tests -p 'test_readme_hq.py' -v
+      - name: Set up Python for README smoke test
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.11'
+      - name: Smoke-test the v0.0.1 quick start from pinned source
+        shell: bash
+        run: |
+          source_sha=$(sed -nE 's/^git checkout --detach ([0-9a-f]{40})$/\1/p' workspace/v0.0.1/DRAFT.md)
+          [[ "$source_sha" =~ ^[0-9a-f]{40}$ ]]
+          git worktree add --detach "$RUNNER_TEMP/blender-agent-readme" "$source_sha"
+          cd "$RUNNER_TEMP/blender-agent-readme"
+          python -m venv .venv
+          source .venv/bin/activate
+          python -m pip install .
+          blender-agent version > version.json
+          python -c "from pathlib import Path; p = Path('readme-demo'); p.mkdir(); (p / 'triangle.obj').write_text('v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n', encoding='utf-8')"
+          blender-agent --workspace readme-demo inspect triangle.obj > report.json
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          version = json.loads(Path("version.json").read_text())
+          report = json.loads(Path("report.json").read_text())
+          assert version == {"version": "0.0.1"}, version
+          assert report["vertices"] == 3 and report["faces"] == 1, report
+          assert report["bounds"] == {"min": [0, 0, 0], "max": [1, 1, 0]}, report
+          assert report["sha256"] == hashlib.sha256(Path("readme-demo/triangle.obj").read_bytes()).hexdigest()
+          print("PASS: installed CLI, version, OBJ counts, bounds and SHA-256")
+          PY
