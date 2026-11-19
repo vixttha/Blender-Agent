@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000003",
+  "title": "Produce a graph-guided implementation brief",
+  "summary": "Given a feature or proposed change, trace the affected code, reusable functions and tests at a pinned commit, then turn confirmed findings into implementation and validation steps.",
+  "kind": "workflow",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000001",
+    "IDEA-000002",
+    "IDEA-000004"
+  ],
+  "acceptance_criteria": [
+    "Run the workflow on a representative feature in one repository.",
+    "Cite exact source paths for each finding and verify at least one useful connection that changes the plan.",
+    "Record which behavior to check and link the resulting test evidence."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [],
+  "release_membership": "NOT_ASSERTED"
+}

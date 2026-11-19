@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000001",
+  "title": "Use Graphify before implementing a change",
+  "summary": "Start from a feature or planned change, follow graph links to related code and tests, and record the findings that change the implementation plan.",
+  "kind": "process",
+  "origin": {
+    "created_by": "human",
+    "source": "Graphify HQ project direction, November 2026."
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "development",
+    "discovery"
+  ],
+  "benefits": [
+    "Find existing code to reuse and affected paths that a name search could miss."
+  ],
+  "risks": [
+    "A stale or incomplete graph can omit relevant paths. Confirm leads against the source."
+  ],
+  "related_ideas": [],
+  "evidence": []
+}
