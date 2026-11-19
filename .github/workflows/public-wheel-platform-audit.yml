@@ -1,0 +1,153 @@
+name: Public wheel and Blender platform audit
+
+on:
+  push:
+    branches: [audit/public-wheel-platforms]
+
+permissions:
+  contents: read
+
+jobs:
+  installed-wheel:
+    name: ${{ matrix.os }} / Blender ${{ matrix.blender }} / MCP ${{ matrix.sdk }}
+    if: github.repository == 'vixttha/Blender-Agent' && github.event.repository.private == false
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12"}
+          - {os: windows-latest, blender: "4.5.0", sdk: "resolved", python: "3.12"}
+          - {os: macos-15, blender: "4.5.0", sdk: "resolved", python: "3.12"}
+          - {os: ubuntu-24.04, blender: "4.1.0", sdk: "resolved", python: "3.12"}
+          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "1.12.0", python: "3.11"}
+          - {os: ubuntu-24.04, blender: "5.2.4", sdk: "resolved", python: "3.12"}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 18
+    steps:
+      - name: Check out exact application candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: 150f1705e4872dad03addbadc0156baf6e7fda77
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Build and test an installed wheel outside the checkout
+        env:
+          AUDIT_TARGET_SHA: 150f1705e4872dad03addbadc0156baf6e7fda77
+          AUDIT_BLENDER: ${{ matrix.blender }}
+          AUDIT_SDK: ${{ matrix.sdk }}
+        shell: bash
+        run: |
+          python - <<'PY'
+          import hashlib
+          import os
+          from pathlib import Path
+          import platform
+          import shutil
+          import subprocess
+          import sys
+          import tempfile
+          import venv
+          import zipfile
+
+          def run(*args, **kwargs):
+              return subprocess.run(args, check=True, **kwargs)
+
+          def fetch(url, destination):
+              run("curl", "--fail", "--location", "--retry", "3", "--silent",
+                  "--show-error", "--output", str(destination), url)
+
+          source = Path.cwd()
+          actual = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          assert actual == os.environ["AUDIT_TARGET_SHA"], actual
+          print("AUDIT_APPLICATION_SHA=" + actual, flush=True)
+          print("AUDIT_WORKFLOW_SHA=" + os.environ["GITHUB_SHA"], flush=True)
+          print(f"AUDIT_HOST={platform.system()} {platform.machine()} Python {platform.python_version()}", flush=True)
+
+          with tempfile.TemporaryDirectory(prefix="blender-wheel-audit-") as directory:
+              work = Path(directory)
+              wheels = work / "wheels"
+              run(sys.executable, "-m", "pip", "wheel", "--no-deps", "-w", str(wheels), str(source))
+              wheel, = wheels.glob("blender_agent-*.whl")
+              with wheel.open("rb") as stream:
+                  print(f"AUDIT_WHEEL_SHA256={hashlib.file_digest(stream, 'sha256').hexdigest()} {wheel.name}", flush=True)
+              environment = work / "venv"
+              venv.EnvBuilder(with_pip=True).create(environment)
+              scripts = environment / ("Scripts" if os.name == "nt" else "bin")
+              python = str(scripts / ("python.exe" if os.name == "nt" else "python"))
+              sdk = os.environ["AUDIT_SDK"]
+              requirements = [str(wheel) + "[mcp]"]
+              if sdk != "resolved":
+                  requirements.append("mcp==" + sdk)
+              run(python, "-m", "pip", "install", *requirements, cwd=work)
+              run(python, "-c", "from importlib.metadata import version; from pathlib import Path; "
+                  "import sys, blender_agent; "
+                  "p = Path(blender_agent.__file__).resolve(); "
+                  "assert p.is_relative_to(Path(sys.prefix).resolve()), p; "
+                  "print('AUDIT_INSTALLED_VERSION=' + version('blender-agent') + ' MCP=' + version('mcp'))",
+                  cwd=work)
+              run(python, "-m", "blender_agent", "version", cwd=work)
+              for fixture in ("test_mcp_smoke.py", "blender_linked_fixture.py"):
+                  shutil.copy2(source / "tests" / fixture, work / fixture)
+
+              version = os.environ["AUDIT_BLENDER"]
+              bundle = "blender-" + version
+              build = {"Linux": "linux-x64.tar.xz", "Darwin": "macos-arm64.dmg",
+                       "Windows": "windows-x64.zip"}[platform.system()]
+              filename = bundle + "-" + build
+              base = "https://download.blender.org/release/Blender" + version.rsplit(".", 1)[0] + "/"
+              manifest = work / "blender.sha256"
+              archive = work / filename
+              fetch(base + bundle + ".sha256", manifest)
+              expected, = [line.split()[0] for line in manifest.read_text().splitlines()
+                           if line.split() and line.split()[-1].lstrip("*") == filename]
+              fetch(base + filename, archive)
+              with archive.open("rb") as stream:
+                  actual_digest = hashlib.file_digest(stream, "sha256").hexdigest()
+              assert actual_digest == expected.lower(), filename
+              print(f"AUDIT_BLENDER_DOWNLOAD_SHA256={actual_digest} {filename}", flush=True)
+              dist = work / "blender-dist"
+              dist.mkdir()
+              mount = None
+              try:
+                  if platform.system() == "Darwin":
+                      run("hdiutil", "attach", "-nobrowse", "-readonly", "-mountpoint", str(dist), str(archive))
+                      mount = dist
+                      app, = dist.glob("*.app")
+                      blender = app / "Contents" / "MacOS" / "Blender"
+                  elif platform.system() == "Windows":
+                      with zipfile.ZipFile(archive) as zip_file:
+                          zip_file.extractall(dist)
+                      blender, = dist.rglob("blender.exe")
+                  else:
+                      run("tar", "-xf", str(archive), "-C", str(dist), "--strip-components=1")
+                      blender = dist / "blender"
+                  output = subprocess.check_output([str(blender), "--version"], text=True)
+                  print(output.splitlines()[0], flush=True)
+                  assert output.splitlines()[0] == "Blender " + version, output
+
+                  # Run each probe even if another probe fails, so the log identifies the smallest failure.
+                  failed = []
+                  def probe(label, *args):
+                      result = subprocess.run(args, cwd=work, timeout=240)
+                      print(f"AUDIT_PROBE {label} exit={result.returncode}", flush=True)
+                      if result.returncode:
+                          failed.append(label)
+
+                  probe("mcp-end-to-end", python, str(work / "test_mcp_smoke.py"), "--blender", str(blender))
+                  workspace = work / "CLI workspace"
+                  workspace.mkdir()
+                  cli = (python, "-m", "blender_agent", "--workspace", str(workspace), "--blender", str(blender))
+                  for shape in ("uv_sphere", "cylinder"):
+                      output = shape + ".stl"
+                      probe("cli-create-" + shape, *cli, "create", shape, output)
+                      probe("cli-inspect-" + shape, *cli, "inspect", output)
+                  probe("cli-fbx-export", *cli, "convert", "cylinder.stl", "cylinder.fbx")
+                  probe("cli-fbx-reimport", *cli, "convert", "cylinder.fbx", "cylinder-roundtrip.stl")
+                  assert not failed, failed
+              finally:
+                  if mount is not None:
+                      run("hdiutil", "detach", str(mount))
+          PY
