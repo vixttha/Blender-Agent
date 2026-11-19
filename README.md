@@ -1,85 +1,81 @@
 # Blender-Agent
 
-**Open, harness-neutral tools for Blender and 3D assets.**
+Blender-Agent is a pre-alpha Python toolkit for inspecting 3D assets and running a small set of headless Blender operations. Use it from the command line or connect a compatible host through the optional Model Context Protocol (MCP) adapter.
 
-Blender-Agent v0.0.2 is a pre-alpha foundation for CLI and Model Context Protocol (MCP) workflows. It is not yet a fully autonomous 3D artist. v0.0.1 was the initial foundation candidate; this version addresses its six audit findings. Neither candidate is a production release.
+**v0.0.2 pre-alpha foundation.** The quick start uses a pinned, tested source revision. [Foundation PR](https://github.com/vixttha/Blender-Agent/pull/1)
 
-## Capability status
-
-| Capability | Status | Important limit |
-| --- | --- | --- |
-| STL / OBJ inspection | Implemented | Bounded, read-only structural metrics; not printability certification |
-| GLB, FBX, BLEND inspection | Metadata only | File hash/size; detailed inspection requires Blender |
-| Create primitives | Blender required | Cube, UV sphere, cylinder |
-| Convert assets | Blender required | STL, OBJ, GLB, FBX, BLEND |
-| Repair basic meshes | Blender required | Weld nearby vertices and recalculate normals on a copy |
-| CLI | Implemented | Harnesses capable of invoking authorized commands |
-| MCP | Optional | Tested using a real stdio MCP client; host-specific support not guaranteed |
-| Sculpting, worlds, rigs, animation, game and printing validation | Planned | Not shipped |
-| AI model generation, persistent memory, dynamic skill execution | Planned | Not shipped |
+[Quick start](#quick-start) · [Capabilities](#capabilities) · [MCP setup](#mcp-setup) · [Testing and contributing](#testing-and-contributing)
 
 ## Quick start
 
-Python 3.11+ is required. Blender 4.1+ is required for operations involving Blender; v0.0.2 public CI tests Blender 4.5.0 on Linux. The Python inspector works without Blender.
+Install Git and Python 3.11 or newer. The first example runs without Blender.
 
-Create the workspace and its input/output directories before running these commands.
+```sh
+git clone https://github.com/vixttha/Blender-Agent.git
+cd Blender-Agent
+git checkout --detach 2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b
+python -m venv .venv
+```
 
-~~~sh
-python -m pip install -e .
+Activate the virtual environment with `source .venv/bin/activate` on macOS or Linux, or `.\.venv\Scripts\Activate.ps1` in PowerShell. Then install the package and inspect a sample triangle:
+
+```sh
+python -m pip install .
 blender-agent version
-blender-agent skills
-blender-agent --workspace ./workspace inspect input/model.stl
-blender-agent --workspace ./workspace create cube output/cube.stl --size 1
-blender-agent --workspace ./workspace convert input/model.stl output/model.glb
-blender-agent --workspace ./workspace repair input/model.stl output/cleaned.stl
-~~~
+python -c "from pathlib import Path; p = Path('readme-demo'); p.mkdir(); (p / 'triangle.obj').write_text('v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n', encoding='utf-8')"
+blender-agent --workspace readme-demo inspect triangle.obj
+```
 
-Paths must remain in the workspace. The source is never modified in place, and outputs cannot overwrite existing files by default. Use --blender /path/to/blender when Blender is not on PATH.
+The inspection reports three vertices, one face, bounds from `[0, 0, 0]` to `[1, 1, 0]`, and a SHA-256 digest. The sample command expects a fresh `readme-demo` directory. To try your own asset, put it inside that workspace and pass its filename to `inspect`.
 
-For compatible MCP hosts:
+### Create, convert, and repair with Blender
 
-~~~sh
-python -m pip install -e ".[mcp]"
-blender-agent-mcp
-~~~
+The worker requires Blender 4.1 or newer. The headless smoke test uses Blender 4.5.0 on Ubuntu. Put `blender` on your command path or pass `--blender` with the executable path before the operation name.
 
-Set BLENDER_AGENT_WORKSPACE to an absolute workspace directory; optionally set BLENDER_AGENT_BLENDER. See [harness integration](docs/HARNESS.md).
+```sh
+blender-agent --workspace readme-demo create cube cube.stl --size 1
+blender-agent --workspace readme-demo convert cube.stl cube.glb
+blender-agent --workspace readme-demo repair cube.stl cube-repaired.stl
+```
 
-## Security and resource limits
+If a destination already exists, choose a new output name. Convert and repair can replace a separate output only when the CLI is given `--overwrite`. Use a dedicated workspace with trusted inputs and keep backups of important assets.
 
-- Workspace paths are checked with resolved symlinks. This is **not** a security sandbox; protect the workspace from hostile concurrent filesystem mutations.
-- Output publication without overwrite uses atomic no-clobber hard-link creation, preventing competing writers from silently overwriting a destination.
-- Creating or modifying existing files still requires explicit authorization. MCP tools have no overwrite option.
-- Fixed Blender worker; factory startup and automatic scripting disabled; no model-generated Python execution.
-- Bounded Blender execution time (1–900 seconds), captured logs (256 KiB), source size (512 MiB), and generated output (512 MiB).
-- Detailed structural STL/OBJ inspection has a 128 MiB input limit and rejects malformed references/coordinates.
-- A structural summary does not certify printability, watertightness, visual quality, or game readiness.
+## Capabilities
 
-## Architecture and roadmap
+| Operation | v0.0.2 scope |
+| --- | --- |
+| Inspect STL and OBJ | Python reports file size, SHA-256, bounds, and basic geometry counts. |
+| Inspect GLB, FBX, and BLEND | Python reports file metadata only. |
+| Create | Headless Blender creates a cube, UV sphere, or cylinder. |
+| Convert | The Blender worker has readers and writers for STL, OBJ, GLB, FBX, and BLEND. Public CI checks STL roundtrips through OBJ, GLB, FBX, and BLEND. |
+| Repair | Blender merges nearby vertices and recalculates face normals, then writes a separate output. |
 
-See [architecture](docs/ARCHITECTURE.md), [specialist skill policy](docs/SKILL_POLICY.md), [harness integration](docs/HARNESS.md), and [capability roadmap](docs/ROADMAP.md). Four starter skill documents live under [skills](skills).
+The worker uses a fixed operation set and starts Blender with automatic script execution disabled. Blender runs with your account’s permissions. Use a workspace whose contents and concurrent access you control. The worker caps captured logs at 256 KiB and published output at 512 MiB. Detailed STL and OBJ inspection is limited to 128 MiB per input. Geometry counts and cleanup give you diagnostics. Printability, game-engine imports, and material or animation fidelity require checks in the destination tool. [Architecture](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/docs/ARCHITECTURE.md) · [Roadmap](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/docs/ROADMAP.md)
 
-Local checks:
+## MCP setup
 
-~~~sh
-python -m pip install -e .
-python -m compileall -q src
-python -m unittest discover -s tests -p "test_*.py" -v
-~~~
+Install the optional adapter in the repository’s activated environment:
 
-MCP integration tests require the optional extra:
+```sh
+python -m pip install ".[mcp]"
+```
 
-~~~sh
-python -m pip install -e ".[mcp]"
-python tests/test_mcp_smoke.py
-~~~
+Configure your host to launch `blender-agent-mcp` over stdio. Use the executable from the virtual environment if your host has a separate command path. Set `BLENDER_AGENT_WORKSPACE` to the absolute path of an existing workspace and optionally set `BLENDER_AGENT_BLENDER` to your Blender executable.
 
-Public CI uses free standard GitHub-hosted Linux and Windows runners and a separate Blender 4.5 smoke job. The Blender 4.5 check includes real roundtrips for supported formats and geometry bounds; other Blender versions and printers/game engines are not certified.
+The adapter exposes `inspect_model`, `create_primitive`, `convert_model`, and `repair_mesh`. Public CI starts the installed launcher from a separate working directory, checks all four input schemas, and verifies workspace-bounded inspection on Linux and Windows. Compatibility depends on the host. [Harness configuration](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/docs/HARNESS.md)
 
-See [contributing](CONTRIBUTING.md), [security](SECURITY.md), and [changelog](CHANGELOG.md).
+## Testing and contributing
+
+Run the Python suite from the source checkout:
+
+```sh
+python -m unittest discover -s tests -v
+```
+
+The pinned foundation passed Python 3.11 and 3.12 checks on Linux and Windows. On Ubuntu with Blender 4.5.0, CI created an STL cube, roundtripped it through OBJ, GLB, FBX, and BLEND, and wrote a separate repaired STL. It checked triangle counts and bounds for each resulting STL. Individual MCP hosts and other Blender format combinations still need their own verification. [Foundation CI run](https://github.com/vixttha/Blender-Agent/actions/runs/44436263213)
+
+If you find a bug, include the source revision, OS, Python and Blender versions, file format, command, and expected and actual results. A small synthetic asset helps reproduce file-specific behavior. [GitHub Issues](https://github.com/vixttha/Blender-Agent/issues) · [Contributing](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/CONTRIBUTING.md) · [Security](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/SECURITY.md) · [Changelog](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/CHANGELOG.md)
 
 ## License
 
-MIT; see [LICENSE](LICENSE).
-
-An independent community project, not affiliated with or endorsed by the Blender Foundation.
+Blender-Agent is an independent project distributed under the [MIT License](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/LICENSE).

@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased] — v0.0.2 candidate
+## v0.0.2 — audited pre-alpha foundation
 
 - Repair the default output overwrite race using atomic no-clobber publication; add simultaneous-writer negative regression tests.
 - Recheck workspace containment before output publication and document remaining filesystem threat assumptions.
