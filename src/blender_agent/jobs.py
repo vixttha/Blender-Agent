@@ -14,6 +14,7 @@ from contextlib import contextmanager
 from pathlib import Path
 
 from .inspect import MAX_PREVIEW_BYTES, inspect_mesh
+from .obj_records import obj_records
 from .paths import destination_path, root_path, source_path, within_workspace
 
 PRIMITIVES = frozenset({"cube", "uv_sphere", "cylinder"})
@@ -102,13 +103,11 @@ def _publish(temp: Path, final: Path, root: Path, *, overwrite: bool) -> None:
 
 
 def _material_libraries(obj: Path):
-    with obj.open("rb") as stream:
-        for line in stream:
+    with obj.open(encoding="utf-8-sig", errors="surrogateescape") as stream:
+        for line in obj_records(stream):
             parts = line.split(None, 1)
-            if len(parts) == 2 and parts[0] == b"mtllib":
-                yield parts[1].strip().removeprefix(b'"').removesuffix(b'"').decode(
-                    "utf-8", errors="surrogateescape",
-                )
+            if len(parts) == 2 and parts[0] == "mtllib":
+                yield parts[1].strip().removeprefix('"').removesuffix('"')
 
 
 @contextmanager

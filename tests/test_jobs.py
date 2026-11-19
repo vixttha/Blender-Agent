@@ -121,15 +121,17 @@ class JobTests(unittest.TestCase):
 
     def test_obj_overwrite_preserves_material_referenced_by_source(self):
         source = self.root / "input.obj"
-        source.write_text('mtllib "out.mtl"\n', encoding="utf-8")
         material = self.root / "out.mtl"
         material.write_bytes(b"source material")
-        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
-             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
-            with self.assertRaisesRegex(ValueError, "Source material libraries"):
-                execute("convert", workspace=self.root, source="input.obj", output="out.obj", overwrite=True)
-        self.assertEqual(material.read_bytes(), b"source material")
-        self.assertFalse((self.root / "out.obj").exists())
+        for reference in ('mtllib "out.mtl"\n', 'mtllib ' + "\\" + '\r\n  "out.mtl"\r\n'):
+            with self.subTest(reference=reference):
+                source.write_bytes(reference.encode("utf-8-sig"))
+                with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+                     patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+                    with self.assertRaisesRegex(ValueError, "Source material libraries"):
+                        execute("convert", workspace=self.root, source="input.obj", output="out.obj", overwrite=True)
+                self.assertEqual(material.read_bytes(), b"source material")
+                self.assertFalse((self.root / "out.obj").exists())
 
     def interrupt_obj_publication(self, overwrite=False):
         result = subprocess.run(

@@ -10,6 +10,7 @@ import os
 import struct
 from pathlib import Path
 
+from .obj_records import obj_records
 from .paths import root_path, source_path
 
 MAX_PREVIEW_BYTES = 128 * 1024 * 1024
@@ -145,26 +146,10 @@ def _ascii_stl(lines) -> dict:
     return {"encoding": "ascii", "triangles": facets, "bounds": {"min": box_min, "max": box_max}}
 
 
-def _obj_records(lines):
-    parts = []
-    for line in lines:
-        line = line.rstrip()
-        if line.endswith("\\"):
-            parts.append(line[:-1])
-        elif parts:
-            parts.append(line)
-            yield " ".join(parts)
-            parts.clear()
-        else:
-            yield line
-    if parts:
-        raise ValueError("Unterminated OBJ continuation.")
-
-
 def _obj(lines) -> dict:
     vertices: list[tuple[float, float, float]] = []
     faces = 0
-    for line in _obj_records(lines):
+    for line in obj_records(lines):
         parts = line.split()
         if not parts:
             continue

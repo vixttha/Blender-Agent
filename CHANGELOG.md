@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.14 — v0.0.3 development checkpoint
+
+- Protect existing source material libraries named by continued OBJ records and share parsing with OBJ inspection (PR #17 audit follow-up).
+
 ## v0.0.2.13 — v0.0.3 development checkpoint
 
 - Recover interrupted OBJ and MTL publication with an OS-backed lock and a retained material backup, preserving unrelated files (#23).
