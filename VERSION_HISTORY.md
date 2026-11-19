@@ -13,6 +13,8 @@ This is the comparison index for the template. Each version folder contains its 
 
 ## v0.0.2
 
+Generated and vendored overrides reject leftover name fields with a validation error.
+
 The revised auditor explains which evidence it checks structurally, reports drift while retaining the audited pin, and makes the runner setup portable. Use the [migration guide](v0.0.2/MIGRATION.md) to convert an existing registry. A schema v1 registry can continue to use the archived v0.0.1 kit. See [the version review PR](https://github.com/vixttha/Blender-Agent/pull/9) for merge status and CI.
 
 ## v0.0.1
