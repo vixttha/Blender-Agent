@@ -20,13 +20,13 @@
 1. Confirm the implementation branch at a full commit SHA; verify commands, requirements, and link targets against that exact source.
 2. Validate relative Markdown links, HQ snapshots, indexes, and absent private identifying data.
 3. Check that the README clearly distinguishes available features, limitations, planned features, and unverified integration tests.
-4. Run [README HQ validation](../.github/workflows/readme-hq.yml) on the exact documentation commit using standard free GitHub-hosted public runners.
+4. Run [README HQ validation](https://github.com/vixttha/Blender-Agent/blob/readme-hq/.github/workflows/readme-hq.yml) on the exact documentation commit using standard free GitHub-hosted public runners.
 5. Review the publication PR against current `main` for conflicting changes and ensure any linked application files exist there before merging.
 6. Obtain explicit publication approval. Never merge the HQ branch wholesale.
 
 ## Baseline and immutability
 
-The initial HQ `v0.0.1` landing and guide are frozen under [versions](versions/README.md). The live root `README.md` and this guide must match their latest HQ archive snapshots byte for byte. Keep previous versions unchanged; amendments belong to a newer version with a changelog.
+The initial HQ `v0.0.1` landing and guide are frozen under [versions](https://github.com/vixttha/Blender-Agent/blob/readme-hq/readme-hq/versions/README.md). The live root `README.md` and this guide must match their latest HQ archive snapshots byte for byte. Keep previous versions unchanged; amendments belong to a newer version with a changelog.
 
 The first public README is currently **Draft**. Do not add it to the approved `versions/` archive or claim it is public on `main` until the implementation and publication are accepted.
 
