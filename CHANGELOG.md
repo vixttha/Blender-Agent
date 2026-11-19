@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.16 — v0.0.3 development checkpoint
+
+- Restore the Blender 4.1 repair path and validate the full installed-wheel fixture on Blender 4.1.0 and 4.5.0 (#32).
+
 ## v0.0.2.15 — v0.0.3 development checkpoint
 
 - Cancel queued or active MCP Blender publications before the commit point and verify that the next request still succeeds (#34).

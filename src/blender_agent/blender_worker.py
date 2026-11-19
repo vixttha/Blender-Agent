@@ -70,7 +70,8 @@ def _repair():
         identity = mesh.as_pointer()
         if identity in repaired:
             continue
-        if not mesh.is_editable:
+        # Blender 4.1 exposes the library but does not expose ID.is_editable.
+        if not getattr(mesh, "is_editable", mesh.library is None):
             raise ValueError("Repair requires editable mesh datablocks.")
         bm = bmesh.new()
         try:
