@@ -111,10 +111,10 @@ The installed MCP launcher exposes `inspect_model`, `create_primitive`, `convert
 | --- | --- |
 | Python CLI | Python 3.11 and 3.12 on Linux and Windows |
 | Headless Blender | Blender 4.5.0 on Ubuntu. Cube creation, STL roundtrips through OBJ, GLB, FBX and BLEND, and mesh repair |
-| MCP stdio in v0.0.2 | Launcher, schemas, and inspection on Linux and Windows |
-| MCP with Blender on main | All four operations exercised through real stdio on Ubuntu, including welding and source preservation |
+| MCP stdio in v0.0.2 | Launcher, schemas, and workspace-bounded inspection on Linux and Windows. [Tagged source CI](https://github.com/vixttha/Blender-Agent/actions/runs/44438741759) · [Release quick-start check](https://github.com/vixttha/Blender-Agent/actions/runs/44438934108/job/135274667346) |
+| MCP on main at `42c1ce6` | All four tool calls with Blender 4.5.0 on Ubuntu, including repair and source preservation. Windows exercises launcher startup, schemas, and workspace-bounded inspection. [Main CI](https://github.com/vixttha/Blender-Agent/actions/runs/44441784614) · [Ubuntu Blender job](https://github.com/vixttha/Blender-Agent/actions/runs/44441784614/job/135284120753) · [Windows stdio job](https://github.com/vixttha/Blender-Agent/actions/runs/44441784614/job/135284121183) |
 
-Named host integrations, macOS runner coverage, and universal format fidelity are outside these checks. [v0.0.2 foundation CI](https://github.com/vixttha/Blender-Agent/actions/runs/44436263213) · [Full MCP-through-Blender CI for PR #8](https://github.com/vixttha/Blender-Agent/actions/runs/44440943575)
+Named host integrations, macOS runner coverage, and universal format fidelity require their own checks.
 
 ## Troubleshooting
 

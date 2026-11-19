@@ -7,6 +7,8 @@
 - [README HQ archive](https://github.com/vixttha/Blender-Agent/blob/df9b4c387b86aa423216311334247eac0b155420/versions/v0.0.2/README.md) matches the tagged README bytes.
 - [Graphify release receipt](https://github.com/vixttha/Blender-Agent/blob/5526238af9b510092db336d01b26a42c1ef82548/versions/v0.0.2/receipt.json) covers 10 Markdown sources. The archive has 37 nodes, 36 edges, and a verified graph checksum. [Graphify public runner](https://github.com/vixttha/Blender-Agent/actions/runs/44439503554)
 
+For [issue #16](https://github.com/vixttha/Blender-Agent/issues/16), README HQ CI runs the draft's shell blocks and OBJ sample on Ubuntu. It checks the actual release commit, fresh source installation, CLI version, triangle face and vertex counts, bounding box, SHA-256 digest, and archived v0.0.2 README bytes.
+
 ## Findings and draft repairs
 
 | Finding | Draft change |
