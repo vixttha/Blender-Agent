@@ -16,15 +16,17 @@ The [November 19 branch audit](audits/2026-11-19-branch-audit.md) lists all 185 
 
 ## Graphify HQ v0.0.8 repair checkpoints
 
-These are planned Graphify HQ checkpoints. Each maps to one audit repair and its GitHub issue. Record the exact implementation commit and public GitHub Actions evidence when each checkpoint is validated.
+Each checkpoint passed its targeted public-runner checks and is in draft review. Checks covered the original failure, the exact proposed patch and repository state, and the recorded CI results.
 
-| Checkpoint | GitHub issue | Work |
-| --- | --- | --- |
-| `v0.0.8.1` | [BART #66](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/66) | Preserve historical receipt identity across the BART rename and verify live PR provenance under the current repository identity. |
-| `v0.0.8.2` | [BART #75](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/75) | Keep the previous graph and receipt consistent if replacement fails. |
-| `v0.0.8.3` | [AlderVale #159](https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159) | Restore the pinned First Spark verifier and dependency lock in the intended merge tree. |
-| `v0.0.8.4` | [Lydite #12](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/12) | Rebuild historical maps from a clean checkout. The fix passed in [Lydite draft PR #22](https://github.com/vixttha/Lydite-Test-Vault-Template/pull/22). Lydite tracks this repair as `v0.0.3.11`. |
-| `v0.0.8.5` | [Lydite #17](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/17) | Detect executable-bit drift when archived file bytes match. |
+| Checkpoint | GitHub issue | Draft and head | Public validation |
+| --- | --- | --- | --- |
+| `v0.0.8.1` | [BART #66](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/66) | [Template #77](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/77) `070f560` · [OBJ/MTL #78](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/78) `2680e03` | [Template run](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44500410227) rebuilt the frozen v0.0.8 archive. The [OBJ/MTL run](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44500007115) rebuilt the graph and resolved live PR #17 through the current repository name. |
+| `v0.0.8.2` | [BART #75](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/75) | [Draft #79](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/79) `0f7e0c6` | [Public run](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44500465829) passed 19 candidate tests, including receipt write failure, retry and concurrent publication rejection. |
+| `v0.0.8.3` | [AlderVale #159](https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159) | [Draft #157](https://github.com/vixttha/AlderVale-Pact-of-Ten/pull/157) `8e0b402` | [Public run](https://github.com/vixttha/AlderVale-Pact-of-Ten/actions/runs/44499692409) built and read back First Spark on the proposed merge `9eb79bb` and rehearsed publication. |
+| `v0.0.8.4` | [Lydite #12](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/12) | [Draft #22](https://github.com/vixttha/Lydite-Test-Vault-Template/pull/22) `c5b02ca` | [Public run](https://github.com/vixttha/Lydite-Test-Vault-Template/actions/runs/44499987938) fetched pinned source commits, rebuilt three archived maps, and rejected byte drift. Lydite tracks this as `v0.0.3.11`. |
+| `v0.0.8.5` | [Lydite #17](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/17) | [Draft #32](https://github.com/vixttha/Lydite-Test-Vault-Template/pull/32) `3b26628` | [Public run](https://github.com/vixttha/Lydite-Test-Vault-Template/actions/runs/44500407187) rejected a Git mode-only change while a clean checkout reproduced all three maps. |
+
+The BART template drafts stack as [#74](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/74) → [#77](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/77) → [#79](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/79). The OBJ/MTL draft [#78](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/78) targets the application evidence branch. Lydite [#32](https://github.com/vixttha/Lydite-Test-Vault-Template/pull/32) is stacked on [#22](https://github.com/vixttha/Lydite-Test-Vault-Template/pull/22).
 
 [AlderVale #160](https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/160) is a separate enhancement to link First Spark graph evidence to reward and save implementation. It is outside the five repair checkpoints.
 
