@@ -48,7 +48,9 @@ jobs:
 
           manifest = json.loads((Path(os.environ["EVIDENCE_PATH"]) / "manifest.json").read_text())
           source = manifest["source_commit"]
-          if not re.fullmatch(r"[0-9a-f]{40}", source) or manifest["repository"] != os.environ["GITHUB_REPOSITORY"]:
+          if (not re.fullmatch(r"[0-9a-f]{40}", source)
+              or os.environ["GITHUB_REPOSITORY"] != "vixttha/Blender-Agent-Refinement-Toolkit"
+              or manifest["repository"] != "vixttha/Blender-Agent"):
               raise SystemExit("The evidence must pin a SHA in this repository.")
           print(source)
           PY
@@ -69,4 +71,17 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           kit="$RUNNER_TEMP/versions/v0.0.8"
-          python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$EVIDENCE_PATH" --verify-pr --check
+          PYTHONPATH="$kit" python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          from github_provenance import verify_pull_request
+
+          manifest = json.loads((Path(os.environ["EVIDENCE_PATH"]) / "manifest.json").read_text())
+          observation = verify_pull_request(
+              os.environ["GITHUB_REPOSITORY"], manifest["source_commit"], manifest["pull_request"],
+          )
+          print("GitHub pull request provenance:\n" + json.dumps(observation, indent=2))
+          PY
+          python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$EVIDENCE_PATH" --check

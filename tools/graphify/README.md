@@ -1,6 +1,6 @@
-# Blender-Agent version graph workflow
+# Blender-Agent Refinement Toolkit version graph workflow
 
-This workspace adapts the version-by-version Graphify HQ pattern already used for AlderVale, but tracks **Blender-Agent software releases**, not game or README HQ template versions.
+This workspace adapts the version-by-version Graphify HQ pattern already used for AlderVale, but tracks **Blender-Agent Refinement Toolkit software releases**, not game or README HQ template versions.
 
 ## Approval and source contract
 
@@ -45,7 +45,7 @@ Only run that example after v1.0.0 has genuinely been approved and archived. The
 
 .github/workflows/graphify-hq.yml runs on push or PR targeting graphify-hq, using standard GitHub-hosted ubuntu-latest and read-only permissions. It installs the locked Graphify dependencies, runs a deterministic self-test, and checks all committed version archives. It does not publish artifacts automatically, merge, release, call a private service, or depend on local hardware.
 
-Because the catalog is intentionally empty at bootstrap, the initial runner checks the real template with a **synthetic fixture only**. It does not misrepresent that sample as an approved Blender-Agent release.
+Because the catalog is intentionally empty at bootstrap, the initial runner checks the real template with a **synthetic fixture only**. It does not misrepresent that sample as an approved Blender-Agent Refinement Toolkit release.
 
 ## Unapproved release candidates
 
