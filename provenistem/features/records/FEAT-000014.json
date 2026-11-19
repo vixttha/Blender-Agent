@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000014",
+  "title": "Record reusable graph findings alongside feature plans",
+  "summary": "Capture a named query, its pinned map, significant discovered relationships, and the decision or validation they informed.",
+  "kind": "workflow",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000014"
+  ],
+  "acceptance_criteria": [
+    "Trace one idea to one feature and to a source-verified relationship.",
+    "Show who or what confirmed the source claim and which test or review verifies behavior.",
+    "Carry findings forward after a source change with explicit recheck status."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The tracker already proposes a graph-guided implementation brief.",
+      "source_sha": "ae9e55cd388de4b605945cd2a3871d55a2838e95",
+      "source_path": "provenistem/features/records/FEAT-000003.json",
+      "receipt": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/ae9e55cd388de4b605945cd2a3871d55a2838e95/provenistem/features/records/FEAT-000003.json"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

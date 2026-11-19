@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000007",
+  "title": "Add a reproducible document discovery mode",
+  "summary": "Combine a scoped document graph with reviewed semantic links and concrete source anchors when a project has relevant materials.",
+  "kind": "capability",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000007"
+  ],
+  "acceptance_criteria": [
+    "Show exact source SHA and anchors for each relationship.",
+    "Rebuild from a retained reviewed extraction without a model API call on the hosted verifier.",
+    "Keep extraction method and unknown usage visible in the receipt."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The launcher template keeps a pinned semantic extraction with per-file source hashes.",
+      "source_sha": "b4c1c3e2f2a6a942cb93b7ab38aed8a8052b1a88",
+      "source_path": "tools/graphify/semantic/v0.0.1.json",
+      "receipt": "https://github.com/vixttha/AlderVale-Pact-of-Ten/blob/b4c1c3e2f2a6a942cb93b7ab38aed8a8052b1a88/tools/graphify/semantic/v0.0.1.json"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

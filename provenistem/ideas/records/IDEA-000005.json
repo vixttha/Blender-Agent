@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000005",
+  "title": "Find the right graph for any branch",
+  "summary": "Use one lookup to resolve a branch to its graph kind, tracked scope, current source SHA, and freshest available receipt.",
+  "kind": "architecture",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/AlderVale-Pact-of-Ten/blob/ae544b6f6fffe511374404addb53e665ffe8a5c5/main/receipt.json"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "inventory",
+    "discovery"
+  ],
+  "benefits": [
+    "A developer can start from a branch or feature name and reach the applicable evidence quickly."
+  ],
+  "risks": [
+    "Shared file sets must not be mistaken for equivalent branch behavior."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "AlderVale's main and feature snapshots are published under different paths and pin different source commits.",
+      "repository": "vixttha/AlderVale-Pact-of-Ten",
+      "commit": "ae544b6f6fffe511374404addb53e665ffe8a5c5",
+      "path": "main/receipt.json"
+    }
+  ]
+}

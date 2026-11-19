@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000008",
+  "title": "Verify Git mode and blob identity together",
+  "summary": "Extend archive verification to compare the expected tracked path, Git mode and blob while preserving existing version graphs.",
+  "kind": "capability",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000008"
+  ],
+  "acceptance_criteria": [
+    "On standard public Linux, a mode-only change fails the archive check.",
+    "A clean archive reproduces the existing graph and receipt bytes.",
+    "Check Git modes from the index or tree and report the mismatched path."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The candidate accepts both regular Git modes but stores just the blob ID for archive comparison.",
+      "source_sha": "fbcf265dd72cd5e626204c6d99bfa2556771b09c",
+      "source_path": "tools/graphify/version_maps.py",
+      "receipt": "https://github.com/vixttha/Lydite-Test-Vault-Template/issues/17"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

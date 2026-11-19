@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000007",
+  "title": "Find relationships spread across project documentation",
+  "summary": "Evaluate whether reviewed semantic links can surface decisions and dependencies spread across instructions, guides, and contracts.",
+  "kind": "research",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/AlderVale-Pact-of-Ten/blob/b4c1c3e2f2a6a942cb93b7ab38aed8a8052b1a88/tools/graphify/semantic/v0.0.1.json"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "discovery",
+    "documentation"
+  ],
+  "benefits": [
+    "Surface design and adoption constraints that code extraction cannot see."
+  ],
+  "risks": [
+    "Reviewed semantic links still need source checks; unavailable model usage must remain explicit."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The launcher template keeps a pinned semantic extraction with per-file source hashes.",
+      "repository": "vixttha/AlderVale-Pact-of-Ten",
+      "commit": "b4c1c3e2f2a6a942cb93b7ab38aed8a8052b1a88",
+      "path": "tools/graphify/semantic/v0.0.1.json"
+    }
+  ]
+}

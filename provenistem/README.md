@@ -10,10 +10,14 @@ Graphify HQ helps developers use the graph before and during a change. Start fro
 - [Produce a graph-guided implementation brief](features/records/FEAT-000003.json)
 - [Track public, local, and private execution](features/records/FEAT-000002.json)
 
+## Branch audit
+
+The [November 19 branch audit](audits/2026-11-19-branch-audit.md) lists all 185 inspected branch heads and the evidence behind IDEAs 000005 through 000014 and FEATs 000005 through 000014.
+
 ## Open engineering work
 
 - [BART #75](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/75) tracks graph and receipt consistency after a failed write. [BART #66](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/66) tracks repository-rename compatibility.
 - [AlderVale #159](https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159) tracks the missing pinned verifier and dependency lock in the proposed First Spark merge.
-- [Lydite #12](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/12) tracks clean-checkout reproduction. [Lydite #17](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/17) tracks executable-bit drift.
+- [Lydite #12](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/12) tracks clean-checkout reproduction. The candidate fix passed in [draft PR #22](https://github.com/vixttha/Lydite-Test-Vault-Template/pull/22); it is pending integration into `main`. [Lydite #17](https://github.com/vixttha/Lydite-Test-Vault-Template/issues/17) tracks executable-bit drift.
 
 Use the next unused IDEA or FEAT ID when adding a record and update the corresponding index. Distinguish proposed work, implementation, test results, and release decisions. Cite the exact Git commit for source evidence and link the run for claims about testing.
