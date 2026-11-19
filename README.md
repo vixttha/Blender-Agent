@@ -1,8 +1,10 @@
-# Blender-Agent
+# Blender-Agent Refinement Toolkit
 
-Blender-Agent is a pre-alpha Python toolkit for inspecting, creating, converting, and repairing 3D assets locally. Use the CLI or connect an MCP host. Inspection runs on Python alone. Creation, conversion, and repair run Blender in the background.
+*Give shape to an idea.*
 
-**v0.0.3 pre-alpha.** The walkthrough uses a tested source revision. [Changelog](CHANGELOG.md) · [GitHub releases](https://github.com/vixttha/Blender-Agent/releases)
+**BART** is the agent for Blender-Agent Refinement Toolkit, an open-source Python toolkit for inspecting, creating, converting, and repairing 3D assets locally. Use the CLI or connect an MCP host. Inspection runs on Python alone. Creation, conversion, and repair run Blender in the background.
+
+**Published pre-alpha v0.0.3.** The walkthrough uses the exact [published release](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/releases/tag/v0.0.3). [Changelog](CHANGELOG.md) · [GitHub releases](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/releases)
 
 [Quick start](#quick-start) · [Capabilities](#capabilities) · [MCP setup](#mcp-setup) · [Compatibility](#compatibility) · [Troubleshooting](#troubleshooting)
 
@@ -11,9 +13,9 @@ Blender-Agent is a pre-alpha Python toolkit for inspecting, creating, converting
 Use Git and Python 3.11 or newer. Clone into a directory that does not already contain a `Blender-Agent` folder.
 
 ```sh
-git clone --no-checkout https://github.com/vixttha/Blender-Agent.git
+git clone --no-checkout https://github.com/vixttha/Blender-Agent-Refinement-Toolkit.git Blender-Agent
 cd Blender-Agent
-git checkout --detach 0fa17fa9ba497696313f6af82ff1a6e43e2de8e7
+git checkout --detach 7febadd1d18bd15967e9eed6223098268dadfe2f
 python -m venv .venv
 ```
 
@@ -67,7 +69,7 @@ The version command reports `0.0.3`. The inspection JSON includes these fields:
 }
 ```
 
-The full result includes the file’s size and SHA-256 digest. The digest depends on the exact file bytes, including line endings. [Public Linux and Windows walkthrough checks](https://github.com/vixttha/Blender-Agent/actions/workflows/ci.yml)
+The full result includes the file’s size and SHA-256 digest. The digest depends on the exact file bytes, including line endings. [Public Linux and Windows walkthrough checks](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/workflows/ci.yml)
 
 ![A solid triangle beside a wireframe triangle with three marked vertices](assets/triangle-inspection.webp)
 
@@ -150,7 +152,7 @@ Look for the same **3 vertices, 1 face, and bounds** as in the CLI result. The S
 | Installed-wheel MCP stdio | Linux and Windows, including startup from outside the workspace, tool schemas, and read-only inspection |
 | Blender and MCP | Real Blender 4.1.0 and 4.5.0 on Ubuntu, and real Blender 4.5.0 on Windows. Checks include all four tool calls, geometry, source preservation, and OBJ material re-import. |
 
-The application supports Blender 4.1 or later. Named MCP hosts, macOS runners, and additional format combinations need their own checks. [v0.0.3 application checks](https://github.com/vixttha/Blender-Agent/actions/runs/44455781203) · [Detailed compatibility and known limits](docs/HARNESS.md)
+The application supports Blender 4.1 or later. Named MCP hosts, macOS runners, and additional format combinations need their own checks. [v0.0.3 application checks](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44469831772) · [Detailed compatibility and known limits](docs/HARNESS.md)
 
 ### Working with asset dependencies
 
@@ -170,4 +172,4 @@ Use a trusted workspace whose files and concurrent writers you control. The work
 
 ## Project links
 
-[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Issues](https://github.com/vixttha/Blender-Agent/issues) · [Specialist skill guides](skills) · [v0.0.2 documentation graph](https://github.com/vixttha/Blender-Agent/blob/5526238af9b510092db336d01b26a42c1ef82548/versions/v0.0.2/README.md) · [MIT License](LICENSE)
+[Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Issues](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues) · [Specialist skill guides](skills) · [v0.0.2 documentation graph](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/5526238af9b510092db336d01b26a42c1ef82548/versions/v0.0.2/README.md) · [MIT License](LICENSE)

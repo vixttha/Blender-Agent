@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "blender-agent"
-version = "0.0.3"
-description = "Harness-neutral tools for safe Blender asset workflows"
+version = "0.0.3.1"
+description = "Blender-Agent Refinement Toolkit for local 3D asset workflows"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "MIT"
