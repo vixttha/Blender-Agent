@@ -13,7 +13,7 @@ jobs:
   validate:
     if: github.event.repository.private == false
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
@@ -30,6 +30,54 @@ jobs:
         run: python3 v0.0.1/tools/test_audit.py -v
       - name: Validate v0.0.2 and copy it into an unrelated project layout
         run: python3 v0.0.2/tools/test_audit.py -v
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.12'
+      - name: Validate the v0.0.3 copied kit and refresh behavior
+        run: |
+          python3 v0.0.3/tools/test_audit.py -v
+          python3 v0.0.3/tools/test_stack.py -v
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: 42c1ce618543374ed4dd5c8bcac5d437835c4e57
+          path: sample-blender-agent
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          repository: vixttha/AlderVale-Pact-of-Ten
+          ref: a6c2060b8175f505cc6327ccb5658cc00a458b24
+          path: sample-aldervale
+          persist-credentials: false
+      - name: Validate the same kit on both pinned project trees
+        run: |
+          template_sha="$(git rev-parse HEAD)"
+          python3 v0.0.3/tools/stack.py --repo sample-blender-agent \
+            --ref 42c1ce618543374ed4dd5c8bcac5d437835c4e57 \
+            --template-commit "$template_sha" --out reports/blender-agent
+          python3 v0.0.3/tools/stack.py --repo sample-aldervale \
+            --ref a6c2060b8175f505cc6327ccb5658cc00a458b24 \
+            --template-commit "$template_sha" --out reports/aldervale
+          python3 - <<'PYTEST'
+          import json
+          from pathlib import Path
+
+          blender = json.loads(Path("reports/blender-agent/code-stack.json").read_text())
+          aldervale = json.loads(Path("reports/aldervale/code-stack.json").read_text())
+          for registry, role, language in ((blender, "blender-worker", "Python"),
+                                           (aldervale, "browser", "TypeScript")):
+              matches = [row for row in registry["recommendations"] if (row["role"], row["language"])
+                         == (role, language) and row["verdict"] == "keep"]
+              assert matches and matches[0]["evidence_paths"], (role, language, matches)
+              assert not registry["approved_decisions"], "Generated recommendations are drafts"
+              print(f"{registry['source_commit']}: {role} -> keep {language}", flush=True)
+          assert not any(row["role"] == "blender-worker" for row in aldervale["recommendations"])
+          PYTEST
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: code-stack-portability-reports
+          path: reports/
+          retention-days: 3
 
   graphify:
     name: Rebuild Code Stack maps and verify Graphify MCP
