@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.0.3.1 — branding checkpoint
+
+- Record **Blender-Agent Refinement Toolkit** as the locked product name and **BART** as the locked agent name.
+- Apply README v0.0.4 branding and use the renamed repository in the walkthrough and project links.
+
 ## v0.0.3 — pre-alpha
 
 - Publish OBJ files with their matching material libraries. Preserve source assets and handle destination collisions and interrupted publication.
