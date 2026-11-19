@@ -9,7 +9,8 @@ This project reads third-party 3D formats and may launch Blender. **Treat extern
 - Publication without overwrite uses atomic hard-link creation: concurrent writes cannot silently clobber the same destination.
 - The output parent and temporary path are revalidated before publication. Untrusted processes must not concurrently mutate workspace paths or symlinks; use separate OS-level sandboxes for hostile multi-tenant execution.
 - Blender runs a fixed worker under background/factory startup with auto-execution disabled; tools do not accept arbitrary generated scripts.
-- Blender work has a bounded timeout (default 180 seconds, maximum 900), captured log budget (256 KiB), source cap (512 MiB), and output cap (512 MiB). Detailed STL/OBJ inspection is limited to 128 MiB.
+- Blender work has a bounded timeout (default 180 seconds, maximum 900), captured log budget (256 KiB), input cap (512 MiB), and publication cap (512 MiB). Blender can use more temporary disk space while exporting. Detailed STL/OBJ inspection is limited to 128 MiB and checks whether the source changed during inspection.
+- ASCII STL inspection validates finite normals and triangle vertices. It treats loop markers as optional and skips them while checking each facet.
 - Input parsers reject non-finite coordinates and invalid OBJ vertex references; these checks do not validate entire geometry.
 
 ## Residual risks

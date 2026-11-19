@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from blender_agent import inspect as inspection
 from blender_agent.inspect import MAX_PREVIEW_BYTES, inspect_asset
 
 
@@ -40,6 +41,30 @@ class InspectionTests(unittest.TestCase):
             "vertex 0 1 0\nendsolid\n", encoding="utf-8")
         with self.assertRaises(ValueError):
             inspect_asset("shape.stl", self.root)
+
+    def test_ascii_stl_streams_multiple_facets_and_newline_styles(self):
+        facet = "facet normal 0 0 1\r\nvertex {} 0 0\rvertex 1 0 0\nvertex 0 1 0\rendfacet\n"
+        data = ("solid " + "a" * 65535 + "\r\n" + facet.format(-2) + facet.format(3) + "endsolid").encode()
+        (self.root / "stream.stl").write_bytes(data)
+        info = inspect_asset("stream.stl", self.root)
+        self.assertEqual(info["triangles"], 2)
+        self.assertEqual(info["bounds"], {"min": [-2., 0., 0.], "max": [3., 1., 0.]})
+        self.assertEqual(info["sha256"], hashlib.sha256(data).hexdigest())
+
+    def test_inspector_rejects_source_growth_during_inspection(self):
+        source = self.root / "changing.obj"
+        source.write_bytes(b"v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n")
+        digest = inspection._sha256
+
+        def hash_then_grow(stream, size):
+            result = digest(stream, size)
+            with source.open("ab") as writer:
+                writer.write(b"# appended externally\n")
+            return result
+
+        with patch("blender_agent.inspect._sha256", side_effect=hash_then_grow):
+            with self.assertRaisesRegex(ValueError, "Source file changed"):
+                inspect_asset("changing.obj", self.root)
 
     def test_ascii_stl_extra_facet_vertex(self):
         (self.root / "shape.stl").write_text(

@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.5 — v0.0.3 development checkpoint
+
+- Stream ASCII STL counts and bounds, detect file changes during inspection, and clarify temporary export disk use (#13).
+
 ## v0.0.2.4 — v0.0.3 development checkpoint
 
 - Require setuptools 77.0.3 or later and verify an MIT-licensed wheel built with the minimum backend (#25).
