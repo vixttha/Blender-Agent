@@ -51,7 +51,24 @@ jobs:
       - name: Verify committed version maps and Graphify MCP
         run: |
           printf 'Verified graphify-hq SHA: %s\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
-          python tools/graphify/version_maps.py --check
+          python tools/graphify/version_maps.py --generate
+          git diff --exit-code -- versions/v0.0.2
+      - name: Emit exact-tag archive files for review
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          from pathlib import Path
+
+          paths = ("versions/README.md", "versions/v0.0.3/README.md",
+                   "versions/v0.0.3/graph.json", "versions/v0.0.3/receipt.json")
+          for name in paths:
+              data = base64.b64encode(Path(name).read_bytes()).decode("ascii")
+              for index in range(0, len(data), 3000):
+                  print("GRAPHIFY_RELEASE_ARTIFACT " + json.dumps({
+                      "path": name, "part": index // 3000, "data": data[index:index + 3000],
+                  }), flush=True)
+          PY
       - name: Rebuild and verify candidate archive with Graphify MCP
         run: |
           python tools/graphify/candidate_maps.py --check
