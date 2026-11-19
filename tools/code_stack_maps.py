@@ -59,9 +59,16 @@ def version_files(revision, name):
         mode, kind, oid, size = metadata.split()
         if kind != "blob" or mode not in {"100644", "100755"} or int(size) > MAX_BYTES:
             raise ValueError(f"Unsupported source entry: {path}")
-        files[path] = oid
+        files[path] = (mode, oid)
     if not 1 <= len(files) <= MAX_FILES:
         raise ValueError(f"Missing or oversized template folder: {name}")
+    return files
+
+
+def verify_archived_files(revision, name, archive="HEAD"):
+    files = version_files(revision, name)
+    if files != version_files(archive, name):
+        raise ValueError(f"{name} tracked paths, blobs, or modes differ from the pinned template version")
     return files
 
 
@@ -153,7 +160,7 @@ def build_graph(name, revision, files, output):
         "graph_sha256": hashlib.sha256(graph_path.read_bytes()).hexdigest(),
         "nodes": graph.number_of_nodes(),
         "edges": graph.number_of_edges(),
-        "source_blobs": dict(sorted(files.items())),
+        "source_blobs": {path: oid for path, (_, oid) in sorted(files.items())},
     }
     asyncio.run(verify_mcp(graph_path, receipt, probes.values()))
     (output / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
@@ -195,9 +202,7 @@ def main():
         differences = []
         for record in load_catalog():
             name, revision = record["version"], record["source_commit"]
-            files = version_files(revision, name)
-            if files != version_files("HEAD", name):
-                raise ValueError(f"{name} tracked files differ from the pinned template version")
+            files = verify_archived_files(revision, name)
             build_graph(name, revision, files, generated / name)
             for filename in ("graph.json", "receipt.json"):
                 path = f"{name}/{filename}"

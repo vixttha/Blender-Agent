@@ -104,6 +104,10 @@ jobs:
         run: >
           python -m pip install --no-cache-dir --only-binary=:all: --no-deps
           -r .graphify-hq-tooling/tools/graphify/requirements.txt
+      - name: Reject executable-bit drift in a template archive
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/.graphify-hq-tooling/tools/graphify" \
+            python tools/test_code_stack_maps.py -v
       - name: Verify all version maps through Graphify MCP
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
