@@ -7,7 +7,7 @@
 - [README HQ archive](https://github.com/vixttha/Blender-Agent/blob/df9b4c387b86aa423216311334247eac0b155420/versions/v0.0.2/README.md) matches the tagged README bytes.
 - [Graphify release receipt](https://github.com/vixttha/Blender-Agent/blob/5526238af9b510092db336d01b26a42c1ef82548/versions/v0.0.2/receipt.json) covers 10 Markdown sources. The archive has 37 nodes, 36 edges, and a verified graph checksum. [Graphify public runner](https://github.com/vixttha/Blender-Agent/actions/runs/44439503554)
 
-For [issue #16](https://github.com/vixttha/Blender-Agent/issues/16), README HQ CI runs the draft's shell blocks and OBJ sample on Ubuntu. It checks the actual release commit, fresh source installation, CLI version, triangle face and vertex counts, bounding box, SHA-256 digest, and archived v0.0.2 README bytes.
+The original [issue #16](https://github.com/vixttha/Blender-Agent/issues/16) check was Ubuntu-only. The revised [README HQ workflow](../../.github/workflows/readme-hq.yml) extracts the published Markdown commands and runs them in fresh clones on Ubuntu and Windows. It verifies the release SHA and archived README bytes, the documented CLI output and file digest, and the documented MCP request over real stdio from outside the workspace. It also verifies that an out-of-workspace input is rejected.
 
 ## Findings and draft repairs
 
@@ -18,9 +18,9 @@ For [issue #16](https://github.com/vixttha/Blender-Agent/issues/16), README HQ C
 | A support table and testing prose exist. The full Blender-through-MCP test is discoverable in current harness docs and CI but missing from the homepage. | Put release and main evidence in separate compatibility rows. |
 | The README lacks any visual example, a ready-to-adapt MCP host configuration, and troubleshooting for path and dependency errors. | Add two labeled concepts, the generic configuration, and common recovery steps. |
 | The application is pre-alpha. Host compatibility and material fidelity depend on the exercised workflow. | Keep explicit test limits and link security and roadmap. |
-| The live HQ front page still refers to the original v0.0.1 draft. Its frozen template and workflow changes belong to separate HQ maintenance. | Link this candidate from the workspace index and retain provenance here. |
+| The live HQ front page still refers to the original v0.0.1 draft. Its frozen template and workflow changes belong to separate HQ maintenance. | Update the live HQ landing page and keep the archived v0.0.1 template pinned. |
 
-The photos are generated concept illustrations. Numeric results come from the actual CLI and public-runner test evidence. Check the new draft at narrow and desktop widths and in light and dark themes before promoting it.
+The draft shows the inspected triangle JSON ahead of the concept artwork. The v0.0.3 development evidence comes from PR #30’s exact checkpoint checkout. The [published examples](DRAFT.md#quick-start) use v0.0.2. The [workspace publication paths](README.md#publication-paths) preserve the relative image links when the homepage is promoted.
 
 ## Inspiration
 

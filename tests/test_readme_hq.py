@@ -1,5 +1,6 @@
 """Negative regression checks for the README HQ validator."""
 
+import re
 import shutil
 import sys
 import tempfile
@@ -29,7 +30,7 @@ class ReadmeHQTests(unittest.TestCase):
         self.assertEqual([], validate(self.root))
 
     def test_archive_drift_rejected(self):
-        (self.root / "README.md").write_text("# Wrong\n", encoding="utf-8")
+        (self.root / "readme-hq/versions/v0.0.1/README.md").write_text("# Wrong\n", encoding="utf-8")
         self.assertTrue(any("drift" in x for x in validate(self.root)))
 
     def test_missing_draft_rejected(self):
@@ -48,6 +49,23 @@ class ReadmeHQTests(unittest.TestCase):
             "broken local link: workspace/v0.0.3/DRAFT.md -> assets/triangle-inspection.webp",
             validate(self.root),
         )
+
+    def test_promoted_readme_keeps_image_links(self):
+        workspace = self.root / "workspace/v0.0.3"
+        promoted = self.root / "homepage"
+        promoted.mkdir()
+        shutil.copyfile(workspace / "DRAFT.md", promoted / "README.md")
+        shutil.copytree(workspace / "assets", promoted / "assets")
+
+        readme = (promoted / "README.md").read_text(encoding="utf-8")
+        images = re.findall(r"!\[[^\]]+\]\(([^)]+)\)", readme)
+        self.assertCountEqual(images, [
+            "assets/triangle-inspection.webp",
+            "assets/wireframe-cube.webp",
+        ])
+        for path in images:
+            data = (promoted / path).read_bytes()
+            self.assertEqual(data[:4] + data[8:12], b"RIFFWEBP", path)
 
     def test_secret_rejected(self):
         p = self.root / "graphify/README.md"

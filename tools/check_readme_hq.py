@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -40,12 +41,15 @@ def validate(root: Path) -> list[str]:
     if errors:
         return errors
 
-    for live, archive in (
-        ("README.md", "readme-hq/versions/v0.0.1/README.md"),
-        ("readme-hq/README.md", "readme-hq/versions/v0.0.1/GUIDE.md"),
-    ):
-        if (root / live).read_bytes() != (root / archive).read_bytes():
-            errors.append(f"archived HQ baseline drift: {live}")
+    archive = "readme-hq/versions/v0.0.1/README.md"
+    data = (root / archive).read_bytes()
+    git_blob = f"blob {len(data)}\0".encode() + data
+    if hashlib.sha1(git_blob).hexdigest() != "326d609adcfcab36b00f1e04c7e2d39b6b587307":
+        errors.append(f"archived HQ baseline drift: {archive}")
+
+    guide = "readme-hq/README.md"
+    if (root / guide).read_bytes() != (root / "readme-hq/versions/v0.0.1/GUIDE.md").read_bytes():
+        errors.append(f"archived HQ baseline drift: {guide}")
 
     draft = (root / "workspace/v0.0.1/DRAFT.md").read_text(encoding="utf-8")
     if PINNED not in (root / "workspace/v0.0.1/README.md").read_text(encoding="utf-8"):

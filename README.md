@@ -2,11 +2,11 @@
 
 The permanent documentation workspace for Blender-Agent's public README, version history, review evidence, and publication workflow.
 
-**README HQ baseline:** `v0.0.1` · **Public README:** `v0.0.1` draft, not yet published · **Branch:** `readme-hq`
+**README HQ baseline:** `v0.0.1` · **Public README:** `v0.0.2` published pre-release · **Branch:** `readme-hq`
 
 | Area | Purpose |
 | --- | --- |
-| [Public README draft](https://github.com/vixttha/Blender-Agent/blob/readme-hq/workspace/v0.0.1/DRAFT.md) | Read the proposed v0.0.1 homepage, installation, and capability boundaries. |
+| [Public README v0.0.3 candidate](workspace/v0.0.3/DRAFT.md) | Preview the homepage, copyable CLI and MCP walkthroughs, and compatibility. |
 | [Draft workspaces](https://github.com/vixttha/Blender-Agent/blob/readme-hq/workspace/README.md) | Maintain each public README candidate independently. |
 | [Public README history](https://github.com/vixttha/Blender-Agent/blob/readme-hq/versions/README.md) | Find approved public README snapshots once published. |
 | [README HQ versions](https://github.com/vixttha/Blender-Agent/blob/readme-hq/readme-hq/versions/README.md) | Immutable HQ landing page, guide, and change history. |
@@ -17,14 +17,12 @@ The permanent documentation workspace for Blender-Agent's public README, version
 
 ## Current public README candidate
 
-**[Blender-Agent README v0.0.1](https://github.com/vixttha/Blender-Agent/blob/readme-hq/workspace/v0.0.1/DRAFT.md)** documents the pre-alpha foundation, basic inspection, limited Blender-powered creation/conversion/repair, CLI use, optional MCP integration, security boundaries, and honest testing scope.
-
-The proposed instructions depend on `feature/v0.0.1-foundation`. The current `main` branch does not yet contain those tools. Do not describe this draft as an installed release or publish it ahead of its source implementation.
+[Blender-Agent README v0.0.3](workspace/v0.0.3/README.md) is the active draft. Its walkthrough uses the [published v0.0.2 pre-release](https://github.com/vixttha/Blender-Agent/releases/tag/v0.0.2). See [PR #39](https://github.com/vixttha/Blender-Agent/pull/39) for review and checks.
 
 ## Two independent version histories
 
 - **README HQ v0.0.1**: the adapted documentation operating template established on this branch.
-- **Public README v0.0.1**: a separate proposed homepage. It becomes approved only after a reviewed publication decision and a verified PR to `main`.
+- **Public README history** records the released application homepage and its provenance. Each candidate remains in its own workspace until approved for archival and publication.
 
 ## Working rules
 
