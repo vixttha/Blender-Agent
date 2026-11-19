@@ -1,0 +1,66 @@
+{
+  "initial_category": "Abstract mark",
+  "art_style": "Flat technical diagram, heavy strokes, one-color silhouette",
+  "category_fit": {
+    "Abstract mark": {
+      "fits": true,
+      "reason": "A simple geometric contour fits the GitHub avatar and can point back to a real 3D operation."
+    },
+    "Lettermark": {
+      "fits": true,
+      "reason": "A single readable letter can work at 32 px and tie the icon back to the exact agent name."
+    },
+    "Mascot": {
+      "fits": false,
+      "reason": "A character would compete with the mesh story and increase the chance of an unrelated pop-culture reading."
+    }
+  },
+  "concepts": [
+    {
+      "id": "section-line",
+      "category": "Abstract mark",
+      "art_style": "Flat technical diagram with wide negative space",
+      "example": "Draw two solid offset profiles with one open vertical break, keeping the outside silhouette continuous in a 32 px circle crop.",
+      "rationale": "The opening evokes reading a cross-section, the gap makes the object easy to parse, and the two intact profiles suggest inspecting and refining a shape while preserving the input. The break must stay visible at 16 px.",
+      "scores": {
+        "brand_fit": 5,
+        "artistic_character": 4,
+        "distinctiveness": 4,
+        "versatility": 5
+      }
+    },
+    {
+      "id": "mesh-joint",
+      "category": "Lettermark",
+      "art_style": "Cut-paper lettering with a single precise joint",
+      "example": "Form a compact B from two squared counters with a small seam where the panels meet, using the seam as the only detail.",
+      "rationale": "The B points to BART, the two panels suggest adjoining mesh faces, and the visible seam expresses a deliberate refinement. The counters may fill at favicon size.",
+      "scores": {
+        "brand_fit": 5,
+        "artistic_character": 4,
+        "distinctiveness": 4,
+        "versatility": 4
+      }
+    },
+    {
+      "id": "reference-frame",
+      "category": "Abstract mark",
+      "art_style": "Monochrome geometric construction",
+      "example": "Place a stepped solid shape inside an open corner frame, with the margin supplying the second edge instead of drawing a full border.",
+      "rationale": "The frame refers to reported bounds, the visible placement helps a new user understand scale, and the open corner leaves room for iteration. It could read as a crop icon without a distinctive interior.",
+      "scores": {
+        "brand_fit": 4,
+        "artistic_character": 4,
+        "distinctiveness": 3,
+        "versatility": 5
+      }
+    }
+  ],
+  "selected_concept": "section-line",
+  "selection_reason": "Trial recommendation at 90/100. The contour and opening carry the concept at avatar size using one color. Awaiting owner review.",
+  "names": {
+    "product": "Blender-Agent Refinement Toolkit",
+    "wordmark": "BART"
+  },
+  "confirmation": null
+}

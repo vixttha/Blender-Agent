@@ -4,14 +4,14 @@ on:
   push:
     branches: [Brand-Identity-template-v0.0.1, BART-Brand-Identity]
   pull_request:
-    branches: [Brand-Identity-template-v0.0.1]
+    branches: [Brand-Identity-template-v0.0.1, BART-Brand-Identity]
 
 permissions:
   contents: read
 
 env:
-  BRAND_CHECKOUT_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-  BRAND_SOURCE_REF: ${{ github.head_ref || github.ref_name }}
+  BRAND_CHECKOUT_SHA: ${{ github.sha }}
+  BRAND_SOURCE_REF: ${{ github.ref }}
   PYTHONHASHSEED: '0'
 
 jobs:
@@ -26,10 +26,25 @@ jobs:
           ref: ${{ env.BRAND_CHECKOUT_SHA }}
           persist-credentials: false
       - name: Verify exact checkout and kit
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           test "$(git rev-parse HEAD)" = "$BRAND_CHECKOUT_SHA"
+          if [[ "$GITHUB_EVENT_NAME" == pull_request ]]; then
+            mapfile -t parents < <(git cat-file -p HEAD | sed -n '/^$/q; s/^parent //p')
+            test "${#parents[@]}" -eq 2
+            test "${parents[0]}" = "$PR_BASE_SHA"
+            test "${parents[1]}" = "$PR_HEAD_SHA"
+            printf "PR base: %s\nPR head: %s\n" "$PR_BASE_SHA" "$PR_HEAD_SHA" >> "$GITHUB_STEP_SUMMARY"
+          fi
           python3 brand-identity/verify.py
           printf 'Brand kit checkout: %s\n' "$BRAND_CHECKOUT_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Exercise the v0.0.2 adoption trial
+        run: |
+          python3 -m unittest discover -s trials/brand-identity-v0.0.2/brand-identity -p 'test_*.py' -v
+          python3 .github/scripts/brand_identity_trial.py
 
   graphify:
     name: Map brand source and verify Graphify MCP
