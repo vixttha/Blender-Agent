@@ -1,4 +1,4 @@
-name: Public OBJ source material preservation audit
+name: Public wheel and Blender platform audit
 
 on:
   push:
@@ -9,20 +9,20 @@ permissions:
 
 jobs:
   installed-wheel:
-    name: Source preservation / checkpoint ${{ matrix.checkpoint }}
+    name: ${{ matrix.os }} / Blender ${{ matrix.blender }} / MCP ${{ matrix.sdk }}
     if: github.repository == 'vixttha/Blender-Agent' && github.event.repository.private == false
     strategy:
       fail-fast: false
       matrix:
         include:
-          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12", checkpoint: "0.0.2.14 combined checkpoint", ref: "e514a6fdf39fee200e01021c555f045c06667146"}
+          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12"}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 18
     steps:
       - name: Check out exact application candidate
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ${{ matrix.ref }}
+          ref: 1703ef55cc5e4862c440bd979d172889de9ada2e
           persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -30,7 +30,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Build and test an installed wheel outside the checkout
         env:
-          AUDIT_TARGET_SHA: ${{ matrix.ref }}
+          AUDIT_TARGET_SHA: 1703ef55cc5e4862c440bd979d172889de9ada2e
           AUDIT_BLENDER: ${{ matrix.blender }}
           AUDIT_SDK: ${{ matrix.sdk }}
         shell: bash
@@ -59,6 +59,87 @@ jobs:
               run("curl", "--fail", "--location", "--retry", "3", "--silent",
                   "--show-error", "--output", str(destination), url)
 
+
+          def check_cancelled_output(scripts, blender, work):
+              workspace = work / "Cancellation workspace"
+              workspace.mkdir()
+              gate = work / "cancel-gate"
+              started = work / "cancel-started"
+              wrapper = work / "gated-blender"
+              wrapper.write_text(
+                  "#!/bin/sh\n"
+                  f"touch {shlex.quote(str(started))}\n"
+                  f"while [ ! -f {shlex.quote(str(gate))} ]; do sleep 0.05; done\n"
+                  f'exec {shlex.quote(str(blender))} "$@"\n',
+                  encoding="utf-8",
+              )
+              wrapper.chmod(0o755)
+              command = [str(scripts / "blender-agent"), "--workspace", str(workspace),
+                         "--blender", str(wrapper), "--timeout", "25", "mcp"]
+              process = subprocess.Popen(command, cwd=work, stdin=subprocess.PIPE,
+                                         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                                         encoding="utf-8")
+              messages = queue.Queue()
+
+              def read_messages():
+                  for line in process.stdout:
+                      try:
+                          messages.put(json.loads(line))
+                      except ValueError:
+                          messages.put({"invalid": line})
+              threading.Thread(target=read_messages, daemon=True).start()
+
+              def send(method, parameters=None, identifier=None):
+                  packet = {"jsonrpc": "2.0", "method": method}
+                  if parameters is not None:
+                      packet["params"] = parameters
+                  if identifier is not None:
+                      packet["id"] = identifier
+                  process.stdin.write(json.dumps(packet) + "\n")
+                  process.stdin.flush()
+
+              def receive(identifier):
+                  deadline = time.monotonic() + 30
+                  while time.monotonic() < deadline:
+                      message = messages.get(timeout=max(0.01, deadline - time.monotonic()))
+                      assert "invalid" not in message, message
+                      if message.get("id") == identifier:
+                          assert "error" not in message, message
+                          return message["result"]
+                  raise TimeoutError(f"MCP response missing: {identifier}")
+
+              try:
+                  send("initialize", {"protocolVersion": "2025-06-18", "capabilities": {},
+                                      "clientInfo": {"name": "wheel-audit", "version": "1"}}, 1)
+                  receive(1)
+                  send("notifications/initialized")
+                  send("tools/call", {"name": "create_primitive",
+                                      "arguments": {"kind": "cube", "output": "cancelled.stl"}}, 2)
+                  deadline = time.monotonic() + 10
+                  while not started.exists() and time.monotonic() < deadline:
+                      time.sleep(0.05)
+                  assert started.exists(), "The first operation did not reach the Blender gate"
+                  send("notifications/cancelled", {"requestId": 2, "reason": "Test host cancelled the job"})
+                  send("ping", identifier=3)
+                  receive(3)
+                  gate.touch()
+                  send("tools/call", {"name": "create_primitive",
+                                      "arguments": {"kind": "cube", "output": "next.stl"}}, 4)
+                  following = receive(4)
+                  assert not following.get("isError", False), following
+                  assert (workspace / "next.stl").is_file(), "The follow-up job was not published"
+                  published = (workspace / "cancelled.stl").exists()
+                  print(f"AUDIT_CANCELLED_OUTPUT_EXISTS={published}", flush=True)
+                  return not published
+              finally:
+                  gate.touch(exist_ok=True)
+                  process.stdin.close()
+                  try:
+                      process.wait(timeout=30)
+                  except subprocess.TimeoutExpired:
+                      process.kill()
+                      process.wait()
+                  process.stdout.close()
 
           source = Path.cwd()
           actual = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
@@ -90,6 +171,8 @@ jobs:
                   "print('AUDIT_INSTALLED_VERSION=' + version('blender-agent') + ' MCP=' + version('mcp'))",
                   cwd=work)
               run(python, "-m", "blender_agent", "version", cwd=work)
+              for fixture in ("test_mcp_smoke.py", "blender_linked_fixture.py"):
+                  shutil.copy2(source / "tests" / fixture, work / fixture)
 
               version = os.environ["AUDIT_BLENDER"]
               bundle = "blender-" + version
@@ -127,40 +210,27 @@ jobs:
                   print(output.splitlines()[0], flush=True)
                   assert output.splitlines()[0].split()[:2] == ["Blender", version], output
 
+                  # Run each probe even if another probe fails, so the log identifies the smallest failure.
                   failed = []
-                  for form in ("ordinary", "continued"):
-                      workspace = work / ("OBJ source preservation " + form)
-                      workspace.mkdir()
-                      material = workspace / "color.mtl"
-                      material.write_text("newmtl AuditGreen\nKd 0.0 1.0 0.0\n", encoding="utf-8")
-                      original = material.read_bytes()
-                      directive = "mtllib color.mtl\n"
-                      if form == "continued":
-                          directive = "mtllib " + chr(92) + "\ncolor.mtl\n"
-                      geometry = "o triangle\nv 0 0 0\nv 1 0 0\nv 0 1 0\nusemtl AuditGreen\nf 1 2 3\n"
-                      (workspace / "source.obj").write_text(directive + geometry, encoding="utf-8")
-                      cli = (python, "-m", "blender_agent", "--workspace", str(workspace),
-                             "--blender", str(blender))
-                      witness = subprocess.run([*cli, "convert", "source.obj", "witness.glb"],
-                                               capture_output=True, text=True, cwd=work, timeout=60)
-                      assert witness.returncode == 0, witness.stderr
-                      data = (workspace / "witness.glb").read_bytes()
-                      assert data[:4] == b"glTF"
-                      gltf = json.loads(data[20:20 + int.from_bytes(data[12:16], "little")])
-                      assigned = gltf["meshes"][0]["primitives"][0].get("material")
-                      props = gltf["materials"][assigned] if assigned is not None else {}
-                      color = props.get("pbrMetallicRoughness", {}).get("baseColorFactor")
-                      loaded = props.get("name") == "AuditGreen" and color == [0.0, 1.0, 0.0, 1.0]
-                      print(f"AUDIT_OBJ_SOURCE_MATERIAL_LOADED {form}={loaded}", flush=True)
-                      result = subprocess.run([*cli, "convert", "source.obj", "color.obj", "--overwrite"],
-                                              capture_output=True, text=True, cwd=work, timeout=60)
-                      unchanged = material.is_file() and material.read_bytes() == original
-                      exists = (workspace / "color.obj").exists()
-                      print(f"AUDIT_OBJ_PROTECTION {form} rc={result.returncode} "
-                            f"material_unchanged={unchanged} output_exists={exists} stderr={result.stderr.strip()}",
-                            flush=True)
-                      if result.returncode == 0 or not unchanged or exists:
-                          failed.append(form)
+                  def probe(label, *args):
+                      result = subprocess.run(args, cwd=work, timeout=240)
+                      print(f"AUDIT_PROBE {label} exit={result.returncode}", flush=True)
+                      if result.returncode:
+                          failed.append(label)
+
+                  probe("mcp-end-to-end", python, str(work / "test_mcp_smoke.py"), "--blender", str(blender))
+                  workspace = work / "CLI workspace"
+                  workspace.mkdir()
+                  cli = (python, "-m", "blender_agent", "--workspace", str(workspace), "--blender", str(blender))
+                  for shape in ("uv_sphere", "cylinder"):
+                      output = shape + ".stl"
+                      probe("cli-create-" + shape, *cli, "create", shape, output)
+                      probe("cli-inspect-" + shape, *cli, "inspect", output)
+                  probe("cli-fbx-export", *cli, "convert", "cylinder.stl", "cylinder.fbx")
+                  probe("cli-fbx-reimport", *cli, "convert", "cylinder.fbx", "cylinder-roundtrip.stl")
+                  if platform.system() == "Linux" and version == "4.5.0":
+                      if not check_cancelled_output(scripts, blender, work):
+                          failed.append("mcp-cancellation-still-published")
                   assert not failed, failed
               finally:
                   if mount is not None:
