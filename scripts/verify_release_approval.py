@@ -13,6 +13,21 @@ from urllib.request import Request, urlopen
 FINAL_RELEASE_TAG = re.compile(r"v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)")
 
 
+def read_release_notes(tag, directory=Path("docs/releases")):
+    if not FINAL_RELEASE_TAG.fullmatch(tag):
+        raise ValueError("Release notes require a final vMAJOR.MINOR.PATCH tag.")
+    path = directory / f"{tag}.md"
+    try:
+        notes = path.read_bytes().decode("utf-8")
+    except FileNotFoundError as exc:
+        raise ValueError(f"Reviewed release notes are missing: {path}") from exc
+    except UnicodeDecodeError as exc:
+        raise ValueError(f"Reviewed release notes must be UTF-8: {path}") from exc
+    if not notes.strip():
+        raise ValueError(f"Reviewed release notes are empty: {path}")
+    return notes
+
+
 def validate_dispatch(event, env, version):
     owner = event["repository"]["owner"]
     default_branch = event["repository"]["default_branch"]
@@ -57,6 +72,7 @@ def main():
     event = json.loads(Path(env["GITHUB_EVENT_PATH"]).read_text(encoding="utf-8"))
     version = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
     tag, sha, run_id, branch = validate_dispatch(event, env, version)
+    read_release_notes(tag)
     prefix = f'{env["GITHUB_API_URL"]}/repos/{env["GITHUB_REPOSITORY"]}'
 
     def get(path):
