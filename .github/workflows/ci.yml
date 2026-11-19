@@ -101,8 +101,10 @@ jobs:
       - name: Download and verify official Blender 4.5.0
         shell: bash
         run: |
-          curl --fail --location --retry 3 --retry-delay 3 --silent --show-error \
-            https://download.blender.org/release/Blender4.5/blender-4.5.0-linux-x64.tar.xz -o blender.tar.xz
+          release=release/Blender4.5/blender-4.5.0-linux-x64.tar.xz
+          if ! curl --fail --location --retry 2 --silent --show-error "https://download.blender.org/$release" -o blender.tar.xz; then
+            curl --fail --location --retry 2 --silent --show-error "https://mirror.clarkson.edu/blender/$release" -o blender.tar.xz
+          fi
           echo "1188b95cc12321c770b631939f7c25a096910b6f884a990bf9c0f62d52b38aec  blender.tar.xz" | sha256sum --check -
           mkdir -p blender-dist
           tar -xf blender.tar.xz -C blender-dist --strip-components=1
