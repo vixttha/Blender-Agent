@@ -28,7 +28,6 @@
       "source_files": [
         "CHANGELOG.md",
         "README.md",
-        "SECURITY.md",
         "docs/ARCHITECTURE.md",
         "docs/HARNESS.md",
         "docs/RELEASE.md",
