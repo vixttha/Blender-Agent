@@ -1,6 +1,6 @@
 # Graphify HQ Test Vault
 
-This branch is the Graphify HQ project's adoption of the Lydite Test Vault. The [case catalog](cases.md) starts at **0 cases**. Use the [case and run receipt form](case-and-receipt.md) when test work begins.
+This branch is the Graphify HQ project's adoption of the Lydite Test Vault. The [case catalog](cases.md) starts at **0 cases**. See the [first test plan](PLAN.md) for the proposed Python, Bash, and JavaScript cases. Use the [case and run receipt form](case-and-receipt.md) when test work begins.
 
 ## Adoption audit
 
