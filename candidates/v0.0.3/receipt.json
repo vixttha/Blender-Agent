@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "version": "v0.0.3",
+  "release_tag": null,
+  "source_repository": "vixttha/Blender-Agent",
+  "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "27db9e48aeacc636253a7168a36737b9fe195cd3028dc97492b436cd19431b92",
+  "nodes": 73,
+  "edges": 76,
+  "documents": {
+    "CHANGELOG.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "CHANGELOG.md",
+      "blob_sha1": "48595114d4c6260ff872630f189c1a60ca72ef43"
+    },
+    "README.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "README.md",
+      "blob_sha1": "1f1c29898b5a0bb0e987cccc59d8e7568e3a8668"
+    },
+    "docs/ARCHITECTURE.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "docs/ARCHITECTURE.md",
+      "blob_sha1": "0d3256cf7faabab58ed126a5398d3a6443e669cf"
+    },
+    "docs/HARNESS.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "docs/HARNESS.md",
+      "blob_sha1": "c4b0967d97f52b3785108545bbd1d4998e65a3d1"
+    },
+    "docs/RELEASE.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "docs/RELEASE.md",
+      "blob_sha1": "edcf60a5abb0e29a7cdcf53b0be48da6f94cdc73"
+    },
+    "docs/ROADMAP.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "docs/ROADMAP.md",
+      "blob_sha1": "3a7c30e0c50d2bf4e6f95bc858e0121a5d70e628"
+    },
+    "docs/SKILL_POLICY.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "docs/SKILL_POLICY.md",
+      "blob_sha1": "e9e53484fb22f07ac682d07209f9998cac8d4eb4"
+    },
+    "skills/asset-conversion/SKILL.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "skills/asset-conversion/SKILL.md",
+      "blob_sha1": "850ca31eb6aae5ff683de50c07bfcc7540eb965d"
+    },
+    "skills/asset-inspection/SKILL.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "skills/asset-inspection/SKILL.md",
+      "blob_sha1": "eca594381acc3a090e233c07e0b2aceb68d09edb"
+    },
+    "skills/mesh-repair/SKILL.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "skills/mesh-repair/SKILL.md",
+      "blob_sha1": "67dcd56c28222a6afa03e59715002c28190cb190"
+    },
+    "skills/procedural-primitives/SKILL.md": {
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_path": "skills/procedural-primitives/SKILL.md",
+      "blob_sha1": "712d4c842ba5e699c60904d46874babf709dce3f"
+    }
+  },
+  "synthetic_fixture": false,
+  "archive_status": "candidate",
+  "source_pr": 57,
+  "source_branch": "main"
+}
