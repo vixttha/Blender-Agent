@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.6 — v0.0.3 development checkpoint
+
+- Accept continued OBJ polygons while rejecting incomplete continuation records and retaining input limits (#24).
+
 ## v0.0.2.5 — v0.0.3 development checkpoint
 
 - Stream ASCII STL counts and bounds, detect file changes during inspection, and clarify temporary export disk use (#13).

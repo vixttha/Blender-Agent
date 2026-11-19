@@ -129,6 +129,23 @@ class InspectionTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             inspect_asset("bad.obj", self.root)
 
+    def test_obj_continued_face(self):
+        vertices = "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\n"
+        separator = "\\" + "\n"
+        face = "f 1 -3 " + separator + "3 " + separator + "4\n"
+        (self.root / "quad.obj").write_text(vertices + face, encoding="utf-8")
+        info = inspect_asset("quad.obj", self.root)
+        self.assertEqual(info["vertices"], 4)
+        self.assertEqual(info["faces"], 1)
+
+    def test_obj_unterminated_continuation(self):
+        mesh = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3 " + "\\"
+        for ending in ("", "\n"):
+            with self.subTest(ending=ending):
+                (self.root / "bad.obj").write_text(mesh + ending, encoding="utf-8")
+                with self.assertRaisesRegex(ValueError, "Unterminated OBJ continuation"):
+                    inspect_asset("bad.obj", self.root)
+
     def test_obj_size_cap(self):
         path = self.root / "large.obj"
         with path.open("wb") as stream:
