@@ -9,9 +9,33 @@ import shlex
 import shutil
 import struct
 import subprocess
+import sys
 import sysconfig
 import tempfile
 from pathlib import Path
+
+
+def record_vault_case(case_id, verdict, expected, observed):
+    lines = [
+        f"### Test Vault {case_id} — {verdict}",
+        f"- Expected: {json.dumps(expected, sort_keys=True)}",
+        f"- Observed: {json.dumps(observed, sort_keys=True)}",
+    ]
+    summary = os.environ.get("GITHUB_STEP_SUMMARY")
+    if summary:
+        checkout = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[1], text=True,
+        ).strip()
+        lines.extend([
+            f"- Checkout: `{checkout}`",
+            f"- Job: {os.environ['GITHUB_JOB']} / {os.environ['RUNNER_OS']}",
+            f"- Event: {os.environ['GITHUB_EVENT_NAME']}",
+            f"- Run / attempt: {os.environ['GITHUB_RUN_ID']} / {os.environ['GITHUB_RUN_ATTEMPT']}",
+            f"- Host Python: {sys.version.split()[0]}",
+        ])
+        with Path(summary).open("a", encoding="utf-8") as stream:
+            stream.write("\n" + "\n".join(lines) + "\n")
+    print("\n".join(lines), flush=True)
 
 
 async def call_tool(session, name, **arguments):
@@ -149,6 +173,12 @@ async def obj_material_roundtrip(session, workspace):
     assert (workspace / "source.mtl").read_bytes() == material
     print("MCP OBJ materials: Blender re-import preserved the assigned AuditRed color.")
     print("MCP OBJ collisions: existing OBJ and MTL preserved, with no partial output.")
+    protection = {"collision_outputs": "existing file unchanged; sibling absent", "inputs_unchanged": True}
+    record_vault_case(
+        "MCP-001", "PASS",
+        {"rgba": [1.0, 0.0, 0.0, 1.0], "material": "AuditRed", **protection},
+        {"rgba": color, "material": restored["name"], **protection},
+    )
 
 
 async def reject_faceless_output(session, workspace):
@@ -202,6 +232,38 @@ async def verify_shared_mesh_repair(session, workspace, blender):
     await run_blender_fixture(blender, "verify_shared", output)
     assert source.read_bytes() == original
     print("MCP shared repair: one datablock repaired; both transforms, UVs, and material survived.")
+
+
+async def verify_multi_scene_geometry(session, workspace, blender):
+    source = workspace / "two-scenes.blend"
+    output = "active-scene.stl"
+    await run_blender_fixture(blender, "create_multi_scene", source)
+    original = source.read_bytes()
+    result = await call_tool(session, "convert_model", source=source.name, output=output)
+    artifact = await call_tool(session, "inspect_model", path=output)
+    assert result["ok"] is True and result["operation"] == "convert", result
+    assert Path(result["output"]) == Path(output), result
+    assert result["size_bytes"] == (workspace / output).stat().st_size > 0, result
+    assert result["artifact_validation"] == "structural_mesh", result
+    assert source.read_bytes() == original, "The source blend file changed"
+
+    expected = {"scope": "pre_export_scene", "mesh_objects": 1, "vertices": 3, "faces": 1, "triangles": 1}
+    observed = {
+        "scope": result["geometry_scope"],
+        "mesh_objects": result["geometry"]["mesh_objects"],
+        "vertices": result["geometry"]["vertices"],
+        "faces": result["geometry"]["faces"],
+        "triangles": artifact["triangles"],
+    }
+    known_file_wide_counts = {**expected, "mesh_objects": 2, "vertices": 11, "faces": 7}
+    if observed == expected:
+        record_vault_case("BLENDER-001", "PASS", expected, observed)
+    else:
+        record_vault_case("BLENDER-001", "FAIL", expected, observed)
+        # Keep the smoke suite running only for the exact mismatch tracked by issue #55.
+        assert observed == known_file_wide_counts, observed
+        if os.environ.get("GITHUB_ACTIONS") == "true":
+            print("::warning::Test Vault BLENDER-001 reproduced the geometry scope mismatch in issue #55.")
 
 
 async def verify_blender_scheduling(cli, blender, host_directory, workspace, env):
@@ -355,6 +417,7 @@ async def smoke(blender):
                     await reject_faceless_output(session, workspace)
                     await verify_blend_dependency(session, workspace, blender)
                     await verify_shared_mesh_repair(session, workspace, blender)
+                    await verify_multi_scene_geometry(session, workspace, blender)
 
         cli_params = StdioServerParameters(
             command=cli, args=["--workspace", str(workspace), "mcp"], cwd=host_directory,

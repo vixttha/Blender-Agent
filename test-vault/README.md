@@ -20,7 +20,7 @@ Run this from the repository root with Python 3.12:
 python3 test-vault/validate_catalog.py
 ```
 
-The command runs with Python's standard library. It should find one starter case. To exercise the failing path locally, change its priority from `P0` to `P9`, rerun the command, then restore the valid priority. Open a pull request in a repository with Actions enabled to see the same check and the exact checkout in the job summary.
+The command runs with Python's standard library. It should find the cases listed in the [Blender-Agent catalog](cases.md). To exercise the failing path locally, change its priority from `P0` to `P9`, rerun the command, then restore the valid priority. Open a pull request in a repository with Actions enabled to see the same check and the exact checkout in the job summary.
 
 ## Build tests for the target project
 
