@@ -1,16 +1,12 @@
 # Code Stack Template
 
-A reusable programming-language hub for software projects. **Start with [v0.0.2](v0.0.2/README.md).** The [v0.0.1 archive](v0.0.1/README.md) remains available.
+A reusable programming-language hub for software projects. Each version folder contains the actual portable template files. The maps live alongside the kits in [Graphify HQ](graphify/README.md).
 
-| Read or use | Purpose |
-| --- | --- |
-| [Stack](v0.0.2/STACK.md) | Sessional identity for the project's programming language steward |
-| [Memory](v0.0.2/STACK_MEMORY.md) | Repository-owned handoff and durable decision record |
-| [Audit guide](v0.0.2/AUDIT.md) | Review a project's actual stack and run the portable audit |
-| [Proposal](v0.0.2/PROPOSAL.md) | Compare a language change with the current implementation |
-| [Registry example](v0.0.2/registry.example.json) | Machine-readable language, status and evidence records |
-| [Validation workflow](.github/workflows/code-stack-template.yml) | Public-runner tests against synthetic fixtures and an isolated copied installation |
+| Version | Template files | Graphify map | Source receipt |
+| --- | --- | --- | --- |
+| v0.0.1 | [Original kit](v0.0.1/) | [Graph](graphify/v0.0.1/graph.json) | [Receipt](graphify/v0.0.1/receipt.json) |
+| v0.0.2 | [Updated kit](v0.0.2/) | [Graph](graphify/v0.0.2/graph.json) | [Receipt](graphify/v0.0.2/receipt.json) |
 
-The [Blender-Agent Code Stack](https://github.com/vixttha/Blender-Agent/tree/code-stack) is a project-specific installation of this template. Copy a version directory's contents into your own documentation branch or folder. Keep each template version addressable and publish subsequent revisions in new folders.
+Read [VERSION_HISTORY.md](VERSION_HISTORY.md) for what changed and the migration path. Each kit includes a project role, a memory file, audit tooling and a proposal format. Copy the version folder you want to install. The [Blender-Agent Code Stack](https://github.com/vixttha/Blender-Agent/tree/code-stack) is a project-specific installation.
 
-The portable template is available under the [MIT license](v0.0.2/LICENSE).
+The [public-runner workflow](.github/workflows/code-stack-template.yml) checks the template and verifies the archived maps through Graphify MCP.
