@@ -1,6 +1,9 @@
-flowchart LR
-  M["Blender-Agent main (engineering baseline)"]
-  B["chatgpt-project-instructions (permanent archive branch)"]
-  V1["v0.0.1 (candidate instructions)"]
-  M -->|branched-from| B
+flowchart TD
+  M["Blender-Agent main"]
+  B["Instructions archive"]
+  V1["v0.0.1 candidate"]
+  V2["v0.0.2 candidate"]
+  M -->|branched from| B
   B -->|contains| V1
+  B -->|contains| V2
+  V2 -->|proposes successor to| V1

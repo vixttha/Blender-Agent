@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     env:
+      GRAPHIFY_HQ_SHA: eeaa26d3cdc689beaec55baec78f1dc6bb732b06
       REPO_VISIBILITY: ${{ github.event.repository.visibility }}
     steps:
       - name: Enforce public repository and free GitHub-hosted runner
@@ -36,37 +37,29 @@ jobs:
           set -euo pipefail
           git init --quiet .
           git remote add origin "https://github.com/${REPO_FULL_NAME}.git"
-          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git fetch --no-tags origin "$GITHUB_SHA"
           git checkout --quiet --detach "$GITHUB_SHA"
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           echo "CHECKED_OUT_SHA=$GITHUB_SHA"
-      - name: Validate instructions and Graphify handoff
-        shell: bash
+      - name: Verify archive and receipt attribution
         env:
           RUNNER_KIND: ${{ runner.environment }}
+        run: |
+          python3 -m unittest discover -s scripts -v
+          python3 scripts/validate_archive.py
+      - name: Set up Graphify HQ Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+      - name: Prepare pinned Graphify HQ tooling
+        shell: bash
         run: |
           set -euo pipefail
-          python3 scripts/validate_archive.py --root . --sha "$GITHUB_SHA" --output-dir "$RUNNER_TEMP/agent-instructions"
-      - name: Emit SHA-bound verification receipt
-        if: always()
-        shell: bash
-        env:
-          RUNNER_KIND: ${{ runner.environment }}
-        run: |
-          {
-            echo "## Blender-Agent instructions archive"
-            echo ""
-            echo "- Repository: https://github.com/vixttha/Blender-Agent"
-            echo "- Exact candidate SHA: \`$GITHUB_SHA\`"
-            echo "- Runner: \`$RUNNER_KIND\`"
-            echo "- Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
-            echo ""
-            if test -f "$RUNNER_TEMP/agent-instructions/receipt.json"; then
-              echo "### Receipt"
-              echo "\`\`\`json"
-              cat "$RUNNER_TEMP/agent-instructions/receipt.json"
-              echo "\`\`\`"
-            else
-              echo "**Validation receipt unavailable: examine failed step logs.**"
-            fi
-          } >> "$GITHUB_STEP_SUMMARY"
+          git fetch --no-tags --depth=1 origin "$GRAPHIFY_HQ_SHA"
+          graphify_tools="$RUNNER_TEMP/graphify-hq"
+          mkdir -p "$graphify_tools"
+          git archive "$GRAPHIFY_HQ_SHA" tools/graphify/version_maps.py tools/graphify/requirements.txt | tar -x -C "$graphify_tools"
+          printf 'GRAPHIFY_HQ_TOOLS=%s/tools/graphify\n' "$graphify_tools" >> "$GITHUB_ENV"
+          python -m pip install --disable-pip-version-check --no-cache-dir --only-binary=:all: --no-deps -r "$graphify_tools/tools/graphify/requirements.txt"
+      - name: Generate instructions graph and verify MCP read-back
+        run: python scripts/build_instructions_graph.py

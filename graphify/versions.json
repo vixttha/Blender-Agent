@@ -7,7 +7,8 @@
     "repository": "vixttha/Blender-Agent",
     "archive_branch": "chatgpt-project-instructions",
     "generator": "manual archive handoff (not Graphify MCP)",
-    "mcp_verified": false
+    "mcp_verified": false,
+    "active_version": "v0.0.2"
   },
   "nodes": [
     {
@@ -25,6 +26,14 @@
       "label": "v0.0.1 — candidate",
       "kind": "instructions-version",
       "directory": "v0.0.1",
+      "status": "candidate",
+      "frozen_at": "33513f6e0e1f8bfe8acb7972066ef194219eb98c"
+    },
+    {
+      "id": "version:v0.0.2",
+      "label": "v0.0.2 — candidate",
+      "kind": "instructions-version",
+      "directory": "v0.0.2",
       "status": "candidate"
     }
   ],
@@ -38,6 +47,16 @@
       "source": "branch:chatgpt-project-instructions",
       "target": "version:v0.0.1",
       "relation": "contains"
+    },
+    {
+      "source": "branch:chatgpt-project-instructions",
+      "target": "version:v0.0.2",
+      "relation": "contains"
+    },
+    {
+      "source": "version:v0.0.2",
+      "target": "version:v0.0.1",
+      "relation": "proposes-successor"
     }
   ]
 }

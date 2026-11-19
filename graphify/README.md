@@ -1,16 +1,7 @@
-# Graphify — Instructions archive map
+# Graphify for Blender-Agent project instructions
 
-This is **Archivewright's dedicated instructions-version graph** for Blender-Agent. Its purpose is to distinguish the persistent instructions branch, its version folders, and release lineage from the application's own source-code/version graph.
+[Instructions lineage manifest](versions.json) · [Mermaid lineage](versions.mmd) · [Archive workflow](../.github/workflows/instructions-archive.yml) · [Software Graphify HQ](https://github.com/vixttha/Blender-Agent/tree/graphify-hq)
 
-- Canonical editable map: [versions.json](versions.json).
-- Human-readable topology: [versions.mmd](versions.mmd).
-- Runner validation: [instructions-archive.yml](../.github/workflows/instructions-archive.yml).
-- Repo: https://github.com/vixttha/Blender-Agent
+The lineage manifest is a manually maintained catalog of ChatGPT instructions versions. Public GitHub-hosted Ubuntu builds a searchable graph of the active instructions, setup guide and acceptance checks using the pinned Graphify HQ generator and dependencies. The runner verifies graph statistics and document lookups using the read-only Graphify MCP process and records the tested commit, event, source documents, tooling revision, graph checksum and run URL. Software releases and product PR candidates use Graphify HQ’s catalog.
 
-The graph is a Git-tracked handoff manifest, **not an output from Graphify MCP**. Use `$graphify` when accessible to index actual code and version history; preserve the Graphify tool version, extraction scope, exact source SHA, artifact checksum, and real workflow/MCP receipt separately. Never mark `mcp_verified=true` unless a Graphify invocation actually succeeds.
-
-The standard public-runner job validates the manifest against real version folders, derives a checksum, and prints the graph summary and SHA-bound receipt into Actions logs and the job summary without credentials or a paid Graphify account. The runner's graph validation is **not** an MCP invocation.
-
-## Update contract
-
-Each new `vX.Y.Z/` folder gets a unique version node and a `contains` link from the permanent branch. Successive versions get a `supersedes` link only when a new version is explicitly accepted; candidates may have `proposes-successor` links instead. Never mutate accepted snapshots or invent run URLs. `main` is the engineering baseline, not an automatic target for instructions-archive merges.
+For a new instructions version, update the catalog and lineage, point `active_version` to the candidate, and keep its documents in a new version folder. Use a `proposes-successor` link until maintainer acceptance. To preserve a version, set `frozen_at` to the full commit that contains its exact directory and leave that folder intact. Keep ChatGPT connector access and installed-settings evidence explicit in their respective receipts.

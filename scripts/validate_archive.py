@@ -1,118 +1,174 @@
-#!/usr/bin/env python3
-"""Validate the public instructions archive and print exact-commit CI receipts."""
-from __future__ import annotations
-import argparse
+"""Validate versioned instructions and record the actual GitHub Actions checkout."""
+
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
 import subprocess
-import sys
+from pathlib import Path
+from urllib.parse import unquote, urlsplit
 
 REPO = "vixttha/Blender-Agent"
-BRANCH = "chatgpt-project-instructions"
-REQUIRED = (
-    "README.md",
-    "v0.0.1/README.md",
-    "v0.0.1/CHATGPT_PROJECT_INSTRUCTIONS.md",
-    "v0.0.1/ACCEPTANCE.md",
-    "v0.0.1/VERIFICATION.md",
-    "graphify/README.md",
-    "graphify/versions.json",
-    "graphify/versions.mmd",
-    ".github/workflows/instructions-archive.yml",
+ARCHIVE = "chatgpt-project-instructions"
+HISTORY = "33513f6e0e1f8bfe8acb7972066ef194219eb98c"
+VERSION = re.compile(r"v\d+\.\d+\.\d+")
+SHA = re.compile(r"[0-9a-f]{40}")
+DOCUMENTS = ("README.md", "CHATGPT_PROJECT_INSTRUCTIONS.md", "ACCEPTANCE.md", "VERIFICATION.md")
+STAGES = (
+    ("head.*select one feature", ("acceptance criteria", "scope", "one active worker")),
+    ("worker.*implement", ("reuse", "architecture", "tests")),
+    ("validate.*public github runners", ("github-hosted", "tested sha", "head", "base")),
+    ("internal auditor.*verify findings", ("demonstrated gaps", "repair")),
+    ("head.*merge approval and archive", ("authorization", "integrate once", "merged sha")),
 )
-NEEDED = (
-    "Head — select one feature",
-    "Worker — implement",
-    "Validate — public GitHub runners",
-    "Internal Auditor — verify findings",
-    "Head — merge approval and archive",
-    "exact tested commit SHA",
-    "GitHub-hosted runners",
-    "demonstrated gaps",
-    "main",
-    "graphify/versions.json",
+POLICIES = (
+    "https://github.com/" + REPO,
+    "https://github.com/" + REPO + "/tree/graphify-hq",
+    "archivewright", "solo", "public", "creator-identifying", "credentials",
+    "$0", "local ci", "self-hosted", "$graphify", "graph checksum",
+    "gpt-6.1-sol", "medium", "meta-prompts", "feature freezes",
+    "active pr", "blender smoke", "pending", "summary",
 )
-def check(condition: bool, explanation: str) -> None:
+
+
+def require(condition, message):
     if not condition:
-        raise AssertionError(explanation)
+        raise ValueError(message)
 
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
 
-def main() -> None:
-    p = argparse.ArgumentParser()
-    p.add_argument("--root", type=Path, default=Path("."))
-    p.add_argument("--sha", required=True, help="Actual expected GitHub Actions checkout SHA")
-    p.add_argument("--output-dir", type=Path, required=True)
-    args = p.parse_args()
-    root = args.root.resolve()
-    check(bool(re.fullmatch(r"[0-9a-f]{40}", args.sha)), "Expected an exact 40-char commit SHA")
-    actual = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
-    check(actual == args.sha, f"Checkout mismatch: actual {actual}, expected {args.sha}")
-    for rel in REQUIRED:
-        check((root / rel).is_file(), f"Missing required file: {rel}")
-    doc = (root / "v0.0.1/CHATGPT_PROJECT_INSTRUCTIONS.md").read_text(encoding="utf-8")
-    for token in NEEDED:
-        check(token.casefold() in doc.casefold(), f"Missing project instruction: {token}")
-    check(doc.find("**Head — select one feature.") < doc.find("**Worker — implement.") < doc.find("**Validate — public GitHub runners.") < doc.find("**Internal Auditor — verify findings.") < doc.find("**Head — merge approval and archive."), "Execution stages out of order")
-    check("https://github.com/" + REPO in doc, "Missing canonical GitHub URL")
-    check("no self-hosted" in doc.casefold(), "No self-hosted requirement missing")
-    check("explicit maintainer authorization" in doc, "Maintainer approval requirement missing")
-    check("must **not stunt progress**" in doc, "Project finalization guard missing")
-    index = json.loads((root / "graphify/versions.json").read_text(encoding="utf-8"))
-    info = index["graph"]
-    check(info["repository"] == REPO and info["archive_branch"] == BRANCH, "Graph identity mismatch")
-    check(info["mcp_verified"] is False and "not Graphify MCP" in info["generator"], "No unverified MCP claim permitted")
-    nodes = {item["id"]: item for item in index["nodes"]}
-    check(len(nodes) == len(index["nodes"]), "Duplicate graph node IDs")
-    edges = index["links"]
-    check(all(edge["source"] in nodes and edge["target"] in nodes for edge in edges), "Dangling graph edge")
-    versions = sorted((p.name for p in root.iterdir() if p.is_dir() and re.fullmatch(r"v\d+\.\d+\.\d+", p.name)))
-    check(versions and versions == sorted(node["directory"] for node in nodes.values() if node.get("kind") == "instructions-version"), "Graph version folders disagree with archive")
-    for version in versions:
-        for leaf in ("README.md", "ACCEPTANCE.md", "CHATGPT_PROJECT_INSTRUCTIONS.md"):
-            check((root / version / leaf).is_file(), f"Missing {version}/{leaf}")
-        check(any(e["source"] == "branch:" + BRANCH and e["target"] == "version:" + version and e["relation"] == "contains" for e in edges), f"No branch contains edge for {version}")
-    workflow = (root / ".github/workflows/instructions-archive.yml").read_text(encoding="utf-8")
-    check("runs-on: ubuntu-latest" in workflow, "Require standard free GitHub-hosted runner")
-    check("contents: read" in workflow, "Require read-only token")
-    check("REPO_VISIBILITY" in workflow and "RUNNER_KIND" in workflow, "Require visibility/runner checks")
-    check("self-hosted" not in re.sub(r"#.*", "", workflow), "Self-hosted runner reference in workflow")
-    check("uses:" not in workflow, "External Actions dependency not allowed in baseline workflow")
-    check("git rev-parse HEAD" in workflow and "--sha \"$GITHUB_SHA\"" in workflow, "Workflow does not bind verification to exact SHA")
-    mermaid = (root / "graphify/versions.mmd").read_text(encoding="utf-8")
-    check(all(version in mermaid for version in versions), "Human graph missing version")
-    graph_hash = sha256(root / "graphify/versions.json")
-    receipts = {
-        "schema_version": 1,
-        "repository": REPO,
-        "archive_branch": BRANCH,
-        "source_commit": actual,
-        "workflow": os.getenv("GITHUB_WORKFLOW", "unverified-local-workflow"),
-        "event": os.getenv("GITHUB_EVENT_NAME", "unverified-event"),
-        "workflow_run": (f"https://github.com/{REPO}/actions/runs/{os.getenv('GITHUB_RUN_ID')}" if os.getenv("GITHUB_RUN_ID") else None),
-        "runner": os.getenv("RUNNER_KIND", "unverified"),
-        "validation": "PASS",
-        "version_folders": versions,
-        "graph_sha256": graph_hash,
-        "graph_nodes": len(nodes),
-        "graph_links": len(edges),
-        "graphify_mcp_verified": False,
-        "chatgpt_project_installation_verified": False,
-    }
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir / "receipt.json").write_text(json.dumps(receipts, indent=2) + "\n", encoding="utf-8")
+def git(root, *args):
+    return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
+
+
+def validate_instructions(doc):
+    normalized = doc.casefold()
+    for token in POLICIES:
+        require(token in normalized, f"Missing instruction policy: {token}")
+    stages = list(re.finditer(r"(?m)^\s*\d+\.\s+\*\*([^*\n]+)\*\*", normalized))
+    require(len(stages) == len(STAGES), "Expected five delivery stages")
+    for index, (heading, criteria) in enumerate(STAGES):
+        stage = stages[index]
+        end = stages[index + 1].start() if index + 1 < len(stages) else len(normalized)
+        body = normalized[stage.end():end].split("\n## ", 1)[0]
+        require(re.fullmatch(heading + r"\.?", stage[1]), f"Delivery stage out of order: {stage[1]}")
+        for phrase in criteria:
+            require(phrase in body, f"Missing {phrase} in {stage[1]}")
+
+
+def provenance(tested, event_name, event, parents):
+    require(SHA.fullmatch(tested), "Invalid tested SHA")
+    result = {"tested_sha": tested, "checkout_kind": "branch_commit",
+              "pr_head_sha": None, "pr_base_sha": None}
+    if event_name == "pull_request":
+        pr = event["pull_request"]
+        head, base = pr["head"]["sha"], pr["base"]["sha"]
+        require(SHA.fullmatch(head) and SHA.fullmatch(base), "Invalid PR head or base")
+        require(parents == [base, head], "Tested merge commit does not match the PR base and head")
+        result.update(checkout_kind="pr_merge_commit", pr_head_sha=head, pr_base_sha=base)
+    else:
+        require(event_name == "push" and event["after"] == tested, "Unexpected push revision or event")
+    return result
+
+
+def validate_catalog(root):
+    manifest = json.loads((root / "graphify/versions.json").read_text())
+    info, nodes, links = manifest["graph"], manifest["nodes"], manifest["links"]
+    require(info["repository"] == REPO and info["archive_branch"] == ARCHIVE, "Wrong archive identity")
+    require(info["mcp_verified"] is False, "Lineage manifest must describe its manual provenance")
+    ids = {node["id"] for node in nodes}
+    require(len(ids) == len(nodes), "Duplicate lineage IDs")
+    require(all(edge["source"] in ids and edge["target"] in ids for edge in links), "Dangling lineage link")
+    versions = {node["directory"]: node for node in nodes if node["kind"] == "instructions-version"}
+    directories = {p.name for p in root.iterdir() if p.is_dir() and VERSION.fullmatch(p.name)}
+    require(len(versions) == sum(n["kind"] == "instructions-version" for n in nodes), "Duplicate version directories")
+    require(set(versions) == directories and info["active_version"] in versions, "Version catalog mismatch")
+    readme = (root / "README.md").read_text()
+    mermaid = (root / "graphify/versions.mmd").read_text()
+    require(versions["v0.0.1"].get("frozen_at") == HISTORY, "Historical pin changed")
+    for version, node in versions.items():
+        require(node["id"] == f"version:{version}", f"Wrong node ID for {version}")
+        status = node["status"]
+        require(status in {"candidate", "accepted"}, f"Invalid status for {version}")
+        require(f"| [{version}]({version}/) | {status.title()} |" in readme, f"README status differs for {version}")
+        require(version in mermaid, f"Mermaid lineage lacks {version}")
+        require({"source": f"branch:{ARCHIVE}", "target": node["id"], "relation": "contains"} in links,
+                f"Lineage lacks branch link for {version}")
+        for name in DOCUMENTS:
+            require((root / version / name).is_file(), f"Missing {version}/{name}")
+        frozen = node.get("frozen_at")
+        require(status != "accepted" or frozen, f"Accepted version {version} needs a source pin")
+        if frozen:
+            require(SHA.fullmatch(frozen), f"Invalid source pin for {version}")
+            original = git(root, "rev-parse", f"{frozen}:{version}")
+            current = git(root, "rev-parse", f"HEAD:{version}")
+            require(original == current, f"Frozen version {version} changed")
+    return info["active_version"]
+
+
+def validate_links(root, paths):
+    for path in paths:
+        body = path.read_text()
+        for raw in re.findall(r"\[[^\]\n]+\]\(([^)\s]+)\)", body):
+            url = urlsplit(raw)
+            if url.scheme or url.netloc or not url.path:
+                continue
+            target = (path.parent / unquote(url.path)).resolve()
+            require(target.is_relative_to(root) and target.exists(), f"Broken archive link in {path.name}: {raw}")
+
+
+def validate_snapshot(root, active, hq_revision):
+    folder = root / "graphify" / "instructions" / active
+    if not folder.exists():
+        return
+    receipt = json.loads((folder / "receipt.json").read_text())
+    digest = hashlib.sha256((folder / "graph.json").read_bytes()).hexdigest()
+    require(receipt["graph_sha256"] == digest, "Archived graph checksum differs")
+    require(receipt["scope"] == "chatgpt_project_instructions" and receipt["version"] == active,
+            "Archived graph scope differs")
+    require(receipt["mcp_verified"] is True and receipt["graphify_hq_commit"] == hq_revision,
+            "Archived graph provenance differs")
+    source = receipt["source_commit"]
+    require(SHA.fullmatch(source), "Archived graph source SHA is invalid")
+    expected_docs = {f"{active}/{name}" for name in DOCUMENTS if name != "VERIFICATION.md"}
+    require(set(receipt["documents"]) == expected_docs, "Archived graph source list differs")
+    for path, item in receipt["documents"].items():
+        blob = git(root, "rev-parse", f"{source}:{path}")
+        current = git(root, "rev-parse", f"HEAD:{path}")
+        require(item["blob_sha1"] == blob == current, f"Archived graph is stale for {path}")
+
+
+def main():
+    root = Path.cwd()
+    expected = os.environ["GITHUB_SHA"]
+    actual = git(root, "rev-parse", "HEAD")
+    require(expected == actual, "Actual checkout differs from GitHub SHA")
+    event = os.environ["GITHUB_EVENT_NAME"]
+    payload = json.loads(Path(os.environ["GITHUB_EVENT_PATH"]).read_text())
+    parents = re.findall(r"(?m)^parent ([0-9a-f]{40})$",
+                         git(root, "cat-file", "-p", actual).split("\n\n", 1)[0])
+    require(payload["repository"]["full_name"] == REPO, "Unexpected repository")
+    runner = os.environ["RUNNER_KIND"]
+    require(payload["repository"]["visibility"] == "public" and runner == "github-hosted",
+            "Expected a public GitHub-hosted runner")
+    receipt = provenance(actual, event, payload, parents)
+    active = validate_catalog(root)
+    validate_instructions((root / active / "CHATGPT_PROJECT_INSTRUCTIONS.md").read_text())
+    validate_links(root, [root / "README.md", root / "graphify/README.md",
+                          *(root / active / doc for doc in DOCUMENTS)])
+    validate_snapshot(root, active, os.environ["GRAPHIFY_HQ_SHA"])
+    require((root / "LICENSE").read_text().startswith("MIT License"), "Archive reuse terms missing")
+    receipt.update(
+        repository=REPO, version=active, event=event, runner=runner, validation="PASS",
+        workflow_run=f"https://github.com/{REPO}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+        job=os.environ["GITHUB_JOB"],
+        lineage_sha256=hashlib.sha256((root / "graphify/versions.json").read_bytes()).hexdigest(),
+    )
+    summary = json.dumps(receipt, indent=2)
     print("ARCHIVE_VALIDATION=PASS")
-    print("EXACT_SHA=" + actual)
-    print("GRAPH_SHA256=" + graph_hash)
-    print(json.dumps(receipts, indent=2))
+    print(summary)
+    with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a") as output:
+        output.write("## Archive validation\n\n" + chr(96) * 3 + "json\n" + summary + "\n" + chr(96) * 3 + "\n")
+
 
 if __name__ == "__main__":
-    try:
-        main()
-    except (AssertionError, OSError, ValueError, KeyError, subprocess.CalledProcessError) as err:
-        print("ARCHIVE_VALIDATION=FAIL: " + str(err), file=sys.stderr)
-        sys.exit(1)
+    main()
