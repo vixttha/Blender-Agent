@@ -1,5 +1,5 @@
-# Brand Identity Template v0.0.1
+# BART Brand Identity
 
-[Open the reusable brand kit](brand-identity/README.md). The kit works as a self-contained directory in an existing project. Its version describes the kit itself.
+**Draft visual direction · v0.0.1 brand kit**
 
-Copy `brand-identity/` into the destination repo. Retain its license notice. Add a link to the kit in the destination's existing agent instructions so the agent can discover the current brief and decisions. The optional GitHub workflow in this branch is an example of public-runner checks for this project.
+[Open the BART brand kit](brand-identity/README.md) for the proposed logo, wordmark, typography, color roles, and application notes. Product and agent naming follow [rebrand issue #62](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/62).
