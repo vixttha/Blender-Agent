@@ -25,7 +25,7 @@ REQUIRED = (
     "graphify/README.md",
     ".github/workflows/readme-hq.yml",
 )
-LINK = re.compile(r"(?<!!)\[[^\]]+\]\(([^)]+)\)")
+LINK = re.compile(r"!?\[[^\]]+\]\(([^)]+)\)")
 EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 SECRET = re.compile(r"(?i)\b(?:api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_-]{10,}")
 PRIVATE_PATH = re.compile(r"(?i)(?:C:\\Users\\|/Users/[^/\s]+/|/home/[^/\s]+/)")
@@ -57,8 +57,9 @@ def validate(root: Path) -> list[str]:
 
     # Validate navigation on HQ source pages. The candidate homepage is intentionally
     # excluded: its relative links target the implementation branch's future main tree.
-    for rel in REQUIRED:
-        if not rel.endswith(".md") or rel.startswith("workspace/v0.0.1/DRAFT.md"):
+    workspace_pages = {page.relative_to(root).as_posix() for page in (root / "workspace").glob("v*/*.md")}
+    for rel in sorted(set(REQUIRED) | workspace_pages):
+        if not rel.endswith(".md") or rel == "workspace/v0.0.1/DRAFT.md":
             continue
         path = root / rel
         content = path.read_text(encoding="utf-8")
