@@ -1,0 +1,107 @@
+name: v0.0.3 release diagnostics
+on:
+  push:
+    branches: [audit/v0.0.3-release-diagnostics]
+permissions:
+  contents: read
+env:
+  RELEASE_SHA: 7febadd1d18bd15967e9eed6223098268dadfe2f
+  HQ_SHA: 02bf4de3190a95683faeea0318902c20158f72a1
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+  PYTHONHASHSEED: '0'
+jobs:
+  mesh:
+    name: Mesh format diagnostics / ${{ matrix.os }}
+    if: github.event.repository.private == false
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          path: release
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install the exact tagged application
+        shell: bash
+        run: |
+          test "$(git -C release rev-parse HEAD)" = "$RELEASE_SHA"
+          git -C release rev-parse HEAD
+          python -m pip install ./release
+      - name: Download checksum-verified Blender 4.5.0
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          path="release/Blender4.5/blender-4.5.0-linux-x64.tar.xz"
+          curl -fsSL --connect-timeout 10 --max-time 90 --retry 2 --retry-max-time 100 "https://download.blender.org/$path" -o blender.tar.xz ||
+          curl -fsSL --connect-timeout 10 --max-time 90 --retry 2 --retry-max-time 100 "https://mirror.blender.org/$path" -o blender.tar.xz
+          printf '%s  blender.tar.xz\n' 1188b95cc12321c770b631939f7c25a096910b6f884a990bf9c0f62d52b38aec | sha256sum --check -
+          mkdir blender-dist
+          tar -xf blender.tar.xz -C blender-dist --strip-components=1
+      - name: Probe inspection and real Blender on Ubuntu
+        if: runner.os == 'Linux'
+        run: python tools/v03_regression_audit.py --blender blender-dist/blender
+      - name: Probe standalone inspection on Windows
+        if: runner.os == 'Windows'
+        run: python tools/v03_regression_audit.py
+  graphify:
+    name: Verify Graphify archive and live repository identity
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ env.HQ_SHA }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Verify the published tag and existing HQ archive
+        run: |
+          test "$(git rev-parse 'v0.0.3^{commit}')" = "$RELEASE_SHA"
+          test "$(git rev-parse HEAD)" = "$HQ_SHA"
+          python -m pip install --no-cache-dir --only-binary=:all: --no-deps -r tools/graphify/requirements.txt
+          python tools/graphify/version_maps.py --check
+          python tools/graphify/candidate_maps.py --check
+      - name: Read back a temporary release graph and compare repository identities
+        env:
+          PYTHONPATH: tools/graphify
+        run: |
+          python - <<'PY'
+          import asyncio
+          import json
+          import os
+          import tempfile
+          from pathlib import Path
+
+          from version_maps import make_map, read_sources, verify_mcp
+
+          candidate = json.loads(Path("candidates/v0.0.3/receipt.json").read_text())
+          sha = os.environ["RELEASE_SHA"]
+          paths = sorted([*candidate["documents"], "docs/releases/v0.0.3.md"])
+          entry = {"release_tag": "v0.0.3", "source_commit": sha, "source_files": paths}
+          with tempfile.TemporaryDirectory() as temporary:
+              output = Path(temporary)
+              receipt = make_map("v0.0.3", sha, read_sources(entry), output)
+              asyncio.run(verify_mcp(output / "graph.json", receipt))
+              print("V03_GRAPH", json.dumps({k: receipt[k] for k in ("source_commit", "graphify_version", "nodes", "edges", "graph_sha256")}))
+          manifest = json.loads(Path("evidence/obj-mtl/v0.0.2.1/manifest.json").read_text())
+          repo = os.environ["GITHUB_REPOSITORY"]
+          print("V03_REPO_IDENTITY", json.dumps({
+              "runner_repository": repo,
+              "manifest_repository": manifest["repository"],
+              "obj_workflow_accepts_repository": manifest["repository"] == repo,
+              "hq_candidate_source": candidate["source_commit"],
+          }))
+          PY
