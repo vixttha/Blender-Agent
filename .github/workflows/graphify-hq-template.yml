@@ -1,0 +1,32 @@
+name: Graphify HQ template verification
+
+on:
+  push:
+    branches: [graphify-hq-template]
+  pull_request:
+    branches: [graphify-hq-template]
+
+permissions:
+  contents: read
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  verify:
+    name: Test template and verify its Graphify archive
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+      - name: Test and rebuild version evidence
+        run: python tools/verify_archive.py
