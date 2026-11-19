@@ -21,13 +21,14 @@ jobs:
           - {os: ubuntu-24.04, blender: "4.1.0", sdk: "resolved", python: "3.12"}
           - {os: ubuntu-24.04, blender: "4.5.0", sdk: "1.12.0", python: "3.11"}
           - {os: ubuntu-24.04, blender: "5.2.4", sdk: "resolved", python: "3.12"}
+          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.14"}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 18
     steps:
       - name: Check out exact application candidate
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: 150f1705e4872dad03addbadc0156baf6e7fda77
+          ref: e175464d480923a31724f84ddd9b7ee06ee87b8c
           persist-credentials: false
       - name: Set up Python
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
@@ -35,7 +36,7 @@ jobs:
           python-version: ${{ matrix.python }}
       - name: Build and test an installed wheel outside the checkout
         env:
-          AUDIT_TARGET_SHA: 150f1705e4872dad03addbadc0156baf6e7fda77
+          AUDIT_TARGET_SHA: e175464d480923a31724f84ddd9b7ee06ee87b8c
           AUDIT_BLENDER: ${{ matrix.blender }}
           AUDIT_SDK: ${{ matrix.sdk }}
         shell: bash
@@ -126,7 +127,7 @@ jobs:
                       blender = dist / "blender"
                   output = subprocess.check_output([str(blender), "--version"], text=True)
                   print(output.splitlines()[0], flush=True)
-                  assert output.splitlines()[0] == "Blender " + version, output
+                  assert output.splitlines()[0].split()[:2] == ["Blender", version], output
 
                   # Run each probe even if another probe fails, so the log identifies the smallest failure.
                   failed = []
