@@ -28,7 +28,7 @@ class ReadmeHQTests(unittest.TestCase):
         self.assertEqual([], validate(self.root))
 
     def test_archive_drift_rejected(self):
-        (self.root / "README.md").write_text("# Wrong\n", encoding="utf-8")
+        (self.root / "readme-hq/versions/v0.0.1/README.md").write_text("# Wrong\n", encoding="utf-8")
         self.assertTrue(any("drift" in x for x in validate(self.root)))
 
     def test_missing_draft_rejected(self):

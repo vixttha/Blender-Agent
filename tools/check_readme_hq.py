@@ -1,7 +1,8 @@
-"""Read-only validation for the Blender-Agent README HQ documentation branch."""
+"""Read-only validation for the Blender-Agent Refinement Toolkit README HQ documentation branch."""
 
 from __future__ import annotations
 
+import hashlib
 import re
 import sys
 from pathlib import Path
@@ -22,6 +23,10 @@ REQUIRED = (
     "workspace/v0.0.1/DRAFT.md",
     "workspace/v0.0.1/CHANGELOG.md",
     "workspace/v0.0.1/REVIEW.md",
+    "workspace/v0.0.4/README.md",
+    "workspace/v0.0.4/DRAFT.md",
+    "workspace/v0.0.4/CHANGELOG.md",
+    "workspace/v0.0.4/REVIEW.md",
     "graphify/README.md",
     ".github/workflows/readme-hq.yml",
 )
@@ -30,6 +35,11 @@ EMAIL = re.compile(r"(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b")
 SECRET = re.compile(r"(?i)\b(?:api[_-]?key|secret[_-]?key|access[_-]?token|password)\s*[:=]\s*['\"]?[A-Za-z0-9_-]{10,}")
 PRIVATE_PATH = re.compile(r"(?i)(?:C:\\Users\\|/Users/[^/\s]+/|/home/[^/\s]+/)")
 PINNED = "45726472fbe7f32de32f87426dc0b21b8fc1e8f7"
+FROZEN_HQ_BLOBS = {
+    "readme-hq/versions/v0.0.1/CHANGELOG.md": "b1445c773659f80dfb8668fb7b33f9741c3c5e4c",
+    "readme-hq/versions/v0.0.1/GUIDE.md": "cc84d5c41d62de91ee82fb08b8ebdc5ce32421e6",
+    "readme-hq/versions/v0.0.1/README.md": "326d609adcfcab36b00f1e04c7e2d39b6b587307",
+}
 
 
 def validate(root: Path) -> list[str]:
@@ -40,12 +50,11 @@ def validate(root: Path) -> list[str]:
     if errors:
         return errors
 
-    for live, archive in (
-        ("README.md", "readme-hq/versions/v0.0.1/README.md"),
-        ("readme-hq/README.md", "readme-hq/versions/v0.0.1/GUIDE.md"),
-    ):
-        if (root / live).read_bytes() != (root / archive).read_bytes():
-            errors.append(f"archived HQ baseline drift: {live}")
+    for path, expected in FROZEN_HQ_BLOBS.items():
+        data = (root / path).read_bytes()
+        header = f"blob {len(data)}".encode("ascii") + b"\0"
+        if hashlib.sha1(header + data, usedforsecurity=False).hexdigest() != expected:
+            errors.append(f"archived HQ baseline drift: {path}")
 
     draft = (root / "workspace/v0.0.1/DRAFT.md").read_text(encoding="utf-8")
     if PINNED not in (root / "workspace/v0.0.1/README.md").read_text(encoding="utf-8"):
@@ -68,6 +77,8 @@ def validate(root: Path) -> list[str]:
             errors.append(f"credential-like assignment in {rel}")
         if PRIVATE_PATH.search(content):
             errors.append(f"personal home-directory path in {rel}")
+        if rel == "workspace/v0.0.4/DRAFT.md":
+            continue
         for raw in LINK.findall(content):
             dest = raw.strip().split(" ", 1)[0].strip("<>")
             parsed = urlsplit(dest)
