@@ -52,6 +52,6 @@ jobs:
         run: |
           printf 'Verified graphify-hq SHA: %s\n' "$(git rev-parse HEAD)" >> "$GITHUB_STEP_SUMMARY"
           python tools/graphify/version_maps.py --check
-      - name: Build and export unapproved source candidate
+      - name: Rebuild and verify candidate archive with Graphify MCP
         run: |
-          python tools/graphify/candidate_maps.py --emit
+          python tools/graphify/candidate_maps.py --check

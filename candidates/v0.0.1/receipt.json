@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "version": "v0.0.1",
+  "release_tag": null,
+  "source_repository": "vixttha/Blender-Agent",
+  "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "ae38cc4805045273f44a1752510e725e66b44cb40b5d09f02cf048acf6082029",
+  "nodes": 41,
+  "edges": 45,
+  "documents": {
+    "CHANGELOG.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "CHANGELOG.md",
+      "blob_sha1": "9778a2c6e111112e380df71fd3979b0080686e4f"
+    },
+    "README.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "README.md",
+      "blob_sha1": "2eef4ab591f60ebebdb6bde49aa3f158d338987f"
+    },
+    "docs/ARCHITECTURE.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "docs/ARCHITECTURE.md",
+      "blob_sha1": "7f63e11f31dbda8794ede73e4d716e9bf7325954"
+    },
+    "docs/HARNESS.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "docs/HARNESS.md",
+      "blob_sha1": "df336bdf62fd396e674be6bdf18c33a7b18447b6"
+    },
+    "docs/ROADMAP.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "docs/ROADMAP.md",
+      "blob_sha1": "c2a2c43519bd070e5901d6a8312c9c2069b7e48c"
+    },
+    "docs/SKILL_POLICY.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "docs/SKILL_POLICY.md",
+      "blob_sha1": "e9e53484fb22f07ac682d07209f9998cac8d4eb4"
+    },
+    "skills/asset-conversion/SKILL.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "skills/asset-conversion/SKILL.md",
+      "blob_sha1": "850ca31eb6aae5ff683de50c07bfcc7540eb965d"
+    },
+    "skills/asset-inspection/SKILL.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "skills/asset-inspection/SKILL.md",
+      "blob_sha1": "eca594381acc3a090e233c07e0b2aceb68d09edb"
+    },
+    "skills/mesh-repair/SKILL.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "skills/mesh-repair/SKILL.md",
+      "blob_sha1": "67dcd56c28222a6afa03e59715002c28190cb190"
+    },
+    "skills/procedural-primitives/SKILL.md": {
+      "source_commit": "45726472fbe7f32de32f87426dc0b21b8fc1e8f7",
+      "source_path": "skills/procedural-primitives/SKILL.md",
+      "blob_sha1": "712d4c842ba5e699c60904d46874babf709dce3f"
+    }
+  },
+  "synthetic_fixture": false,
+  "archive_status": "candidate",
+  "source_pr": 1,
+  "source_branch": "feature/v0.0.1-foundation"
+}
