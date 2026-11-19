@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -69,25 +70,26 @@ def _run_blender(command: list[str], cwd: Path, timeout: int) -> str:
     return log
 
 
-def _publish(temp: Path, final: Path, root: Path, *, overwrite: bool) -> None:
-    """Publish using a hard link when overwrites are forbidden.
-
-    os.link fails atomically when the final name exists, even if another
-    caller creates it after validation. For explicit overwrites, os.replace
-    is atomic and intentional. A shared workspace is not an OS sandbox.
-    """
+def _validate_publication(temp: Path, final: Path, root: Path) -> int:
     if not temp.is_file() or temp.is_symlink():
         raise RuntimeError("Temporary result is not a regular file.")
-    if temp.stat().st_size == 0 or temp.stat().st_size > MAX_OUTPUT_BYTES:
+    size = temp.stat().st_size
+    if not 0 < size <= MAX_OUTPUT_BYTES:
         raise RuntimeError("Generated output is empty or exceeds the size limit.")
     if final.parent.is_symlink() or final.parent.resolve() != final.parent:
         raise ValueError("Output directories must not be symlinks.")
     if temp.parent.resolve() != temp.parent:
         raise ValueError("Temporary directory was unexpectedly moved.")
-    if within_workspace(final, root) != final:
-        raise ValueError("Output path changed outside the workspace.")
+    if final.is_symlink() or within_workspace(final, root) != final:
+        raise ValueError("Output path must remain a regular path inside the workspace.")
     if within_workspace(temp, root) != temp:
         raise ValueError("Temporary path changed outside the workspace.")
+    return size
+
+
+def _publish(temp: Path, final: Path, root: Path, *, overwrite: bool) -> None:
+    """Create a destination exclusively, or replace it with explicit permission."""
+    _validate_publication(temp, final, root)
     if overwrite:
         if final.exists() and not final.is_file():
             raise FileExistsError("Destination is not a regular file.")
@@ -95,7 +97,66 @@ def _publish(temp: Path, final: Path, root: Path, *, overwrite: bool) -> None:
     else:
         # No check-then-replace race: an existing name is never overwritten.
         os.link(temp, final)
-        temp.unlink()
+
+
+def _material_libraries(obj: Path):
+    with obj.open("rb") as stream:
+        for line in stream:
+            parts = line.split(None, 1)
+            if len(parts) == 2 and parts[0] == b"mtllib":
+                yield parts[1].strip().removeprefix(b'"').removesuffix(b'"').decode(
+                    "utf-8", errors="surrogateescape",
+                )
+
+
+def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool) -> Path:
+    """Publish the material library first and undo that change if publishing the OBJ fails."""
+    material = final.with_suffix(".mtl")
+    staged = temp.with_suffix(".mtl")
+    size = _validate_publication(temp, final, root)
+    if not staged.is_file():
+        raise RuntimeError("Blender did not produce the OBJ material library.")
+    if size + _validate_publication(staged, material, root) > MAX_OUTPUT_BYTES:
+        raise RuntimeError("Combined OBJ and material library exceed the output size limit.")
+    if next(_material_libraries(temp), None) != material.name:
+        raise RuntimeError("OBJ does not reference its matching material library.")
+
+    # Serialize publication by material filename, including explicit CLI replacements.
+    key = hashlib.sha256(os.fsencode(material.name.casefold())).hexdigest()
+    lock = final.parent / f".blender-agent-obj-{key}.lock"
+    try:
+        lock.mkdir()
+    except FileExistsError as exc:
+        raise FileExistsError("Destination already exists or another OBJ export is publishing it.") from exc
+    try:
+        _validate_publication(temp, final, root)
+        _validate_publication(staged, material, root)
+        backup = None
+        if material.exists():
+            if not overwrite or not material.is_file():
+                raise FileExistsError("Destination already exists: OBJ material library.")
+            if source is not None and source.suffix.lower() == ".obj":
+                if source.with_suffix(".mtl").resolve() == material or any(
+                    (source.parent / name).resolve() == material for name in _material_libraries(source)
+                ):
+                    raise ValueError("Source material libraries cannot be modified in place.")
+            backup = temp.parent / "previous-material"
+            os.link(material, backup)
+
+        published = staged.stat()
+        _publish(staged, material, root, overwrite=backup is not None)
+        try:
+            _publish(temp, final, root, overwrite=overwrite)
+        except (OSError, ValueError, RuntimeError):
+            if material.exists() and os.path.samestat(published, material.stat()):
+                if backup is None:
+                    material.unlink()
+                else:
+                    os.replace(backup, material)
+            raise
+    finally:
+        lock.rmdir()
+    return material
 
 
 def execute(
@@ -158,9 +219,16 @@ def execute(
         details = json.loads(report.read_text(encoding="utf-8"))
         if not isinstance(details, dict) or details.get("mesh_objects", 0) < 1:
             raise RuntimeError("Blender geometry report is incomplete.")
-        _publish(temporary, final, root, overwrite=overwrite)
-    return {
+        material = None
+        if final.suffix.lower() == ".obj":
+            material = _publish_obj(temporary, final, root, source=input_path, overwrite=overwrite)
+        else:
+            _publish(temporary, final, root, overwrite=overwrite)
+    result = {
         "ok": True, "operation": operation, "output": str(final.relative_to(root)),
         "size_bytes": final.stat().st_size, "geometry": details,
         "note": "Geometry summary only; not a production or printability certification.",
     }
+    if material is not None:
+        result["material_library"] = str(material.relative_to(root))
+    return result

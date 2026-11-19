@@ -39,7 +39,7 @@ def _export(path):
     elif extension == ".stl":
         bpy.ops.wm.stl_export(filepath=str(path), export_selected_objects=False)
     elif extension == ".obj":
-        bpy.ops.wm.obj_export(filepath=str(path))
+        bpy.ops.wm.obj_export(filepath=str(path), export_materials=True)
     elif extension == ".glb":
         bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB")
     elif extension == ".fbx":

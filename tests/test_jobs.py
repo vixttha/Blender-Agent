@@ -31,6 +31,70 @@ class JobTests(unittest.TestCase):
         )
         return "success"
 
+    @staticmethod
+    def fake_obj(command, *, cwd, timeout):
+        JobTests.fake_success(command, cwd=cwd, timeout=timeout)
+        job = json.loads(Path(command[-1]).read_text(encoding="utf-8"))
+        output = Path(job["output"])
+        library = output.with_suffix(".mtl")
+        output.write_text(f"mtllib {library.name}\n", encoding="utf-8")
+        library.write_bytes(b"new material")
+        return "success"
+
+    def test_obj_rolls_back_material_when_obj_appears_late(self):
+        def late_collision(command, *, cwd, timeout):
+            self.fake_obj(command, cwd=cwd, timeout=timeout)
+            (self.root / "cube.obj").write_bytes(b"other writer")
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=late_collision):
+            with self.assertRaises(FileExistsError):
+                execute("create", workspace=self.root, output="cube.obj", kind="cube")
+        self.assertEqual((self.root / "cube.obj").read_bytes(), b"other writer")
+        self.assertFalse((self.root / "cube.mtl").exists())
+
+    def test_obj_refuses_missing_material_library(self):
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_success):
+            with self.assertRaisesRegex(RuntimeError, "did not produce the OBJ material library"):
+                execute("create", workspace=self.root, output="cube.obj", kind="cube")
+        self.assertFalse((self.root / "cube.obj").exists())
+
+    def test_obj_overwrite_restores_previous_library_if_obj_replace_fails(self):
+        obj = self.root / "out.obj"
+        material = obj.with_suffix(".mtl")
+        obj.write_bytes(b"old obj")
+        material.write_bytes(b"old material")
+        from os import replace
+
+        def fail_obj_replace(source, destination):
+            if destination == obj:
+                raise PermissionError("could not replace OBJ")
+            replace(source, destination)
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+            with patch("blender_agent.jobs.os.replace", side_effect=fail_obj_replace):
+                with self.assertRaisesRegex(PermissionError, "could not replace OBJ"):
+                    execute("convert", workspace=self.root, source="input.stl", output="out.obj", overwrite=True)
+            self.assertEqual(obj.read_bytes(), b"old obj")
+            self.assertEqual(material.read_bytes(), b"old material")
+            info = execute("convert", workspace=self.root, source="input.stl", output="out.obj", overwrite=True)
+        self.assertEqual(info["material_library"], "out.mtl")
+        self.assertEqual(material.read_bytes(), b"new material")
+
+    def test_obj_overwrite_preserves_material_referenced_by_source(self):
+        source = self.root / "input.obj"
+        source.write_text('mtllib "out.mtl"\n', encoding="utf-8")
+        material = self.root / "out.mtl"
+        material.write_bytes(b"source material")
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+            with self.assertRaisesRegex(ValueError, "Source material libraries"):
+                execute("convert", workspace=self.root, source="input.obj", output="out.obj", overwrite=True)
+        self.assertEqual(material.read_bytes(), b"source material")
+        self.assertFalse((self.root / "out.obj").exists())
+
     def test_create_promotes_checked_output(self):
         with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
              patch("blender_agent.jobs._run_blender", side_effect=self.fake_success) as runner:
