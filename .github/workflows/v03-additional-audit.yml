@@ -1,0 +1,61 @@
+name: v0.0.3 interchange and macOS diagnostics
+on:
+  push:
+    branches: [audit/v0.0.3-interchange]
+permissions:
+  contents: read
+env:
+  RELEASE_SHA: 7febadd1d18bd15967e9eed6223098268dadfe2f
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+jobs:
+  interchange:
+    name: Blender 4.5 interchange diagnostics / Ubuntu
+    runs-on: ubuntu-latest
+    if: github.event.repository.private == false
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          path: release
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install the exact release
+        run: |
+          test "$(git -C release rev-parse HEAD)" = "$RELEASE_SHA"
+          git -C release rev-parse HEAD
+          python -m pip install ./release
+      - name: Download and verify the repository-pinned Blender distribution
+        run: |
+          asset="release/Blender4.5/blender-4.5.0-linux-x64.tar.xz"
+          curl -fsSL --connect-timeout 10 --max-time 90 --retry 2 --retry-max-time 100 "https://download.blender.org/$asset" -o blender.tar.xz ||
+          curl -fsSL --connect-timeout 10 --max-time 90 --retry 2 --retry-max-time 100 "https://mirror.blender.org/$asset" -o blender.tar.xz
+          printf '%s  blender.tar.xz\n' 1188b95cc12321c770b631939f7c25a096910b6f884a990bf9c0f62d52b38aec | sha256sum --check -
+          mkdir blender-dist
+          tar -xf blender.tar.xz -C blender-dist --strip-components=1
+          ./blender-dist/blender --version | head -n 3
+      - name: Check asset import, export, and repair scope
+        run: python tools/v03_interchange_audit.py blender-dist/blender
+  macos:
+    name: Clean installed wheel and MCP stdio / macOS
+    runs-on: macos-latest
+    if: github.event.repository.private == false
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Check exact release and run the existing wheel fixture
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          git rev-parse HEAD
+          python tests/run_mcp_wheel_smoke.py
