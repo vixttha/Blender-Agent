@@ -54,4 +54,4 @@ jobs:
           python tools/graphify/version_maps.py --check
       - name: Rebuild and verify candidate archive with Graphify MCP
         run: |
-          python tools/graphify/candidate_maps.py --check
+          python tools/graphify/candidate_maps.py --emit

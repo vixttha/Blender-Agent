@@ -23,7 +23,7 @@ This branch is intentionally sparse. It is not the Blender add-on/runtime, a dis
 ## Version lifecycle
 
 1. Approve and tag a Blender-Agent release on main or an explicitly reviewed source commit. A release tag alone does not constitute approval.
-2. Record its full 40-character source SHA, matching release tag, and public Markdown source paths in catalog/versions.json. The catalog starts empty; no releases have been assumed.
+2. Record its full 40-character source SHA, matching release tag, and public Markdown source paths in catalog/versions.json.
 3. Generate its version folder under versions/vX.Y.Z. The folder contains README.md, graph.json, and receipt.json. Do not overwrite a previously accepted snapshot to hide a discrepancy.
 4. Let GitHub Actions rebuild the committed graph and verify Graphify MCP read-back, document provenance, and deterministic byte equality.
 5. Review the exact branch commit and CI evidence before calling that version archived.
@@ -40,3 +40,5 @@ The version graph is a documentation and version-discovery aid, not a claim that
 - The checked-in workflow validates artifacts but never automatically creates a release, promotes a tag, merges branches, or writes to the repository.
 
 **Current archive:** [Blender-Agent v0.0.2](versions/v0.0.2/README.md) maps the published pre-release. The v0.0.1 foundation remains in the historical candidate archive.
+
+**Current application candidate:** [Blender-Agent v0.0.3](candidates/v0.0.3/README.md) maps [main at `38e8f63`](https://github.com/vixttha/Blender-Agent/commit/38e8f63c3fe2e372784276acdbb602cb7409b100). The [exact-commit public CI run](https://github.com/vixttha/Blender-Agent/actions/runs/44462288861) passed all nine application jobs and the read-only release-readiness job.
