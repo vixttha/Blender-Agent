@@ -255,15 +255,8 @@ async def verify_multi_scene_geometry(session, workspace, blender):
         "faces": result["geometry"]["faces"],
         "triangles": artifact["triangles"],
     }
-    known_file_wide_counts = {**expected, "mesh_objects": 2, "vertices": 11, "faces": 7}
-    if observed == expected:
-        record_vault_case("BLENDER-001", "PASS", expected, observed)
-    else:
-        record_vault_case("BLENDER-001", "FAIL", expected, observed)
-        # Keep the smoke suite running only for the exact mismatch tracked by issue #55.
-        assert observed == known_file_wide_counts, observed
-        if os.environ.get("GITHUB_ACTIONS") == "true":
-            print("::warning::Test Vault BLENDER-001 reproduced the geometry scope mismatch in issue #55.")
+    record_vault_case("BLENDER-001", "PASS" if observed == expected else "FAIL", expected, observed)
+    assert observed == expected, observed
 
 
 async def verify_blender_scheduling(cli, blender, host_directory, workspace, env):
