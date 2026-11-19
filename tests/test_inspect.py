@@ -61,6 +61,16 @@ class InspectionTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "non-finite"):
             inspect_asset("bad.stl", self.root)
 
+    def test_empty_binary_stl_rejected(self):
+        (self.root / "empty.stl").write_bytes(b"\x00" * 80 + struct.pack("<I", 0))
+        with self.assertRaisesRegex(ValueError, "no triangles"):
+            inspect_asset("empty.stl", self.root)
+
+    def test_empty_obj_rejected(self):
+        (self.root / "empty.obj").write_text("# no vertices or faces\n", encoding="utf-8")
+        with self.assertRaisesRegex(ValueError, "no mesh geometry"):
+            inspect_asset("empty.obj", self.root)
+
     def test_binary_stl_size_cap(self):
         path = self.root / "huge.stl"
         with path.open("wb") as stream:

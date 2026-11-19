@@ -40,6 +40,8 @@ def _stl(path: Path) -> dict:
         if len(header) >= 84:
             triangles = struct.unpack_from("<I", header, 80)[0]
             if length == 84 + 50 * triangles:
+                if triangles == 0:
+                    raise ValueError("STL contains no triangles.")
                 box_min = [math.inf] * 3
                 box_max = [-math.inf] * 3
                 for _ in range(triangles):
@@ -129,6 +131,8 @@ def _obj(path: Path) -> dict:
                     ):
                         raise ValueError("OBJ face references a missing vertex.")
                 faces += 1
+    if not vertices or not faces:
+        raise ValueError("OBJ contains no mesh geometry.")
     return {"vertices": len(vertices), "faces": faces, "bounds": _bounds(vertices)}
 
 
