@@ -8,7 +8,9 @@ For a new instructions version, update the catalog and lineage, point `active_ve
 
 ## v0.0.3 instructions graph
 
-See the [v0.0.3 verification record](../v0.0.3/VERIFICATION.md) for candidate evidence. The archive workflow generates the graph for the exact candidate checkout and verifies it through Graphify MCP. After the candidate reaches Instructions HQ, the branch push exports the graph and receipt for archival.
+[Generated graph](instructions/v0.0.3/graph.json) · [Source and MCP receipt](instructions/v0.0.3/receipt.json) · [Verification record](../v0.0.3/VERIFICATION.md)
+
+The [Instructions HQ push job](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44490625604/job/135445009998) generated this snapshot from [`b63b7b68495abcce76dfbc4341aa149ea15e0049`](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/commit/b63b7b68495abcce76dfbc4341aa149ea15e0049) using Graphify 0.9.109. The runner verified 19 nodes, 20 edges, and read-only lookups for the instructions, setup guide, and acceptance checks.
 
 ## v0.0.2 instructions graph
 
