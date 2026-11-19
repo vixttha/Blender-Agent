@@ -1,0 +1,254 @@
+{
+  "schema_version": 1,
+  "project": "Blender-Agent",
+  "source_repository": "vixttha/Blender-Agent",
+  "source_ref": "refs/heads/feature/v0.0.1-foundation",
+  "source_commit": "2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b",
+  "template_commit": "042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f",
+  "source_state": "Open v0.0.2 application candidate, PR #1",
+  "required_paths": [
+    "pyproject.toml",
+    "README.md",
+    ".github/workflows/ci.yml",
+    "docs/ARCHITECTURE.md",
+    "src/blender_agent/cli.py",
+    "src/blender_agent/mcp_server.py",
+    "src/blender_agent/jobs.py",
+    "src/blender_agent/blender_worker.py",
+    "tests/test_mcp_smoke.py"
+  ],
+  "reviewed_paths": [],
+  "technologies": [
+    {
+      "name": "Python",
+      "status": "active",
+      "role": "Host CLI, optional MCP, shared asset code, tests and fixed Blender worker",
+      "evidence": [
+        "BA-01",
+        "BA-02",
+        "BA-03",
+        "BA-06",
+        "UP-01",
+        "UP-02"
+      ],
+      "tracked_language": true
+    },
+    {
+      "name": "Bash",
+      "status": "active",
+      "role": "Embedded scripts for Blender setup and checks in the Linux GitHub Actions job",
+      "evidence": [
+        "BA-05",
+        "UP-11"
+      ]
+    },
+    {
+      "name": "JSON",
+      "status": "active",
+      "role": "Structured exchange between host process and Blender worker",
+      "evidence": [
+        "BA-03",
+        "BA-04"
+      ]
+    },
+    {
+      "name": "TOML",
+      "status": "active",
+      "role": "Python package metadata and console script declarations",
+      "evidence": [
+        "BA-01"
+      ]
+    },
+    {
+      "name": "YAML",
+      "status": "active",
+      "role": "Public-runner workflow and test matrix",
+      "evidence": [
+        "BA-05",
+        "UP-11"
+      ]
+    },
+    {
+      "name": "Markdown",
+      "status": "active",
+      "role": "Project documentation, contribution guidance and skill descriptions",
+      "evidence": [
+        "BA-08"
+      ]
+    },
+    {
+      "name": "TypeScript",
+      "status": "conditional",
+      "role": "Optional browser interface when an independently scoped UI is approved",
+      "evidence": [
+        "UP-03",
+        "UP-04",
+        "UP-08"
+      ]
+    },
+    {
+      "name": "HTML/CSS",
+      "status": "conditional",
+      "role": "Browser structure and styles when the viewer is approved",
+      "evidence": [
+        "UP-04",
+        "UP-08"
+      ]
+    },
+    {
+      "name": "Geometry Nodes",
+      "status": "conditional",
+      "role": "Reusable artist-editable procedural operations within Blender",
+      "evidence": [
+        "UP-07",
+        "BA-03"
+      ]
+    },
+    {
+      "name": "Rust",
+      "status": "conditional",
+      "role": "Isolated native mesh operation if profiling and public-runner packaging justify it",
+      "evidence": [
+        "UP-05",
+        "BA-04"
+      ]
+    },
+    {
+      "name": "C++",
+      "status": "research",
+      "role": "Geometry library integration when a specific capability warrants it",
+      "evidence": [
+        "UP-06",
+        "UP-12"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "BA-01",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/pyproject.toml",
+      "claim": "Python 3.11+ package, standard-library core with no declared runtime dependencies, optional MCP v1 API range, and two console entry points."
+    },
+    {
+      "id": "BA-02",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/docs/ARCHITECTURE.md",
+      "claim": "The host CLI and MCP adapter share the Python core. A fixed headless Blender worker produces geometry and output."
+    },
+    {
+      "id": "BA-03",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/src/blender_agent/blender_worker.py",
+      "claim": "Blender-side Python imports bpy and bmesh, implements known operations and writes a JSON report."
+    },
+    {
+      "id": "BA-04",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/src/blender_agent/jobs.py",
+      "claim": "Host-side Python invokes Blender with fixed flags, writes a JSON job, and publishes a validated temporary output."
+    },
+    {
+      "id": "BA-05",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/.github/workflows/ci.yml",
+      "claim": "GitHub Actions workflow YAML tests Python, MCP, and Linux Blender 4.5.0. Bash supports the Blender installation and roundtrip steps."
+    },
+    {
+      "id": "BA-06",
+      "url": "https://github.com/vixttha/Blender-Agent/actions/runs/44436263213",
+      "claim": "All seven foundation jobs passed for the audited PR head. Check the job checkout in logs for head or test merge provenance."
+    },
+    {
+      "id": "BA-07",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/tests/test_mcp_smoke.py",
+      "claim": "The installed MCP console script is exercised for discovery, schema and read-only invocation with workspace rejection."
+    },
+    {
+      "id": "BA-08",
+      "url": "https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/README.md",
+      "claim": "Markdown carries public capability, install and limitation documentation."
+    },
+    {
+      "id": "UP-01",
+      "url": "https://docs.blender.org/api/main/info_overview.html",
+      "claim": "Blender embeds Python and exposes bpy for data and application operations."
+    },
+    {
+      "id": "UP-02",
+      "url": "https://docs.blender.org/api/current/bmesh.html",
+      "claim": "BMesh is a Python API for mesh manipulation."
+    },
+    {
+      "id": "UP-03",
+      "url": "https://modelcontextprotocol.io/docs/2026-07-28/sdk",
+      "claim": "The official MCP project publishes SDKs in multiple languages, including Python and TypeScript."
+    },
+    {
+      "id": "UP-04",
+      "url": "https://www.typescriptlang.org/docs/handbook/intro.html",
+      "claim": "TypeScript provides static type checking for JavaScript."
+    },
+    {
+      "id": "UP-05",
+      "url": "https://pyo3.rs/main/building-and-distribution",
+      "claim": "Rust can be packaged as a Python extension, with platform and wheel distribution considerations."
+    },
+    {
+      "id": "UP-06",
+      "url": "https://doc.cgal.org/latest/Manual/index.html",
+      "claim": "CGAL provides C++ geometry algorithms and data structures."
+    },
+    {
+      "id": "UP-07",
+      "url": "https://docs.blender.org/manual/en/latest/modeling/geometry_nodes/introduction.html",
+      "claim": "Geometry Nodes provides a Blender-native way to author geometry operations."
+    },
+    {
+      "id": "UP-08",
+      "url": "https://registry.khronos.org/glTF/",
+      "claim": "Khronos publishes the glTF specification and its binary asset container."
+    },
+    {
+      "id": "UP-09",
+      "url": "https://docs.github.com/en/actions/concepts/billing-and-usage",
+      "claim": "Standard GitHub-hosted Actions usage is free for public repositories."
+    },
+    {
+      "id": "UP-10",
+      "url": "https://docs.blender.org/manual/en/4.4/files/import_export/obj.html",
+      "claim": "Blender's OBJ export can emit an MTL companion file for materials."
+    },
+    {
+      "id": "UP-11",
+      "url": "https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax",
+      "claim": "GitHub Actions workflows use YAML and allow an explicit shell per step."
+    },
+    {
+      "id": "UP-12",
+      "url": "https://developer.blender.org/docs/handbook/new_developers/setup/",
+      "claim": "Blender itself has native C/C++ and Python development paths."
+    }
+  ],
+  "source_checks": {
+    "pyproject.toml": [
+      "version = \"0.0.2\"",
+      "requires-python = \">=3.11\"",
+      "dependencies = []",
+      "mcp = [\"mcp>=1.12,<2\"]",
+      "blender-agent-mcp = \"blender_agent.mcp_server:main\""
+    ],
+    "src/blender_agent/blender_worker.py": [
+      "import bmesh",
+      "import bpy",
+      "json.loads",
+      "json.dumps"
+    ],
+    "src/blender_agent/jobs.py": [
+      "\"--disable-autoexec\"",
+      "json.dumps(",
+      "os.link("
+    ],
+    ".github/workflows/ci.yml": [
+      "shell: bash",
+      "runs-on: ubuntu-24.04",
+      "Blender 4.5 real-format roundtrips",
+      "Real MCP stdio"
+    ]
+  }
+}

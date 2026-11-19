@@ -1,0 +1,69 @@
+name: Audit Blender-Agent Code Stack
+
+on:
+  push:
+    branches: [code-stack]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Read pinned source and template commits
+        id: revisions
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import re
+          from pathlib import Path
+          registry = json.loads(Path("code-stack.json").read_text(encoding="utf-8"))
+          for name in ("source_commit", "template_commit"):
+              revision = registry[name]
+              if not re.fullmatch(r"[0-9a-f]{40}", revision):
+                  raise SystemExit(f"Invalid {name}")
+              print(f"{name}={revision}")
+          PY
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ steps.revisions.outputs.source_commit }}
+          path: audited-source
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ steps.revisions.outputs.template_commit }}
+          path: audited-template
+          persist-credentials: false
+      - name: Verify Stack handoff and portable tools
+        env:
+          TEMPLATE_SHA: ${{ steps.revisions.outputs.template_commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          test "$(git -C audited-template rev-parse HEAD)" = "$TEMPLATE_SHA"
+          for item in README.md STACK.md STACK_MEMORY.md AUDIT.md PROPOSALS.md code-stack.json; do
+            test -s "$item"
+          done
+          for item in audit.py test_audit.py; do
+            cmp "tools/$item" "audited-template/v0.0.1/tools/$item"
+          done
+          cmp STACK.md audited-template/v0.0.1/STACK.md
+          python3 tools/test_audit.py -v
+      - name: Audit the pinned application stack
+        env:
+          TEMPLATE_SHA: ${{ steps.revisions.outputs.template_commit }}
+        run: |
+          {
+            echo '### Blender-Agent Code Stack audit'
+            echo "Hub commit: $GITHUB_SHA"
+            echo "Template commit: $TEMPLATE_SHA"
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          python3 tools/audit.py --repo audited-source --config code-stack.json \
+            --json "$RUNNER_TEMP/code-stack-audit.json" --summary "$GITHUB_STEP_SUMMARY"
