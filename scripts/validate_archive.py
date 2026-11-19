@@ -8,7 +8,9 @@ import subprocess
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
-REPO = "vixttha/Blender-Agent"
+REPO = "vixttha/Blender-Agent-Refinement-Toolkit"
+LEGACY_INSTRUCTION_VERSIONS = {"v0.0.1", "v0.0.2"}
+LEGACY_REPO = "vixttha/Blender-Agent"
 ARCHIVE = "chatgpt-project-instructions"
 HISTORY = "33513f6e0e1f8bfe8acb7972066ef194219eb98c"
 VERSION = re.compile(r"v\d+\.\d+\.\d+")
@@ -38,8 +40,9 @@ def git(root, *args):
     return subprocess.check_output(["git", "-C", str(root), *args], text=True).strip()
 
 
-def validate_instructions(doc):
-    for url in (f"https://github.com/{REPO}", f"https://github.com/{REPO}/tree/graphify-hq"):
+def validate_instructions(doc, version):
+    repository = LEGACY_REPO if version in LEGACY_INSTRUCTION_VERSIONS else REPO
+    for url in (f"https://github.com/{repository}", f"https://github.com/{repository}/tree/graphify-hq"):
         require(any(line.endswith(" " + url) for line in doc.splitlines()), f"Missing instruction policy: {url}")
     normalized = doc.casefold()
     for token in POLICIES:
@@ -152,7 +155,7 @@ def main():
             "Expected a public GitHub-hosted runner")
     receipt = provenance(actual, event, payload, parents)
     active = validate_catalog(root)
-    validate_instructions((root / active / "CHATGPT_PROJECT_INSTRUCTIONS.md").read_text())
+    validate_instructions((root / active / "CHATGPT_PROJECT_INSTRUCTIONS.md").read_text(), active)
     validate_links(root, [root / "README.md", root / "graphify/README.md",
                           *(root / active / doc for doc in DOCUMENTS)])
     validate_snapshot(root, active, os.environ["GRAPHIFY_HQ_SHA"])

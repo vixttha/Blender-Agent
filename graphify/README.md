@@ -1,6 +1,6 @@
-# Graphify for Blender-Agent project instructions
+# Graphify for Blender-Agent Refinement Toolkit project instructions
 
-[Instructions lineage manifest](versions.json) · [Mermaid lineage](versions.mmd) · [Archive workflow](../.github/workflows/instructions-archive.yml) · [Software Graphify HQ](https://github.com/vixttha/Blender-Agent/tree/graphify-hq)
+[Instructions lineage manifest](versions.json) · [Mermaid lineage](versions.mmd) · [Archive workflow](../.github/workflows/instructions-archive.yml) · [Software Graphify HQ](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/tree/graphify-hq)
 
 The lineage manifest is a manually maintained catalog of ChatGPT instructions versions. Public GitHub-hosted Ubuntu builds a searchable graph of the active instructions, setup guide and acceptance checks using the pinned Graphify HQ generator and dependencies. The runner verifies graph statistics and document lookups using the read-only Graphify MCP process and records the tested commit, event, source documents, tooling revision, graph checksum and run URL. Software releases and product PR candidates use Graphify HQ’s catalog.
 
