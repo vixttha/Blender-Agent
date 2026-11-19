@@ -20,9 +20,9 @@ jobs:
         python-version: ["3.11", "3.12"]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install package
@@ -33,3 +33,49 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: CLI smoke
         run: python -m blender_agent skills
+
+  blender-smoke:
+    name: Blender 4.5 headless roundtrip
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Install package
+        run: python -m pip install -e .
+      - name: Download and verify Blender 4.5.0
+        shell: bash
+        run: |
+          curl --fail --location --retry 3 --retry-delay 3 --silent --show-error \
+            https://download.blender.org/release/Blender4.5/blender-4.5.0-linux-x64.tar.xz -o blender.tar.xz
+          echo "1188b95cc12321c770b631939f7c25a096910b6f884a990bf9c0f62d52b38aec  blender.tar.xz" | sha256sum --check -
+          mkdir -p blender-dist
+          tar -xf blender.tar.xz -C blender-dist --strip-components=1
+          ./blender-dist/blender --version | head -n 3
+      - name: Create, convert and repair genuine 3D assets
+        shell: bash
+        env:
+          BLENDER_BIN: ${{ github.workspace }}/blender-dist/blender
+        run: |
+          mkdir -p asset-sandbox/out
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" create cube out/cube.stl --size 1
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.stl out/cube.glb
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.glb out/roundtrip.stl
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" repair out/cube.stl out/repaired.stl
+          python - <<'PY'
+          from pathlib import Path
+          from blender_agent.inspect import inspect_asset
+          workspace = Path("asset-sandbox")
+          for name in ("cube.stl", "cube.glb", "roundtrip.stl", "repaired.stl"):
+              output = workspace / "out" / name
+              assert output.is_file() and output.stat().st_size > 0, name
+          source = inspect_asset("out/cube.stl", workspace)
+          repaired = inspect_asset("out/repaired.stl", workspace)
+          assert source["triangles"] >= 12, source
+          assert repaired["triangles"] >= 12, repaired
+          print("Blender 4.5 real headless roundtrip: PASS")
+          PY
