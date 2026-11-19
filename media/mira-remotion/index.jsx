@@ -32,7 +32,8 @@ function Presenter({presenter, captions}) {
 function Inspection({heading, fixture, inspection, points, faces}) {
   const frame = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const coordinates = points.map(([x, y]) => [160 + x * 420, 450 - y * 328]);
+  const unitsToPixels = 380;
+  const coordinates = points.map(([x, y]) => [190 + x * unitsToPixels, 450 - y * unitsToPixels]);
 
   return (
     <AbsoluteFill className="inspection" style={{display: "grid", opacity: interpolate(frame, [0, .6 * fps], [0, 1], clamp)}}>
