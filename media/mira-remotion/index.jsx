@@ -1,7 +1,20 @@
 import React from "react";
+import {loadFont} from "@remotion/fonts";
+import {episodeSchema, presenterDurationMs} from "./inputs.mjs";
 import {AbsoluteFill, Composition, Img, OffthreadVideo, Sequence, interpolate, registerRoot, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
 import previewProps from "./evidence/triangle.props.json";
 import "./episode.css";
+
+loadFont({
+  family: "Instrument Serif",
+  url: staticFile("fonts/instrument-serif-latin-400-normal.woff2"),
+  weight: "400",
+});
+loadFont({
+  family: "IBM Plex Mono",
+  url: staticFile("fonts/ibm-plex-mono-latin-400-normal.woff2"),
+  weight: "400",
+});
 
 const clamp = {extrapolateLeft: "clamp", extrapolateRight: "clamp"};
 
@@ -89,13 +102,13 @@ function Episode({presenter, captions, heading, fixture, inspection, points, fac
   const endStart = Math.round(14.55 * fps);
   return (
     <AbsoluteFill className="episode">
-      <Sequence durationInFrames={Math.round(8.8 * fps)}>
+      <Sequence name="Mira and captions" durationInFrames={Math.round(presenterDurationMs * fps / 1000)}>
         <Presenter presenter={presenter} captions={captions} />
       </Sequence>
-      <Sequence from={inspectionStart} durationInFrames={Math.round(15.1 * fps) - inspectionStart} premountFor={fps}>
+      <Sequence name="Mesh and CLI output" from={inspectionStart} durationInFrames={Math.round(15.1 * fps) - inspectionStart} premountFor={fps}>
         <Inspection heading={heading} fixture={fixture} inspection={inspection} points={points} faces={faces} />
       </Sequence>
-      <Sequence from={endStart} premountFor={fps}>
+      <Sequence name="BART end card" from={endStart} premountFor={fps}>
         <EndCard />
       </Sequence>
     </AbsoluteFill>
@@ -104,5 +117,5 @@ function Episode({presenter, captions, heading, fixture, inspection, points, fac
 
 registerRoot(() => (
   <Composition id="BartMeshInspection" component={Episode} width={1920} height={1080}
-    fps={30} durationInFrames={540} defaultProps={previewProps} />
+    fps={30} durationInFrames={540} schema={episodeSchema} defaultProps={previewProps} />
 ));
