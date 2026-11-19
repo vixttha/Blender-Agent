@@ -5,6 +5,7 @@ import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
+from threading import Event
 
 from .inspect import inspect_asset
 from .jobs import DEFAULT_TIMEOUT, execute, validate_timeout
@@ -31,8 +32,16 @@ def main(*, workspace: str | None = None, blender: str | None = None, timeout: i
     executable = blender if blender is not None else os.environ.get("BLENDER_AGENT_BLENDER", "blender")
 
     async def run_job(operation, **arguments):
-        job = partial(execute, operation, workspace=root, blender=executable, timeout=timeout, **arguments)
-        return await asyncio.get_running_loop().run_in_executor(job_worker, job)
+        cancelled = Event()
+        job = partial(
+            execute, operation, workspace=root, blender=executable, timeout=timeout,
+            cancelled=cancelled, **arguments,
+        )
+        try:
+            return await asyncio.get_running_loop().run_in_executor(job_worker, job)
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
 
     @server.tool()
     async def inspect_model(path: str) -> dict:

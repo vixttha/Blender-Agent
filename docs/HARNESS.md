@@ -34,6 +34,8 @@ MCP startup requires an existing workspace configured by `BLENDER_AGENT_WORKSPAC
 
 Each MCP server runs one Blender job at a time while it continues to respond to inspection and protocol requests. The Blender timeout starts when the job runs.
 
+Cancelling a queued request prevents it from publishing. An active Blender process may run until it finishes or reaches its timeout. The worker checks cancellation immediately before publication, which is the commit point. A cancellation received after that check lets publication finish, including any OBJ material-file update. The worker holds its slot until staging is cleaned up.
+
 The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public CI on Linux and Windows starts the installed `blender-agent-mcp` command from a separate working directory, initializes a real stdio session, checks each tool's input schema, and verifies workspace isolation and read-only inspection. Individual MCP hosts may require different launch configuration.
 
 The Ubuntu job also runs all four tools over MCP stdio with Blender 4.5.0. It checks an STL → GLB → STL cube roundtrip, verifies that repair welds a split edge, and confirms that in-place edits and overwrites are rejected while the existing files retain their original bytes.

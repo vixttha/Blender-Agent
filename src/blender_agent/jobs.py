@@ -187,7 +187,15 @@ def _recover_obj(journal: Path, material: Path) -> None:
     _clear_obj_journal(journal)
 
 
-def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool) -> Path:
+def _require_active(cancelled: threading.Event | None) -> None:
+    if cancelled is not None and cancelled.is_set():
+        raise RuntimeError("Blender job was cancelled before publication.")
+
+
+def _publish_obj(
+    temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool,
+    cancelled: threading.Event | None = None,
+) -> Path:
     """Publish an OBJ pair with filesystem-backed recovery from an interrupted process."""
     material = final.with_suffix(".mtl")
     staged = temp.with_suffix(".mtl")
@@ -225,6 +233,7 @@ def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, ov
             record = journal / "next.json"
             record.write_text(json.dumps({"name": final.name, "replaced_material": replaced_material}), encoding="utf-8")
             os.replace(record, journal / "output.json")
+            _require_active(cancelled)
             _publish(staged, material, root, overwrite=replaced_material)
             _publish(temp, final, root, overwrite=overwrite)
         finally:
@@ -248,7 +257,9 @@ def execute(
     blender: str = "blender",
     overwrite: bool = False,
     timeout: int = DEFAULT_TIMEOUT,
+    cancelled: threading.Event | None = None,
 ) -> dict:
+    _require_active(cancelled)
     if operation not in {"create", "convert", "repair"}:
         raise ValueError("Unknown operation.")
     validate_timeout(timeout)
@@ -305,8 +316,11 @@ def execute(
             artifact_validation = "structural_mesh"
         material = None
         if suffix == ".obj":
-            material = _publish_obj(temporary, final, root, source=input_path, overwrite=overwrite)
+            material = _publish_obj(
+                temporary, final, root, source=input_path, overwrite=overwrite, cancelled=cancelled,
+            )
         else:
+            _require_active(cancelled)
             _publish(temporary, final, root, overwrite=overwrite)
     result = {
         "ok": True, "operation": operation, "output": str(final.relative_to(root)),

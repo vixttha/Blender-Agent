@@ -96,6 +96,21 @@ class JobTests(unittest.TestCase):
                 execute("create", workspace=self.root, output="cube.obj", kind="cube")
         self.assertFalse((self.root / "cube.obj").exists())
 
+    def test_cancelled_worker_discards_both_staged_obj_files(self):
+        cancelled = threading.Event()
+
+        def cancel_after_export(command, *, cwd, timeout):
+            self.fake_obj(command, cwd=cwd, timeout=timeout)
+            cancelled.set()
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=cancel_after_export):
+            with self.assertRaisesRegex(RuntimeError, "cancelled before publication"):
+                execute("create", workspace=self.root, output="cancelled.obj", kind="cube", cancelled=cancelled)
+        self.assertFalse((self.root / "cancelled.obj").exists())
+        self.assertFalse((self.root / "cancelled.mtl").exists())
+        self.assertFalse(list(self.root.glob("*.pending")))
+
     def test_obj_overwrite_restores_previous_library_if_obj_replace_fails(self):
         obj = self.root / "out.obj"
         material = obj.with_suffix(".mtl")

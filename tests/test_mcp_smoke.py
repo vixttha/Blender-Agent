@@ -203,6 +203,7 @@ async def verify_shared_mesh_repair(session, workspace, blender):
 
 async def verify_blender_scheduling(cli, blender, host_directory, workspace, env):
     from mcp import ClientSession, StdioServerParameters
+    from mcp import types
     from mcp.client.stdio import stdio_client
 
     gate = host_directory / "allow-blender"
@@ -237,7 +238,29 @@ async def verify_blender_scheduling(cli, blender, host_directory, workspace, env
                 finally:
                     gate.touch()
             assert first.result()["ok"] and second.result()["ok"]
-    assert len(list(host_directory.glob("started-*"))) == 2
+            assert len(list(host_directory.glob("started-*"))) == 2
+
+            gate.unlink()
+            # This fixture uses the v1 SDK's next request ID for a protocol-level cancellation.
+            request_id = session._request_id
+            interrupted = asyncio.create_task(
+                call_tool(session, "create_primitive", kind="cube", output="cancelled.stl"),
+            )
+            try:
+                async with asyncio.timeout(10):
+                    while len(list(host_directory.glob("started-*"))) != 3:
+                        await asyncio.sleep(0.05)
+                await session.send_notification(types.ClientNotification(
+                    types.CancelledNotification(params=types.CancelledNotificationParams(requestId=request_id)),
+                ))
+                await asyncio.wait_for(session.send_ping(), timeout=5)
+            finally:
+                interrupted.cancel()
+                await asyncio.gather(interrupted, return_exceptions=True)
+                gate.touch()
+            afterward = await call_tool(session, "create_primitive", kind="cube", output="after-cancel.stl")
+            assert afterward["ok"] and (workspace / "after-cancel.stl").is_file()
+            assert not (workspace / "cancelled.stl").exists()
     gate.unlink()
 
     params = StdioServerParameters(command=cli, args=[*args, "--timeout", "1", "mcp"],
@@ -252,6 +275,7 @@ async def verify_blender_scheduling(cli, blender, host_directory, workspace, env
             assert not (workspace / "timed-out.stl").exists()
             assert not any(path.is_dir() for path in workspace.glob(".blender-agent-*"))
     print("MCP scheduling: inspection replied during a blocked job, one Blender ran at a time, and timeout cleaned up.")
+    print("MCP cancellation: a cancelled active request left no output; the subsequent request succeeded.")
 
 
 async def smoke(blender):
