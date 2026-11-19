@@ -83,7 +83,7 @@ jobs:
       - name: Exercise supported formats and validate mesh geometry
         shell: bash
         env:
-          BLENDER_BIN: ${{ github.workspace }}/blender-dist/blender
+          BLENDER_BIN: ./blender-dist/blender
         run: |
           mkdir -p asset-sandbox/out
           python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" create cube out/cube.stl --size 1

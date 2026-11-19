@@ -194,6 +194,7 @@ def execute(
     executable = shutil.which(blender)
     if executable is None:
         raise FileNotFoundError("Blender executable not found; configure --blender.")
+    executable = os.path.abspath(executable)
     worker = Path(__file__).with_name("blender_worker.py")
     with tempfile.TemporaryDirectory(prefix=".blender-agent-", dir=final.parent) as directory:
         temporary = Path(directory) / final.name

@@ -114,6 +114,15 @@ class JobTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 execute("create", workspace=self.root, output="cube.obj", kind="cube")
 
+    def test_relative_executable_is_anchored_before_working_directory_changes(self):
+        blender = str(Path("tools", "blender"))
+        with patch("blender_agent.jobs.shutil.which", return_value=blender) as lookup, \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_success) as runner:
+            execute("create", workspace=self.root, blender=blender, output="cube.stl", kind="cube")
+        lookup.assert_called_once_with(blender)
+        self.assertEqual(runner.call_args.args[0][0], str(Path.cwd() / blender))
+        self.assertEqual(runner.call_args.kwargs["cwd"], self.root)
+
     def test_failure_does_not_publish_output(self):
         with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
              patch("blender_agent.jobs._run_blender", side_effect=RuntimeError("worker failed")):

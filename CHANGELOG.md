@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.2 — v0.0.3 development checkpoint
+
+- Resolve the Blender executable against the launch directory before entering the configured workspace (#18).
+
 ## v0.0.2.1 — v0.0.3 development checkpoint
 
 - Preserve the matching MTL file when publishing an OBJ. CLI and MCP results include its workspace-relative path.
