@@ -2,6 +2,7 @@
 
 | Version | Status | Files |
 | --- | --- | --- |
+| v0.0.4 | Draft for the BART rebrand | [Workspace](v0.0.4/README.md) · [Homepage candidate](v0.0.4/DRAFT.md) · [Review](v0.0.4/REVIEW.md) |
 | v0.0.1 | Draft — waiting on implementation and publication review | [Workspace](v0.0.1/README.md) · [Homepage candidate](v0.0.1/DRAFT.md) · [Review](v0.0.1/REVIEW.md) |
 
 Each public homepage revision gets an independent `workspace/vX.Y.Z/`. Draft work is isolated from HQ archives and the application main branch. After approval, archive the exact accepted version, then make a separate, reviewable publication PR to `main`.
