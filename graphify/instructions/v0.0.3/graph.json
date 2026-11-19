@@ -1,0 +1,388 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {
+    "template_version": "v0.0.3",
+    "scope": "chatgpt_project_instructions",
+    "schema_version": 1,
+    "graphify_version": "0.9.109"
+  },
+  "nodes": [
+    {
+      "id": "reference:LICENSE",
+      "label": "LICENSE",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "license",
+      "source_file": "",
+      "source_location": null
+    },
+    {
+      "id": "reference:README.md",
+      "label": "README.md",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "readme.md",
+      "source_file": "",
+      "source_location": null
+    },
+    {
+      "id": "reference:v0.0.2",
+      "label": "v0.0.2",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "v0.0.2",
+      "source_file": "",
+      "source_location": null
+    },
+    {
+      "id": "reference:v0.0.3/VERIFICATION.md",
+      "label": "v0.0.3/VERIFICATION.md",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "v0.0.3/verification.md",
+      "source_file": "",
+      "source_location": null
+    },
+    {
+      "id": "section:v0.0.3/ACCEPTANCE.md:L1",
+      "label": "v0.0.3 acceptance",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "v0.0.3 acceptance",
+      "source_file": "v0.0.3/ACCEPTANCE.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "label": "Blender-Agent Refinement Toolkit | ChatGPT Project Instructions v0.0.3",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "blender-agent refinement toolkit | chatgpt project instructions v0.0.3",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L11",
+      "label": "Product and agent identity",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "product and agent identity",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L11"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L17",
+      "label": "Start from live GitHub evidence",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "start from live github evidence",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L17"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L23",
+      "label": "Head → Worker → Validate → Internal Auditor → Head",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "head → worker → validate → internal auditor → head",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L23"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L31",
+      "label": "$0 execution and public privacy",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "$0 execution and public privacy",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L31"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L37",
+      "label": "Graphify and source verification",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "graphify and source verification",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L37"
+    },
+    {
+      "id": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L41",
+      "label": "Evidence and handoff",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "evidence and handoff",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L41"
+    },
+    {
+      "id": "section:v0.0.3/README.md:L1",
+      "label": "v0.0.3 — Blender-Agent Refinement Toolkit project instructions",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "v0.0.3 — blender-agent refinement toolkit project instructions",
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "section:v0.0.3/README.md:L14",
+      "label": "Install and verify in ChatGPT",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "install and verify in chatgpt",
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L14"
+    },
+    {
+      "id": "section:v0.0.3/README.md:L5",
+      "label": "Changes since v0.0.2",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "changes since v0.0.2",
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L5"
+    },
+    {
+      "id": "version:v0.0.3",
+      "label": "Blender-Agent Refinement Toolkit project instructions v0.0.3",
+      "community": 0,
+      "file_type": "concept",
+      "norm_label": "blender-agent v0.0.3",
+      "source_file": "",
+      "source_location": null
+    },
+    {
+      "id": "document:v0.0.3/ACCEPTANCE.md",
+      "label": "v0.0.3/ACCEPTANCE.md",
+      "community": 0,
+      "file_type": "document",
+      "norm_label": "v0.0.3/acceptance.md",
+      "source_file": "v0.0.3/ACCEPTANCE.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "document:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "label": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "community": 0,
+      "file_type": "document",
+      "norm_label": "v0.0.3/chatgpt_project_instructions.md",
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L1"
+    },
+    {
+      "id": "document:v0.0.3/README.md",
+      "label": "v0.0.3/README.md",
+      "community": 0,
+      "file_type": "document",
+      "norm_label": "v0.0.3/readme.md",
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L1"
+    }
+  ],
+  "links": [
+    {
+      "source": "version:v0.0.3",
+      "target": "document:v0.0.3/ACCEPTANCE.md",
+      "relation": "contains_document",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/ACCEPTANCE.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "version:v0.0.3",
+      "target": "document:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "relation": "contains_document",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "version:v0.0.3",
+      "target": "document:v0.0.3/README.md",
+      "relation": "contains_document",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/ACCEPTANCE.md",
+      "target": "section:v0.0.3/ACCEPTANCE.md:L1",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/ACCEPTANCE.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "section:v0.0.3/README.md:L1",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L1",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L11",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L11",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L17",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L17",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L23",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L23",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L31",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L31",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L37",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L37",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L1",
+      "target": "section:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md:L41",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "source_location": "L41",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/README.md:L1",
+      "target": "section:v0.0.3/README.md:L14",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L14",
+      "weight": 1.0
+    },
+    {
+      "source": "section:v0.0.3/README.md:L1",
+      "target": "section:v0.0.3/README.md:L5",
+      "relation": "contains_section",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": "L5",
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "document:v0.0.3/ACCEPTANCE.md",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "document:v0.0.3/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "reference:LICENSE",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "reference:README.md",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "reference:v0.0.2",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": null,
+      "weight": 1.0
+    },
+    {
+      "source": "document:v0.0.3/README.md",
+      "target": "reference:v0.0.3/VERIFICATION.md",
+      "relation": "links_to",
+      "confidence": "EXTRACTED",
+      "confidence_score": 1.0,
+      "source_file": "v0.0.3/README.md",
+      "source_location": null,
+      "weight": 1.0
+    }
+  ],
+  "hyperedges": [],
+  "scope": "chatgpt_project_instructions",
+  "built_at_commit": "b63b7b68495abcce76dfbc4341aa149ea15e0049"
+}
