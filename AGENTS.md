@@ -1,16 +1,16 @@
 # Agent operating rules
 
-This public toolkit must remain reusable by people and multiple AI harnesses.
+This repository is a public, reusable toolkit. Keep its content project-focused: no personal biography, private project details, identifying user information or secrets in source, examples, logs or documentation. GitHub's public account metadata remains GitHub-managed.
 
-1. Keep personal and identifying information, private project data, and secrets out of repository content, examples and logs.
-2. Use the neutral project name Blender-Agent. An alternate product identity remains under review and is not approved for publication.
-3. Read README.md, docs/ARCHITECTURE.md, docs/SKILL_POLICY.md and SECURITY.md before editing execution boundaries.
-4. Never overwrite original input files. Reject filesystem escapes and require explicit authorization for destructive output changes.
-5. Do not expose arbitrary shell or Python execution to an agent. Add reviewed, narrowly scoped operations instead.
-6. Separate actual tests from simulations. Never call a model print-ready or game-ready based solely on structural inspection.
-7. Keep the core harness-independent; adapters must reuse the same underlying functions.
-8. Work on a branch, submit a reviewable PR and check exact-commit CI evidence. No automatic merger or release from an agent review alone.
-9. Keep dependencies minimal and do not check in generated or private asset files.
-10. Use public, standard GitHub-hosted runners for CI. Do not require paid runners or personal machines.
+1. Read README.md, docs/ARCHITECTURE.md, docs/SKILL_POLICY.md, and SECURITY.md before execution-boundary changes.
+2. Keep the neutral public project identity Blender-Agent. Another brand identity remains unapproved for public deployment.
+3. Preserve original inputs; non-overwriting publication must be atomic, including concurrent workloads.
+4. Treat imported assets as untrusted data and never execute model-generated Python, shell commands or unreviewed skills.
+5. Host the CLI/MCP through a configured trusted workspace; the path guard does not replace OS sandboxing.
+6. Report actual tests, simulated tests, and unverified claims separately. Geometry counts are not printability or production certifications.
+7. Do not fragment the shared core into harness-specific implementations. Extend adapters instead.
+8. Use one scoped work lane: Head selects → Worker implements → Validate exact SHA → Internal Auditor challenges → Head requests merge approval and archives evidence.
+9. Use free, standard GitHub-hosted public runners only; never depend on paid or self-hosted runners.
+10. Work through PRs, preserve test provenance and do not automatically merge or release.
 
-The current v0.0.1 scope is inspection, limited repair and conversion, primitives, CLI and optional MCP. Dynamic skill generation, complex modeling, game and print validation are roadmap items.
+v0.0.2 is the in-review repair candidate for six identified v0.0.1 findings, not a general autonomous asset creator.

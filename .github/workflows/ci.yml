@@ -13,6 +13,7 @@ jobs:
   python:
     name: Python ${{ matrix.python-version }} / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -25,17 +26,37 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install package
+      - name: Install
         run: python -m pip install -e .
-      - name: Compile source
-        run: python -m compileall -q src
-      - name: Run unit tests
-        run: python -m unittest discover -s tests -v
-      - name: CLI smoke
-        run: python -m blender_agent skills
+      - name: Compile
+        run: python -m compileall -q src tests
+      - name: Unit and negative-path tests
+        run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: CLI version
+        run: python -m blender_agent version
+
+  mcp-stdio:
+    name: Real MCP stdio / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Install actual MCP server and client SDK
+        run: python -m pip install -e ".[mcp]"
+      - name: Handshake, discovery, invoke and reject traversal
+        run: python tests/test_mcp_smoke.py
 
   blender-smoke:
-    name: Blender 4.5 headless roundtrip
+    name: Blender 4.5 real-format roundtrips
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
@@ -45,9 +66,9 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.12"
-      - name: Install package
+      - name: Install
         run: python -m pip install -e .
-      - name: Download and verify Blender 4.5.0
+      - name: Download and verify official Blender 4.5.0
         shell: bash
         run: |
           curl --fail --location --retry 3 --retry-delay 3 --silent --show-error \
@@ -56,7 +77,7 @@ jobs:
           mkdir -p blender-dist
           tar -xf blender.tar.xz -C blender-dist --strip-components=1
           ./blender-dist/blender --version | head -n 3
-      - name: Create, convert and repair genuine 3D assets
+      - name: Exercise supported formats and validate mesh geometry
         shell: bash
         env:
           BLENDER_BIN: ${{ github.workspace }}/blender-dist/blender
@@ -65,17 +86,33 @@ jobs:
           python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" create cube out/cube.stl --size 1
           python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.stl out/cube.glb
           python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.glb out/roundtrip.stl
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.stl out/cube.obj
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.obj out/from_obj.stl
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.stl out/cube.fbx
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.fbx out/from_fbx.stl
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.stl out/cube.blend
+          python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" convert out/cube.blend out/from_blend.stl
           python -m blender_agent --workspace asset-sandbox --blender "$BLENDER_BIN" repair out/cube.stl out/repaired.stl
           python - <<'PY'
           from pathlib import Path
           from blender_agent.inspect import inspect_asset
-          workspace = Path("asset-sandbox")
-          for name in ("cube.stl", "cube.glb", "roundtrip.stl", "repaired.stl"):
-              output = workspace / "out" / name
-              assert output.is_file() and output.stat().st_size > 0, name
-          source = inspect_asset("out/cube.stl", workspace)
-          repaired = inspect_asset("out/repaired.stl", workspace)
-          assert source["triangles"] >= 12, source
-          assert repaired["triangles"] >= 12, repaired
-          print("Blender 4.5 real headless roundtrip: PASS")
+          root = Path("asset-sandbox")
+          all_files = [
+              "cube.stl", "cube.glb", "roundtrip.stl", "cube.obj",
+              "from_obj.stl", "cube.fbx", "from_fbx.stl",
+              "cube.blend", "from_blend.stl", "repaired.stl",
+          ]
+          for name in all_files:
+              f = root / "out" / name
+              assert f.is_file() and f.stat().st_size > 0, name
+          for name in (
+              "cube.stl", "roundtrip.stl", "from_obj.stl", "from_fbx.stl",
+              "from_blend.stl", "repaired.stl",
+          ):
+              info = inspect_asset("out/" + name, root)
+              assert info["triangles"] == 12, (name, info)
+              for axis in range(3):
+                  assert abs(info["bounds"]["min"][axis] + 0.5) < 0.005, (name, info)
+                  assert abs(info["bounds"]["max"][axis] - 0.5) < 0.005, (name, info)
+          print("Blender 4.5 real-format geometry roundtrip: PASS")
           PY

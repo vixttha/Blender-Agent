@@ -1,16 +1,17 @@
 # Capability roadmap
 
-Planned scope is broader than the v0.0.1 implementation.
+The product goal is a reusable, harness-neutral platform. v0.0.1 was the initial implementation candidate; v0.0.2 is the six-finding repair candidate. Neither is a full platform release.
 
-| Department | v0.0.1 status | Later acceptance target |
+| Specialization | v0.0.2 state | Future acceptance gate |
 | --- | --- | --- |
-| Game assets | Not implemented | Engine-ready meshes, UVs, LODs, collision and validated exports |
-| STL / 3D printing | Limited inspect and repair | Dimensions, wall thickness, watertightness, slicer test and printer profile |
-| File engineering | Foundation implemented | Batch operations, validation, reproducible repairs |
-| Organic sculpting | Not implemented | Anatomy-aware workflows and verified topology |
-| World creation | Not implemented | Modular procedural environments and performance checks |
-| Rigging / animation | Not implemented | Deformation, animation and engine export checks |
+| Game development assets | Not implemented | Game-engine import and material, topology, LOD, collision checks |
+| STL and 3D printing | Limited inspect/repair | Watertightness, wall thickness, print profile and slicer validation |
+| 3D file engineering | Bounded foundation | Validated batch repair, preservation and broader format coverage |
+| Organic modeling | Not implemented | Anatomy-aware production and retopology checks |
+| Worlds and environments | Not implemented | Procedural modular scenes with performance evidence |
+| Rigging and animation | Not implemented | Deformation quality, animations and game-engine acceptance |
+| Multi-harness interface | CLI + MCP stdio | Per-harness independent compatibility matrix |
+| Dynamic skills | Policy only | Safe isolated generation, verification and promotion |
+| Shared memory | Not implemented | Isolation, portability and lifecycle controls |
 
-Cross-cutting future work: verified Blender integration matrix, AI-assisted generation, isolated shared memory, dynamic skill proposal testing, and host-specific integration acceptance.
-
-The next gate after Python tests is real Blender integration on an exact build. Do not advertise this version as production-ready until those checks pass.
+No feature is production-ready based on a green script alone. A separate release decision must follow exact-candidate evidence and review.

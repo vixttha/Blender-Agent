@@ -1,27 +1,22 @@
 # Harness integration
 
-## CLI (default)
+The same core functions back the CLI and optional MCP stdio server. A compatible harness must have an authorized runtime and workspace access. No standalone ChatGPT conversation can operate a user's desktop Blender unless a suitable tool integration exists.
 
-Any harness that can invoke commands in an authorized workspace can use:
+## Command-line bridge
 
 ~~~sh
 python -m pip install -e .
 blender-agent --workspace ./workspace inspect input/mesh.stl
-blender-agent --workspace ./workspace create uv_sphere output/sphere.glb
+blender-agent --workspace ./workspace create cube output/cube.stl
 ~~~
 
-Create workspace/input and workspace/output before running. Blender operations require Blender 4.1+ on the executing machine.
-
-## MCP stdio (optional)
+## MCP stdio bridge
 
 ~~~sh
 python -m pip install -e ".[mcp]"
-blender-agent-mcp
 ~~~
 
-Configure the harness to launch the blender-agent-mcp command with environment variables BLENDER_AGENT_WORKSPACE (absolute directory) and optionally BLENDER_AGENT_BLENDER (executable path/name).
-
-Example conceptual configuration (adapt to the target harness):
+A generic host configuration (adapt to the host's schema):
 
 ~~~json
 {
@@ -33,13 +28,14 @@ Example conceptual configuration (adapt to the target harness):
 }
 ~~~
 
-The tools are inspect_model, create_primitive, convert_model and repair_mesh. MCP tools do not support overwrite or arbitrary code execution.
+The adapter exposes inspect_model, create_primitive, convert_model, and repair_mesh. It does not expose arbitrary code execution, overwrite parameters, AI image generation, memory, or autonomous task scheduling.
 
-The optional adapter currently targets the MCP Python SDK v1 API range mcp>=1.12,<2. This range is intentional; upgrading to SDK v2 needs compatibility work.
+The pinned optional dependency supports the MCP SDK v1 API range mcp>=1.12,<2. A public CI client smoke test initializes a real session, lists the tools, invokes read-only inspection, and checks a denied filesystem traversal. Compatibility with individual hosts still requires host-specific validation.
 
-## Limits
+## Trust and limits
 
-- A chat model or harness without a connected runtime cannot operate a user's Blender installation.
-- No remote network service is exposed by default.
-- A shared memory system is not yet implemented; each invocation uses the supplied workspace.
-- Treat software capabilities as verified only after testing in the specific host and Blender version.
+- Users configure the allowed workspace; keep it away from hostile or untrusted concurrent filesystem writers.
+- Source files are preserved; existing outputs are not overwritten by MCP.
+- Blender 4.1+ is required for 3D operations; Blender 4.5 is exercised in CI.
+- Inputs and output are capped in size and errors/streamed logs are bounded.
+- This is not a remote server or OS sandbox, and cannot execute with permissions a hosting harness does not grant.

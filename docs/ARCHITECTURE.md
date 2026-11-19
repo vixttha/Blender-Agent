@@ -1,32 +1,37 @@
-# Architecture
+# Architecture — v0.0.2 candidate
 
-## Components
+Any compatible harness invokes the Python CLI or optional MCP stdio server, both of which call the same implementation:
 
 ~~~text
-Any compatible harness -> CLI / MCP -> Shared Python Core
-                                      |-- Workspace path boundary
-                                      |-- Read-only inspector
-                                      |-- Blender job runner
-                                            -> Fixed Blender Python worker
-                                            -> New output + geometry summary
+CLI / MCP stdio
+       |
+Python core
+  |-- restricted workspace path guard
+  |-- bounded STL/OBJ inspector
+  |-- bounded job orchestrator -> fixed headless Blender worker
+  |                                  |
+  |                     temp output + geometry report
+  |                                  |
+  |                     atomic no-clobber promotion
+  |
+future: skill orchestration, memory, more engines
 ~~~
 
-The CLI uses only the standard library. The optional MCP adapter uses a bounded compatible Python SDK dependency. No cloud API, remote computer or proprietary model is required by the core.
+## Safety invariants
 
-## Execution boundary
+1. Source paths remain inside the workspace and are never used as the output path.
+2. Output paths are resolved inside the workspace, checked again before publication, and existing outputs are protected by an atomic hard-link operation when overwrite is disabled.
+3. A caller must explicitly opt into overwrite using the CLI; the MCP adapter has no overwrite flag.
+4. No agent-provided Python or shell is executed. Blender receives a fixed worker with a job manifest containing an enumerated operation.
+5. Only Blender success plus an actual geometry report and nonempty bounded output permits promotion.
+6. Blender subprocess output capture and execution time are bounded; inspection and import/export have explicit size caps.
 
-Jobs accept a workspace root, enumerate supported operations, verify source and output paths, start a fixed worker with Blender in background/factory mode and automatic scripting disabled, then move a successful temporary file into place. A source cannot be overwritten in place.
+The file guard does not prevent a hostile process with simultaneous write access from renaming or swapping directories during operation. Trust or isolate the workspace at the OS level.
 
-Supported worker operations are primitive creation, import/export conversion and limited mesh cleanup. The worker counts objects, vertices, faces, boundary edges and nonmanifold edges. Counts are diagnostics, **not** geometry certification.
+## Validation and support
 
-## Multiple harnesses
+Pure Python unit tests run on Windows and Linux with Python 3.11 and 3.12. Optional MCP tests use a real stdio client on both OS families. Blender 4.5.0 integration tests cover creates, repairs, conversion roundtrips, geometry counts, and bounding dimensions on Linux. No compatibility promise is made for Blender builds not tested.
 
-The same core functions back command-line calls and optional MCP stdio tools. Future bridges must reuse these functions, not copy validation rules. A hosting harness needs permission to execute the command and access its configured workspace. Connecting to a remote Blender GUI is not included in v0.0.1.
+## Future B+C architecture
 
-## Skill architecture
-
-The agreed design is a hierarchy of permanent specialist skills plus dynamically proposed candidates. v0.0.1 ships four documented foundation skills. Generated skill execution, promotion and shared cross-project memory are **not implemented**. See SKILL_POLICY.md.
-
-## Validation boundary
-
-Python unit tests cover parsing, basic path controls and orchestration. Blender-version compatibility, material fidelity, slicer outcomes, and game-engine imports must be validated separately with real applications. Never infer those from passing unit tests.
+Permanent hierarchical specialist skills coexist with proposed dynamic skills. Promotion requires evidence and approval; generated skills are not executed in v0.0.2. Shared memory and cloud orchestration are future architecture rather than implemented features.
