@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.7 — v0.0.3 development checkpoint
+
+- Require successful Blender operations and mesh faces, validate staged STL and OBJ files within the inspection limit, and label scene geometry and staged artifact metadata (#14).
+
 ## v0.0.2.6 — v0.0.3 development checkpoint
 
 - Accept continued OBJ polygons while rejecting incomplete continuation records and retaining input limits (#24).

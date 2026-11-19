@@ -19,15 +19,15 @@ def _clear():
 def _import(path):
     extension = path.suffix.lower()
     if extension == ".blend":
-        bpy.ops.wm.open_mainfile(filepath=str(path), load_ui=False)
+        return bpy.ops.wm.open_mainfile(filepath=str(path), load_ui=False)
     elif extension == ".stl":
-        bpy.ops.wm.stl_import(filepath=str(path))
+        return bpy.ops.wm.stl_import(filepath=str(path))
     elif extension == ".obj":
-        bpy.ops.wm.obj_import(filepath=str(path))
+        return bpy.ops.wm.obj_import(filepath=str(path))
     elif extension == ".glb":
-        bpy.ops.import_scene.gltf(filepath=str(path))
+        return bpy.ops.import_scene.gltf(filepath=str(path))
     elif extension == ".fbx":
-        bpy.ops.import_scene.fbx(filepath=str(path))
+        return bpy.ops.import_scene.fbx(filepath=str(path))
     else:
         raise ValueError("Unsupported import format.")
 
@@ -35,26 +35,26 @@ def _import(path):
 def _export(path):
     extension = path.suffix.lower()
     if extension == ".blend":
-        bpy.ops.wm.save_as_mainfile(filepath=str(path))
+        return bpy.ops.wm.save_as_mainfile(filepath=str(path))
     elif extension == ".stl":
-        bpy.ops.wm.stl_export(filepath=str(path), export_selected_objects=False)
+        return bpy.ops.wm.stl_export(filepath=str(path), export_selected_objects=False)
     elif extension == ".obj":
-        bpy.ops.wm.obj_export(filepath=str(path), export_materials=True)
+        return bpy.ops.wm.obj_export(filepath=str(path), export_materials=True)
     elif extension == ".glb":
-        bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB")
+        return bpy.ops.export_scene.gltf(filepath=str(path), export_format="GLB")
     elif extension == ".fbx":
-        bpy.ops.export_scene.fbx(filepath=str(path))
+        return bpy.ops.export_scene.fbx(filepath=str(path))
     else:
         raise ValueError("Unsupported export format.")
 
 
 def _create(kind, size):
     if kind == "cube":
-        bpy.ops.mesh.primitive_cube_add(size=size)
+        return bpy.ops.mesh.primitive_cube_add(size=size)
     elif kind == "uv_sphere":
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=size / 2)
+        return bpy.ops.mesh.primitive_uv_sphere_add(radius=size / 2)
     elif kind == "cylinder":
-        bpy.ops.mesh.primitive_cylinder_add(radius=size / 2, depth=size)
+        return bpy.ops.mesh.primitive_cylinder_add(radius=size / 2, depth=size)
     else:
         raise ValueError("Unsupported primitive.")
 
@@ -95,6 +95,11 @@ def _geometry():
     return total
 
 
+def _require_finished(status, operation):
+    if "FINISHED" not in status:
+        raise RuntimeError(f"Blender did not finish {operation}.")
+
+
 def main():
     if bpy.app.version < (4, 1, 0):
         raise RuntimeError("Blender 4.1 or newer is required.")
@@ -105,18 +110,18 @@ def main():
     operation = job["operation"]
     _clear()
     if operation == "create":
-        _create(job["kind"], float(job["size"]))
+        _require_finished(_create(job["kind"], float(job["size"])), "primitive creation")
     elif operation in {"convert", "repair"}:
-        _import(Path(job["source"]))
+        _require_finished(_import(Path(job["source"])), "mesh import")
         if operation == "repair":
             _repair()
     else:
         raise ValueError("Unknown operation.")
     geometry = _geometry()
-    if geometry["mesh_objects"] == 0:
-        raise ValueError("No mesh objects are available for output.")
+    if geometry["vertices"] < 3 or geometry["faces"] < 1:
+        raise ValueError("No mesh faces are available for output.")
     output = Path(job["output"])
-    _export(output)
+    _require_finished(_export(output), "mesh export")
     Path(job["report"]).write_text(json.dumps(geometry), encoding="utf-8")
 
 

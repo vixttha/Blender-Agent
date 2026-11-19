@@ -12,6 +12,7 @@ import tempfile
 import threading
 from pathlib import Path
 
+from .inspect import MAX_PREVIEW_BYTES, inspect_mesh
 from .paths import destination_path, root_path, source_path, within_workspace
 
 PRIMITIVES = frozenset({"cube", "uv_sphere", "cylinder"})
@@ -219,19 +220,26 @@ def execute(
         _run_blender(command, cwd=root, timeout=timeout)
         if not temporary.is_file() or not report.is_file():
             raise RuntimeError("Blender did not produce the output and geometry report.")
-        if temporary.stat().st_size == 0 or temporary.stat().st_size > MAX_OUTPUT_BYTES:
-            raise RuntimeError("Generated output is empty or exceeds the size limit.")
+        size = _validate_publication(temporary, final, root)
         details = json.loads(report.read_text(encoding="utf-8"))
-        if not isinstance(details, dict) or details.get("mesh_objects", 0) < 1:
+        if (not isinstance(details, dict) or details.get("mesh_objects", 0) < 1
+                or details.get("vertices", 0) < 3 or details.get("faces", 0) < 1):
             raise RuntimeError("Blender geometry report is incomplete.")
+        artifact_validation = "nonempty_file"
+        suffix = final.suffix.lower()
+        if suffix in {".stl", ".obj"} and size <= MAX_PREVIEW_BYTES:
+            with temporary.open("rb") as stream:
+                inspect_mesh(stream, size, suffix)
+            artifact_validation = "structural_mesh"
         material = None
-        if final.suffix.lower() == ".obj":
+        if suffix == ".obj":
             material = _publish_obj(temporary, final, root, source=input_path, overwrite=overwrite)
         else:
             _publish(temporary, final, root, overwrite=overwrite)
     result = {
         "ok": True, "operation": operation, "output": str(final.relative_to(root)),
-        "size_bytes": final.stat().st_size, "geometry": details,
+        "size_bytes": size, "geometry": details, "geometry_scope": "pre_export_scene",
+        "artifact_validation": artifact_validation,
         "note": "Geometry summary only; not a production or printability certification.",
     }
     if material is not None:

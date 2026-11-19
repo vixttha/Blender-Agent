@@ -197,6 +197,12 @@ def _obj(lines) -> dict:
     return {"vertices": len(vertices), "faces": faces, "bounds": _bounds(vertices)}
 
 
+def inspect_mesh(stream, length: int, suffix: str) -> dict:
+    if suffix == ".stl":
+        return _stl(stream, length)
+    return _obj(_lines(stream, length, "utf-8-sig"))
+
+
 def inspect_asset(path: str | Path, workspace: str | Path = ".") -> dict:
     root = root_path(workspace)
     source = source_path(path, root)
@@ -218,10 +224,8 @@ def inspect_asset(path: str | Path, workspace: str | Path = ".") -> dict:
             "limitations": "Does not prove manifoldness, printability, visual quality or game readiness.",
         }
         stream.seek(0)
-        if suffix == ".stl":
-            info.update(_stl(stream, size))
-        elif suffix == ".obj":
-            info.update(_obj(_lines(stream, size, "utf-8-sig")))
+        if suffix in {".stl", ".obj"}:
+            info.update(inspect_mesh(stream, size, suffix))
         else:
             info["limitations"] += " This format has metadata-only inspection without Blender."
         try:

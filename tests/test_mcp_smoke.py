@@ -147,6 +147,18 @@ async def obj_material_roundtrip(session, workspace):
     print("MCP OBJ collisions: existing OBJ and MTL preserved, with no partial output.")
 
 
+async def reject_faceless_output(session, workspace):
+    wire = b"v 0 0 0\nv 1 0 0\nl 1 2\n"
+    (workspace / "wire.obj").write_bytes(wire)
+    await expect_error(
+        session, "convert_model", "No mesh faces are available for output.",
+        source="wire.obj", output="faceless.stl",
+    )
+    assert not (workspace / "faceless.stl").exists()
+    assert (workspace / "wire.obj").read_bytes() == wire
+    print("MCP geometry: Blender rejected a wire-only OBJ without publishing an output.")
+
+
 async def smoke(blender):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -218,6 +230,7 @@ async def smoke(blender):
                 if blender is not None:
                     await blender_roundtrip(session, workspace)
                     await obj_material_roundtrip(session, workspace)
+                    await reject_faceless_output(session, workspace)
 
         cli_params = StdioServerParameters(
             command=cli, args=["--workspace", str(workspace), "mcp"], cwd=host_directory,
