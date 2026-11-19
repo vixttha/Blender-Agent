@@ -37,7 +37,7 @@ python3 tools/stack.py --repo /path/to/project --ref main \
   --previous /path/to/previous/code-stack.json --out /path/to/new-review
 ~~~
 
-Supply the same context if it still applies. The new registry carries earlier owner decisions and marks them for review if recommendation evidence or a recommendation changes. Decisions also remain visible when the component or candidate disappears. If the earlier commit is unavailable, Git path comparisons are incomplete and fingerprints still surface recommendation changes. The receipt hashes detect a report and registry that came from different write attempts. Retain or archive the generated registry to supply it on future runs.
+Rerunning into the same output directory automatically uses its prior registry. Earlier context is reused when available. To replace it, pass a new context file. To clear planned work, pass a file containing an empty goals array. The new registry carries earlier owner decisions and marks them for review if recommendation evidence or a recommendation changes. Decisions also remain visible when the component or candidate disappears. If the earlier commit is unavailable, Git path comparisons are incomplete and fingerprints still surface recommendation changes. The receipt hashes detect a report and registry that came from different write attempts. Retain or archive the generated registry to supply it on future runs.
 
 ## Public CI and migration
 

@@ -115,19 +115,18 @@ class PortableStackTests(unittest.TestCase):
         ])
         registry = self.scan("--approve", approval)
         self.assertEqual(registry["approved_decisions"][0]["status"], "current")
-        snapshot = self.out / "code-stack.json"
         self.commit("documentation only", {"README.md": "# Help\n"})
-        registry = self.scan("--previous", snapshot)
+        registry = self.scan()
         self.assertEqual(registry["refresh"]["changed_paths"], ["README.md"])
         self.assertEqual(registry["approved_decisions"][0]["status"], "current")
         self.commit("changed entrypoint", {"package.json": '{"bin":{"app":"./src/main.js"}}'})
-        registry = self.scan("--previous", snapshot)
+        registry = self.scan()
         self.assertEqual(registry["approved_decisions"][0]["approved_at_source"], first)
         self.assertEqual(registry["approved_decisions"][0]["status"], "review-needed")
         self.assertTrue(registry["refresh"]["recommendations_for_review"])
         self.git("rm", "-q", "package.json", "src/main.js")
         self.git("commit", "-qm", "retire the component")
-        registry = self.scan("--previous", snapshot)
+        registry = self.scan("--previous", self.out / "code-stack.json")
         self.assertEqual(registry["approved_decisions"][0]["status"], "component-or-candidate-missing")
 
     def test_bad_inputs_leave_no_report_and_unrecognized_content_is_explicit(self):

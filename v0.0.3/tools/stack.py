@@ -213,7 +213,7 @@ def build_registry(repo, ref, project, context, previous, approvals):
     repository = github_project(repo)
     project = project or (repository.split("/")[-1] if repository else repo.resolve().name)
     changes = previous_changes(repo, previous, revision, project, repository)
-    goals = goals_from(context)
+    goals = goals_from(context if context is not None else {"goals": previous.get("goals", [])})
     groups, entries = inventory(repo, revision, {}, require_checkout=False)
     components, ci, tooling = discover(repo, revision, groups, entries, list(goals.values()))
     recommendations = compare_components(components, goals, entries, ci)
@@ -338,15 +338,18 @@ def main():
     parser.add_argument("--out", type=Path, required=True, help="directory for the generated report, registry and receipt")
     parser.add_argument("--project", help="display name and portable project identity")
     parser.add_argument("--context", type=Path, help="optional JSON file of project goals")
-    parser.add_argument("--previous", type=Path, help="previous generated code-stack.json")
+    parser.add_argument("--previous", type=Path, help="previous registry (default: existing code-stack.json under --out)")
     parser.add_argument("--approve", type=Path, help="optional JSON array of explicit owner decisions")
     parser.add_argument("--template-commit", help="full source SHA of this template, when known")
     args = parser.parse_args()
     try:
         if args.template_commit and not re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", args.template_commit):
             raise ValueError("--template-commit must be a full Git SHA")
-        registry = build_registry(args.repo, args.ref, args.project, read_json(args.context),
-                                  read_json(args.previous), read_json(args.approve) if args.approve else [])
+        existing = args.out / "code-stack.json"
+        previous = args.previous or (existing if existing.is_file() else None)
+        context = read_json(args.context) if args.context else None
+        registry = build_registry(args.repo, args.ref, args.project, context,
+                                  read_json(previous), read_json(args.approve) if args.approve else [])
         write_reports(registry, args.out, args.template_commit)
     except (OSError, ValueError, TypeError, KeyError, AttributeError, subprocess.CalledProcessError) as error:
         parser.exit(1, f"Code Stack review failed: {error}\n")
