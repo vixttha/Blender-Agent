@@ -28,8 +28,8 @@ from version_maps import (
 
 CATALOG = ROOT / "catalog" / "candidates.json"
 ARCHIVE = ROOT / "candidates"
-BRANCH = re.compile(r"[A-Za-z0-9._/-]{1,160}\\Z")
-SHA = re.compile(r"[0-9a-f]{40}\\Z")
+BRANCH = re.compile(r"[A-Za-z0-9._/-]{1,160}\Z")
+SHA = re.compile(r"[0-9a-f]{40}\Z")
 
 
 def validate_catalog(payload: object) -> list[dict]:
