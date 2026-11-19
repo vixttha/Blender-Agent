@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.12 — v0.0.3 development checkpoint
+
+- Run the MCP matrix and real Blender fixture from clean wheel installs with a pinned SDK and recorded platform details (#15).
+
 ## v0.0.2.11 — v0.0.3 development checkpoint
 
 - Repair shared editable Blender mesh datablocks once and verify that instance transforms, material assignments, and UVs survive (#22).

@@ -38,6 +38,14 @@ The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public
 
 The Ubuntu job also runs all four tools over MCP stdio with Blender 4.5.0. It checks an STL → GLB → STL cube roundtrip, verifies that repair welds a split edge, and confirms that in-place edits and overwrites are rejected while the existing files retain their original bytes.
 
+| Public check | Configuration | Coverage |
+| --- | --- | --- |
+| Python tests | Python 3.11 and 3.12 on Ubuntu and Windows | Unit and negative-path tests |
+| MCP stdio | Python 3.12 and MCP SDK 1.30.0 on Ubuntu and Windows | Built wheel, installed launchers, discovery, configuration, and inspection |
+| Blender workflow | Python 3.12, MCP SDK 1.30.0, and Blender 4.5.0 on Ubuntu 24.04 | CLI roundtrips and built-wheel MCP jobs with real Blender |
+
+CI records the interpreter patch version, platform, and installed MCP dependencies. The public MCP extra still declares the SDK v1 API range. Blender 4.1 is the worker's minimum version check. Other Blender versions, Blender execution on Windows or macOS, and named desktop MCP hosts need separate verification. Default output publication requires hard-link support on the workspace filesystem.
+
 OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries.
 
 When saving a loaded Blender project as a new BLEND file, Blender-Agent anchors relative external references to the original project before saving. The resulting project uses absolute references to those resources, so the files must remain accessible at those paths. The save leaves the source project and external files intact.
