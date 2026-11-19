@@ -6,6 +6,7 @@ import json
 import math
 import os
 import shutil
+import struct
 import sysconfig
 import tempfile
 from pathlib import Path
@@ -99,6 +100,52 @@ async def blender_roundtrip(session, workspace):
     print("MCP file safety: in-place repair and destination overwrite denied; original bytes unchanged.")
 
 
+async def obj_material_roundtrip(session, workspace):
+    source = b"mtllib source.mtl\no Triangle\nv 0 0 0\nv 1 0 0\nv 0 1 0\nusemtl AuditRed\nf 1 2 3\n"
+    material = b"newmtl AuditRed\nKd 1.0 0.0 0.0\n"
+    (workspace / "source.obj").write_bytes(source)
+    (workspace / "source.mtl").write_bytes(material)
+
+    output = await call_tool(session, "convert_model", source="source.obj", output="red model.obj")
+    assert output["material_library"] == "red model.mtl", output
+    obj = (workspace / "red model.obj").read_bytes()
+    mtl = (workspace / "red model.mtl").read_bytes()
+    assert b"mtllib red model.mtl" in obj.splitlines() and b"usemtl AuditRed" in obj.splitlines(), obj
+    assert b"newmtl AuditRed" in mtl.splitlines(), mtl
+
+    # Convert the published OBJ with Blender, then read the material assigned in the resulting GLB.
+    glb, _ = await publish(
+        session, workspace, "convert_model", "convert", source="red model.obj", output="color.glb",
+    )
+    size, kind = struct.unpack_from("<I4s", glb, 12)
+    assert glb[:4] == b"glTF" and kind == b"JSON"
+    scene = json.loads(glb[20:20 + size])
+    primitive, = scene["meshes"][0]["primitives"]
+    restored = scene["materials"][primitive["material"]]
+    color = restored["pbrMetallicRoughness"]["baseColorFactor"]
+    assert restored["name"] == "AuditRed", restored
+    assert len(color) == 4 and all(
+        math.isclose(channel, expected, abs_tol=0.001)
+        for channel, expected in zip(color, (1.0, 0.0, 0.0, 1.0))
+    ), restored
+
+    for suffix, missing_suffix in ((".obj", ".mtl"), (".mtl", ".obj")):
+        existing = workspace / f"collision{suffix}"
+        existing.write_bytes(b"keep existing destination")
+        await expect_error(
+            session, "convert_model", "Destination already exists",
+            source="source.obj", output="collision.obj",
+        )
+        assert existing.read_bytes() == b"keep existing destination"
+        assert not (workspace / f"collision{missing_suffix}").exists()
+        existing.unlink()
+
+    assert (workspace / "source.obj").read_bytes() == source
+    assert (workspace / "source.mtl").read_bytes() == material
+    print("MCP OBJ materials: Blender re-import preserved the assigned AuditRed color.")
+    print("MCP OBJ collisions: existing OBJ and MTL preserved, with no partial output.")
+
+
 async def smoke(blender):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -150,6 +197,7 @@ async def smoke(blender):
                 print("Installed MCP launcher handshake, tool schemas and workspace isolation: PASS")
                 if blender is not None:
                     await blender_roundtrip(session, workspace)
+                    await obj_material_roundtrip(session, workspace)
 
 
 if __name__ == "__main__":

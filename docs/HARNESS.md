@@ -34,6 +34,8 @@ The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public
 
 The Ubuntu job also runs all four tools over MCP stdio with Blender 4.5.0. It checks an STL → GLB → STL cube roundtrip, verifies that repair welds a split edge, and confirms that in-place edits and overwrites are rejected while the existing files retain their original bytes.
 
+OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries.
+
 ## Trust and limits
 
 - Users configure the allowed workspace; keep it away from hostile or untrusted concurrent filesystem writers.
