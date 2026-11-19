@@ -1,5 +1,6 @@
 """Negative regression checks for the README HQ validator."""
 
+import re
 import shutil
 import sys
 import tempfile
@@ -19,7 +20,8 @@ class ReadmeHQTests(unittest.TestCase):
             target = self.root / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, target)
-        shutil.copytree(ROOT / "versions", self.root / "versions", dirs_exist_ok=True)
+        for area in ("versions", "workspace"):
+            shutil.copytree(ROOT / area, self.root / area, dirs_exist_ok=True)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -28,7 +30,7 @@ class ReadmeHQTests(unittest.TestCase):
         self.assertEqual([], validate(self.root))
 
     def test_archive_drift_rejected(self):
-        (self.root / "README.md").write_text("# Wrong\n", encoding="utf-8")
+        (self.root / "readme-hq/versions/v0.0.1/README.md").write_text("# Wrong\n", encoding="utf-8")
         self.assertTrue(any("drift" in x for x in validate(self.root)))
 
     def test_missing_draft_rejected(self):
@@ -39,6 +41,31 @@ class ReadmeHQTests(unittest.TestCase):
         p = self.root / "graphify/README.md"
         p.write_text(p.read_text() + "\n[Missing](../no-such-file.md)\n")
         self.assertTrue(any("broken local link" in x for x in validate(self.root)))
+
+    def test_broken_workspace_image_rejected(self):
+        image = self.root / "workspace/v0.0.3/assets/triangle-inspection.webp"
+        image.unlink()
+        self.assertIn(
+            "broken local link: workspace/v0.0.3/DRAFT.md -> assets/triangle-inspection.webp",
+            validate(self.root),
+        )
+
+    def test_promoted_readme_keeps_image_links(self):
+        workspace = self.root / "workspace/v0.0.3"
+        promoted = self.root / "homepage"
+        promoted.mkdir()
+        shutil.copyfile(workspace / "DRAFT.md", promoted / "README.md")
+        shutil.copytree(workspace / "assets", promoted / "assets")
+
+        readme = (promoted / "README.md").read_text(encoding="utf-8")
+        images = re.findall(r"!\[[^\]]+\]\(([^)]+)\)", readme)
+        self.assertCountEqual(images, [
+            "assets/triangle-inspection.webp",
+            "assets/wireframe-cube.webp",
+        ])
+        for path in images:
+            data = (promoted / path).read_bytes()
+            self.assertEqual(data[:4] + data[8:12], b"RIFFWEBP", path)
 
     def test_secret_rejected(self):
         p = self.root / "graphify/README.md"
