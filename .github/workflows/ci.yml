@@ -240,3 +240,63 @@ jobs:
       - name: Exercise the installed MCP wheel with real Blender
         shell: pwsh
         run: python tests/run_mcp_wheel_smoke.py --blender "$env:BLENDER_BIN"
+
+  release-readiness:
+    name: Release readiness (read-only)
+    needs: [python, mcp-stdio, blender-smoke, blender-windows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Report the tested release candidate
+        shell: bash
+        run: |
+          python - <<'PY'
+          import os
+          import subprocess
+          import tomllib
+          from pathlib import Path
+
+          from scripts.verify_release_approval import FINAL_RELEASE_TAG
+
+          sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          if sha != os.environ["GITHUB_SHA"]:
+              raise SystemExit("CI checked out a different commit than the workflow event.")
+          version = tomllib.loads(Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
+          tag = f"v{version}"
+          run_id = os.environ["GITHUB_RUN_ID"]
+          event = os.environ["GITHUB_EVENT_NAME"]
+          lines = [
+              "## Release readiness",
+              "",
+              "Python, MCP stdio, and real Blender jobs passed.",
+              "",
+              f"- Package version: `{version}`",
+              f"- Tested commit: `{sha}`",
+              f"- CI run: `{run_id}` (`{event}`)",
+          ]
+          if FINAL_RELEASE_TAG.fullmatch(tag):
+              listing = subprocess.check_output(
+                  ["git", "ls-remote", "--refs", "origin", f"refs/tags/{tag}"],
+                  text=True, timeout=30,
+              )
+              if listing.strip():
+                  lines.append(f"- Release tag: `{tag}` already exists.")
+              else:
+                  lines.append(f"- Release tag: `{tag}` is available.")
+          else:
+              lines.append("- The package version is a development checkpoint.")
+          if event != "push":
+              lines.append("- Publication uses the successful push run on the default branch.")
+          report = "\n".join(lines) + "\n"
+          with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:
+              summary.write(report)
+          print(report, end="")
+          PY
