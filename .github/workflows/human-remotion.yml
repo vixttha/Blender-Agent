@@ -1,0 +1,95 @@
+name: Human Remotion follow-up
+
+on:
+  push:
+    branches: [Human]
+    paths:
+      - media/mira-remotion/**
+      - .github/workflows/human-remotion.yml
+
+permissions:
+  contents: read
+
+jobs:
+  episode:
+    name: Verify both prop sets and render the square episode
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out the exact Human candidate
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Set up Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Capture actual CLI results and verify the source portrait
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          printf 'Checkout %s\nEvent %s\nRunner %s\n' "$GITHUB_SHA" "$GITHUB_EVENT_NAME" "$RUNNER_OS"
+          echo '89681e65085b3878c371d176a682d9cc4924125708dfa826d051af6559caf910  docs/human/pilot/assets/mira-vale-mist-base-headshot.png' | sha256sum --check
+          python -m pip install --disable-pip-version-check --no-deps .
+          python media/mira-remotion/prepare.py
+      - name: Install the pinned renderer and create the presenter reference clip
+        working-directory: media/mira-remotion
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          npm install --no-save --package-lock=false --no-audit --no-fund remotion@4.0.534 @remotion/cli@4.0.534 react@19.2.0 react-dom@19.2.0 @fontsource/instrument-serif@5.3.0 @fontsource/ibm-plex-mono@5.3.0
+          mkdir -p public assets
+          cp ../../docs/human/pilot/assets/mira-vale-mist-base-headshot.png public/mira-vale-mist.png
+          cp node_modules/@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2 assets/
+          cp node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2 assets/
+          ffmpeg -v error -i public/mira-vale-mist.png \
+            -vf "scale=1152:-1,zoompan=z='1+0.00016*on':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d=270:s=576x720:fps=30" \
+            -frames:v 270 -c:v libx264 -pix_fmt yuv420p -movflags +faststart -an public/mira-vale-mist-motion.mp4
+      - name: Render triangle and square with the same composition
+        working-directory: media/mira-remotion
+        run: |
+          npx --no-install remotion still index.jsx BartMeshInspection evidence/triangle-presenter.png \
+            --props=evidence/triangle.props.json --frame=120 --scale=0.5 --license-key=free-license
+          npx --no-install remotion still index.jsx BartMeshInspection evidence/triangle-inspection.png \
+            --props=evidence/triangle.props.json --frame=330 --scale=0.5 --license-key=free-license
+          npx --no-install remotion render index.jsx BartMeshInspection evidence/bart-mira-square-episode.mp4 \
+            --props=evidence/square.props.json --codec=h264 --concurrency=2 --muted --license-key=free-license
+      - name: Verify the exported episode and extract review frames
+        working-directory: media/mira-remotion
+        run: |
+          video=evidence/bart-mira-square-episode.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,nb_frames:format=duration \
+            -of json "$video" > evidence/media-probe.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          probe = json.loads(Path("evidence/media-probe.json").read_text())
+          video, = probe["streams"]
+          expected = {
+              "codec_type": "video", "codec_name": "h264", "width": 1920,
+              "height": 1080, "r_frame_rate": "30/1", "nb_frames": "540",
+          }
+          assert all(video[key] == value for key, value in expected.items()), video
+          assert float(probe["format"]["duration"]) == 18.0, probe
+          print("Verified silent H.264: 1920×1080, 30 fps, 540 frames, 18 seconds.")
+          PY
+          ffmpeg -v error -xerror -i "$video" -f null -
+          for second in 1 4 7 11 16; do
+            ffmpeg -v error -ss "$second" -i "$video" -frames:v 1 -vf scale=960:-1 "evidence/frame-$second.png"
+          done
+          (cd evidence && sha256sum bart-mira-square-episode.mp4 > SHA256SUMS)
+      - name: Upload the episode and prop comparison evidence
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: bart-mira-square-episode
+          path: media/mira-remotion/evidence/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

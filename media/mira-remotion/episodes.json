@@ -1,0 +1,117 @@
+{
+  "triangle": {
+    "heading": "One triangle.",
+    "fixture": "triangle.obj",
+    "presenter": {
+      "kind": "image",
+      "file": "mira-vale-mist.png",
+      "label": "Still-image presenter"
+    },
+    "captions": [
+      {
+        "text": "I’m Mira from BART.",
+        "startMs": 450,
+        "endMs": 3000,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Let’s inspect a triangle.",
+        "startMs": 3000,
+        "endMs": 5500,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "We’re looking for three vertices and one face.",
+        "startMs": 5500,
+        "endMs": 8700,
+        "timestampMs": null,
+        "confidence": null
+      }
+    ],
+    "points": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "faces": [
+      [
+        1,
+        2,
+        3
+      ]
+    ]
+  },
+  "square": {
+    "heading": "One square. Two faces.",
+    "fixture": "square.obj",
+    "presenter": {
+      "kind": "video",
+      "file": "mira-vale-mist-motion.mp4",
+      "label": "Still-based presenter clip"
+    },
+    "captions": [
+      {
+        "text": "I’m Mira from BART.",
+        "startMs": 450,
+        "endMs": 3000,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "Let’s inspect a square mesh.",
+        "startMs": 3000,
+        "endMs": 5500,
+        "timestampMs": null,
+        "confidence": null
+      },
+      {
+        "text": "It has four vertices and two triangular faces.",
+        "startMs": 5500,
+        "endMs": 8700,
+        "timestampMs": null,
+        "confidence": null
+      }
+    ],
+    "points": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "faces": [
+      [
+        1,
+        2,
+        3
+      ],
+      [
+        1,
+        3,
+        4
+      ]
+    ]
+  }
+}
