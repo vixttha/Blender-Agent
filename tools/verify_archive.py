@@ -50,7 +50,12 @@ def verify_version(version, entry, head, staging):
     run(python, "-m", "unittest", "discover", "-s", str(kit), "-p", "test_*.py", "-v")
 
     manifest = json.loads((kit / "self-map.json").read_text(encoding="utf-8"))
-    manifest.update(repository=os.environ["GITHUB_REPOSITORY"], source_commit=source)
+    repository = entry.get("source_repository") if archived else os.environ["GITHUB_REPOSITORY"]
+    if not isinstance(repository, str) or not re.fullmatch(
+        r"[A-Za-z0-9][A-Za-z0-9-]{0,38}/[A-Za-z0-9_.-]{1,100}", repository,
+    ):
+        raise ValueError(f"{version} requires a pinned source owner/repository")
+    manifest.update(repository=repository, source_commit=source)
     manifest_path = staging / "manifest.json"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     output = Path("graphify") / version if archived else staging / "candidate"

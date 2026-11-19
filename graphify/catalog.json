@@ -2,6 +2,7 @@
   "latest": "v0.0.8",
   "versions": {
     "v0.0.8": {
+      "source_repository": "vixttha/Blender-Agent",
       "source_commit": "062fb633838daa42204289d889850c03e89d45eb",
       "generation": {
         "event": "push",
