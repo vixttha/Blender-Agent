@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.20 — v0.0.3 development checkpoint
+
+- Force the download failure in the Blender 4.5 Ubuntu pull-request job, verify the mirrored archive, and distinguish download and checksum failures.
+
 ## v0.0.2.19 — v0.0.3 development checkpoint
 
 - Add a read-only owner-dispatch check that binds the final release tag and SHA to successful exact-commit application CI (#29).

@@ -116,12 +116,27 @@ jobs:
           BLENDER_VERSION: ${{ matrix.version }}
           BLENDER_SERIES: ${{ matrix.series }}
           BLENDER_SHA256: ${{ matrix.sha256 }}
+          SIMULATE_PRIMARY_FAILURE: ${{ github.event_name == 'pull_request' && matrix.version == '4.5.0' }}
         run: |
           release="release/Blender${BLENDER_SERIES}/blender-${BLENDER_VERSION}-linux-x64.tar.xz"
-          if ! curl --fail --location --retry 2 --silent --show-error "https://download.blender.org/$release" -o blender.tar.xz; then
-            curl --fail --location --retry 2 --silent --show-error "https://mirror.clarkson.edu/blender/$release" -o blender.tar.xz
+          download_primary() {
+            if [[ "$SIMULATE_PRIMARY_FAILURE" == true ]]; then
+              echo "Simulating a primary Blender download failure to test the mirror."
+              return 22
+            fi
+            curl --fail --location --retry 2 --silent --show-error "https://download.blender.org/$release" -o blender.tar.xz
+          }
+          if ! download_primary; then
+            echo "Downloading Blender $BLENDER_VERSION from the official Clarkson mirror."
+            if ! curl --fail --location --retry 2 --silent --show-error "https://mirror.clarkson.edu/blender/$release" -o blender.tar.xz; then
+              echo "::error::Both Blender download attempts failed."
+              exit 1
+            fi
           fi
-          printf '%s  blender.tar.xz\n' "$BLENDER_SHA256" | sha256sum --check -
+          if ! printf '%s  blender.tar.xz\n' "$BLENDER_SHA256" | sha256sum --check -; then
+            echo "::error::Blender archive checksum mismatch."
+            exit 1
+          fi
           mkdir -p blender-dist
           tar -xf blender.tar.xz -C blender-dist --strip-components=1
           ./blender-dist/blender --version | head -n 3
