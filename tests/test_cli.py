@@ -19,7 +19,7 @@ class CliTests(unittest.TestCase):
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
             self.assertEqual(main(["version"]), 0)
-        self.assertEqual(json.loads(buffer.getvalue())["version"], "0.0.2.10")
+        self.assertEqual(json.loads(buffer.getvalue())["version"], "0.0.2.11")
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
             self.assertEqual(main(["skills"]), 0)

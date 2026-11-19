@@ -62,10 +62,16 @@ def _create(kind, size):
 
 
 def _repair():
+    repaired = set()
     for obj in bpy.data.objects:
         if obj.type != "MESH":
             continue
         mesh = obj.data
+        identity = mesh.as_pointer()
+        if identity in repaired:
+            continue
+        if not mesh.is_editable:
+            raise ValueError("Repair requires editable mesh datablocks.")
         bm = bmesh.new()
         try:
             bm.from_mesh(mesh)
@@ -76,6 +82,8 @@ def _repair():
             mesh.update()
         finally:
             bm.free()
+        repaired.add(identity)
+    return len(repaired)
 
 
 def _geometry():
@@ -116,10 +124,12 @@ def main():
     elif operation in {"convert", "repair"}:
         _require_finished(_import(Path(job["source"])), "mesh import")
         if operation == "repair":
-            _repair()
+            repaired_meshes = _repair()
     else:
         raise ValueError("Unknown operation.")
     geometry = _geometry()
+    if operation == "repair":
+        geometry["repaired_mesh_datablocks"] = repaired_meshes
     if geometry["vertices"] < 3 or geometry["faces"] < 1:
         raise ValueError("No mesh faces are available for output.")
     output = Path(job["output"])

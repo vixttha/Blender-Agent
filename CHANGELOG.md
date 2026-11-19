@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.11 — v0.0.3 development checkpoint
+
+- Repair shared editable Blender mesh datablocks once and verify that instance transforms, material assignments, and UVs survive (#22).
+
 ## v0.0.2.10 — v0.0.3 development checkpoint
 
 - Anchor BLEND dependencies to the original project and verify a published project still loads a relative image (#19).

@@ -42,6 +42,8 @@ OBJ exports publish the matching MTL beside the OBJ and return its path in `mate
 
 When saving a loaded Blender project as a new BLEND file, Blender-Agent anchors relative external references to the original project before saving. The resulting project uses absolute references to those resources, so the files must remain accessible at those paths. The save leaves the source project and external files intact.
 
+Repairs process each shared editable mesh datablock once and report that count in `geometry.repaired_mesh_datablocks`. Repair rejects a project that requires editing a read-only mesh datablock.
+
 ## Trust and limits
 
 - Users configure the allowed workspace; keep it away from hostile or untrusted concurrent filesystem writers.
