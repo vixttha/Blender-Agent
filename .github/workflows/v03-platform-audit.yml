@@ -1,0 +1,90 @@
+name: v0.0.3 platform audit
+on:
+  push:
+    branches: [audit/v0.0.3-platform]
+permissions:
+  contents: read
+env:
+  RELEASE_SHA: 7febadd1d18bd15967e9eed6223098268dadfe2f
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+jobs:
+  macos:
+    name: Blender 4.5 installed-wheel MCP / macOS ARM64
+    runs-on: macos-latest
+    if: github.event.repository.private == false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Download official Blender and verify its checksum
+        run: |
+          test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+          test "$(uname -m)" = arm64
+          image="$RUNNER_TEMP/blender.dmg"
+          path="release/Blender4.5/blender-4.5.0-macos-arm64.dmg"
+          curl -fsSL --connect-timeout 10 --max-time 120 --retry 2 "https://download.blender.org/$path" -o "$image" ||
+          curl -fsSL --connect-timeout 10 --max-time 120 --retry 2 "https://mirror.blender.org/$path" -o "$image"
+          printf '%s  %s\n' f03e5ae7813db62c8664176b62638e12c1413cd9d59a883bb7bfb67cbaa8c52e "$image" | shasum -a 256 -c -
+          mount="$RUNNER_TEMP/blender-mount"
+          hdiutil attach -readonly -nobrowse -mountpoint "$mount" "$image"
+          blender="$mount/Blender.app/Contents/MacOS/Blender"
+          if [[ ! -x "$blender" ]]; then
+            blender="$mount/Blender.app/Contents/MacOS/blender"
+          fi
+          "$blender" --version | head -n 3
+          printf 'BLENDER_BIN=%s\n' "$blender" >> "$GITHUB_ENV"
+      - name: Exercise released MCP fixture with real Blender
+        run: python tests/run_mcp_wheel_smoke.py --blender "$BLENDER_BIN"
+  windows:
+    name: Active MCP cancellation during a real Blender job / Windows
+    runs-on: windows-latest
+    if: github.event.repository.private == false
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ env.RELEASE_SHA }}
+          path: release
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1
+        with:
+          python-version: '3.12'
+      - name: Install the released wheel and MCP minimum
+        shell: pwsh
+        run: |
+          $actual = git -C release rev-parse HEAD
+          if ($actual -ne $env:RELEASE_SHA) { throw 'Wrong app checkout' }
+          Write-Output $actual
+          python -m pip install "./release[mcp]" "mcp==1.30.0"
+          python -m pip check
+      - name: Download and verify official Blender
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $release = 'release/Blender4.5/blender-4.5.0-windows-x64.zip'
+          $archive = Join-Path $env:RUNNER_TEMP 'blender.zip'
+          curl.exe --fail --location --retry 2 --silent --show-error "https://download.blender.org/$release" -o $archive
+          if ($LASTEXITCODE -ne 0) {
+            curl.exe --fail --location --retry 2 --silent --show-error "https://mirror.clarkson.edu/blender/$release" -o $archive
+            if ($LASTEXITCODE -ne 0) { throw 'Blender download failed' }
+          }
+          $expected = '2ee75e9466d293a784fdf020f60fe1309c1e0610ecf73c64f1fc09b01e5eec56'
+          if ((Get-FileHash -Algorithm SHA256 $archive).Hash -ne $expected) { throw 'Blender archive checksum mismatch' }
+          tar.exe -xf $archive -C $env:RUNNER_TEMP
+          if ($LASTEXITCODE -ne 0) { throw 'Blender extraction failed' }
+          $blender = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'blender-4.5.0-windows-x64') -Filter blender.exe
+          if (!$blender) { throw 'Blender executable missing after extraction' }
+          & $blender.FullName --version
+          if ($LASTEXITCODE -ne 0) { throw 'Blender could not start' }
+          "BLENDER_BIN=$($blender.FullName)" >> $env:GITHUB_ENV
+      - name: Exercise active cancellation in the released MCP server
+        shell: pwsh
+        run: python tools/windows_mcp_cancellation.py "$env:BLENDER_BIN"
