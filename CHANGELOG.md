@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.10 — v0.0.3 development checkpoint
+
+- Anchor BLEND dependencies to the original project and verify a published project still loads a relative image (#19).
+
 ## v0.0.2.9 — v0.0.3 development checkpoint
 
 - Document the workspace policy for secondary asset dependencies and explicitly disable script execution when opening Blender projects (#20).

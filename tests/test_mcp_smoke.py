@@ -160,6 +160,35 @@ async def reject_faceless_output(session, workspace):
     print("MCP geometry: Blender rejected a wire-only OBJ without publishing an output.")
 
 
+async def verify_blend_dependency(session, workspace, blender):
+    project = workspace / "source project" / "linked.blend"
+    resource = project.parent / "deps" / "texture.png"
+    destination = workspace / "published" / "linked.blend"
+    destination.parent.mkdir()
+    fixture = Path(__file__).with_name("blender_linked_fixture.py").resolve()
+    command = [
+        str(blender.resolve(strict=True)), "--background", "--factory-startup",
+        "--disable-autoexec", "--python-exit-code", "17", "--python", str(fixture), "--",
+    ]
+
+    async def run(action, path):
+        result = await asyncio.to_thread(
+            subprocess.run, [*command, action, str(path), str(resource)],
+            capture_output=True, text=True, timeout=30,
+        )
+        assert result.returncode == 0, (action, result.stdout, result.stderr)
+
+    await run("create", project)
+    original_project, original_resource = project.read_bytes(), resource.read_bytes()
+    await publish(
+        session, workspace, "convert_model", "convert",
+        source="source project/linked.blend", output="published/linked.blend",
+    )
+    await run("verify", destination)
+    assert project.read_bytes() == original_project and resource.read_bytes() == original_resource
+    print("MCP BLEND export: published project reopened and loaded its original relative image.")
+
+
 async def verify_blender_scheduling(cli, blender, host_directory, workspace, env):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -285,6 +314,7 @@ async def smoke(blender):
                     await blender_roundtrip(session, workspace)
                     await obj_material_roundtrip(session, workspace)
                     await reject_faceless_output(session, workspace)
+                    await verify_blend_dependency(session, workspace, blender)
 
         cli_params = StdioServerParameters(
             command=cli, args=["--workspace", str(workspace), "mcp"], cwd=host_directory,

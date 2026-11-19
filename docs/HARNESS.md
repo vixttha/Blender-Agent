@@ -40,6 +40,8 @@ The Ubuntu job also runs all four tools over MCP stdio with Blender 4.5.0. It ch
 
 OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries.
 
+When saving a loaded Blender project as a new BLEND file, Blender-Agent anchors relative external references to the original project before saving. The resulting project uses absolute references to those resources, so the files must remain accessible at those paths. The save leaves the source project and external files intact.
+
 ## Trust and limits
 
 - Users configure the allowed workspace; keep it away from hostile or untrusted concurrent filesystem writers.

@@ -35,7 +35,9 @@ def _import(path):
 def _export(path):
     extension = path.suffix.lower()
     if extension == ".blend":
-        return bpy.ops.wm.save_as_mainfile(filepath=str(path))
+        if bpy.data.filepath:
+            _require_finished(bpy.ops.file.make_paths_absolute(), "external path anchoring")
+        return bpy.ops.wm.save_as_mainfile(filepath=str(path), relative_remap=False)
     elif extension == ".stl":
         return bpy.ops.wm.stl_export(filepath=str(path), export_selected_objects=False)
     elif extension == ".obj":
