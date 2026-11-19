@@ -1,4 +1,4 @@
-"""Generate deterministic, read-only Graphify version maps for Blender-Agent."""
+"""Generate deterministic, read-only Graphify version maps for Blender-Agent Refinement Toolkit."""
 
 from __future__ import annotations
 
@@ -23,7 +23,17 @@ from mcp.client.stdio import stdio_client
 ROOT = Path(__file__).resolve().parents[2]
 CATALOG = ROOT / "catalog" / "versions.json"
 ARCHIVES = ROOT / "versions"
-REPOSITORY = "vixttha/Blender-Agent"
+REPOSITORY = "vixttha/Blender-Agent-Refinement-Toolkit"
+PRODUCT_NAME = "Blender-Agent Refinement Toolkit"
+LEGACY_REPOSITORY = "vixttha/Blender-Agent"
+LEGACY_PRODUCT_NAME = "Blender-Agent"
+# Exact pre-rebrand source commits whose generated artifacts remain byte-for-byte reproducible.
+LEGACY_SNAPSHOTS = {
+    ("v0.0.1", "45726472fbe7f32de32f87426dc0b21b8fc1e8f7", True),
+    ("v0.0.2", "cb945bd8531ee425615c1968612ab6503849369d", False),
+    ("v0.0.3", "38e8f63c3fe2e372784276acdbb602cb7409b100", True),
+    ("v0.0.3", "7febadd1d18bd15967e9eed6223098268dadfe2f", False),
+}
 RELEASE = re.compile(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\Z")
 COMMIT = re.compile(r"[0-9a-f]{40}\Z")
 HEADING = re.compile(r"^(#{1,6})\s+(.+?)(?:\s+#+)?\s*$")
@@ -148,6 +158,9 @@ def prose_lines(body: str):
             yield line_number, line
 
 def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bool = False, candidate: bool = False) -> dict:
+    repository, product_name = REPOSITORY, PRODUCT_NAME
+    if (tag, sha, candidate) in LEGACY_SNAPSHOTS:
+        repository, product_name = LEGACY_REPOSITORY, LEGACY_PRODUCT_NAME
     nodes: dict[str, dict] = {}
     edges: dict[tuple, dict] = {}
     outlines: dict[str, list[tuple[str, str]]] = {}
@@ -165,7 +178,7 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
             "confidence": "EXTRACTED", "confidence_score": 1.0, "weight": 1.0,
         }
 
-    add_node("version:" + tag, "Blender-Agent " + tag, "concept")
+    add_node("version:" + tag, product_name + " " + tag, "concept")
     for path, body in sorted(docs.items()):
         doc_id = "document:" + path
         add_node(doc_id, path, "document", path, 1)
@@ -213,7 +226,7 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
         "schema_version": 1,
         "version": tag,
         "release_tag": tag if not (fixture or candidate) else None,
-        "source_repository": REPOSITORY,
+        "source_repository": repository,
         "source_commit": sha,
         "graphify_version": package_version("graphifyy"),
         "graph_sha256": hashlib.sha256(graph_path.read_bytes()).hexdigest(),
@@ -228,24 +241,24 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
     }
     (folder / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
     lines = [
-        "# Blender-Agent " + tag, "",
+        "# " + product_name + " " + tag, "",
         "[Graphify map](graph.json) · [Source receipt](receipt.json) · [All versions](../README.md)", "",
         "**Source commit:** " + sha, "",
     ]
     if candidate:
         lines.extend([
-            "**Candidate only — NOT an approved or published Blender-Agent release.**", "",
+            f"**Candidate only — NOT an approved or published {product_name} release.**", "",
             "Approval, an immutable release tag, and promotion into the approved catalog are pending.", "",
         ])
     for path, headings in outlines.items():
         lines.extend(["## " + path, "", "Source document at the pinned release commit:", ""])
         lines.append(
-            "https://github.com/" + REPOSITORY + "/blob/" + sha + "/" + path
+            "https://github.com/" + repository + "/blob/" + sha + "/" + path
         )
         lines.append("")
         for label, slug in headings:
             lines.append("- [" + label.replace("[", "\\[").replace("]", "\\]") + "](" +
-                         "https://github.com/" + REPOSITORY + "/blob/" + sha + "/" + path + "#" + slug + ")")
+                         "https://github.com/" + repository + "/blob/" + sha + "/" + path + "#" + slug + ")")
         lines.append("")
     (folder / "README.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
     return receipt
@@ -273,9 +286,9 @@ async def verify_mcp(graph_file: Path, receipt: dict) -> None:
 
 
 def write_index(records: list[dict], output: Path) -> None:
-    lines = ["# Blender-Agent version graphs", ""]
+    lines = [f"# {PRODUCT_NAME} version graphs", ""]
     if not records:
-        lines.append("No approved Blender-Agent release snapshots have been registered yet.")
+        lines.append(f"No approved {PRODUCT_NAME} release snapshots have been registered yet.")
         lines.append("")
         lines.extend([
             "Each accepted version receives a folder named vMAJOR.MINOR.PATCH containing:",
@@ -288,7 +301,7 @@ def write_index(records: list[dict], output: Path) -> None:
         ])
     else:
         lines.extend([
-            "Maps index public documentation at the exact source commit of each approved Blender-Agent version.",
+            f"Maps index public documentation at the exact source commit of each approved {PRODUCT_NAME} version.",
             "Each map includes a Graphify graph, navigable outline, and verification receipt.",
             "",
         ])
@@ -341,6 +354,8 @@ def self_test() -> None:
         second = Path(temp) / "second"
         receipt = make_map("v0.0.0", "0" * 40, {"README.md": raw}, first, fixture=True)
         again = make_map("v0.0.0", "0" * 40, {"README.md": raw}, second, fixture=True)
+        assert receipt["source_repository"] == REPOSITORY
+        assert (first / "README.md").read_text(encoding="utf-8").startswith(f"# {PRODUCT_NAME} ")
         if receipt['nodes'] != 6 or receipt['edges'] != 5:
             raise ValueError('Code-fence injection polluted the synthetic heading/link graph')
         if generated_files(first) != generated_files(second) or receipt != again:

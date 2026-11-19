@@ -1,6 +1,6 @@
-# Blender-Agent version graphs
+# Blender-Agent Refinement Toolkit version graphs
 
-Maps index public documentation at the exact source commit of each approved Blender-Agent version.
+Maps index public documentation at the exact source commit of each approved Blender-Agent Refinement Toolkit version.
 Each map includes a Graphify graph, navigable outline, and verification receipt.
 
 - [v0.0.3](v0.0.3/README.md) — 7febadd1d18bd15967e9eed6223098268dadfe2f

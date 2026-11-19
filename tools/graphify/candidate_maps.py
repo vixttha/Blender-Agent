@@ -1,4 +1,4 @@
-"""Build and check Graphify snapshots for unapproved Blender-Agent candidates.
+"""Build and check Graphify snapshots for unapproved Blender-Agent Refinement Toolkit candidates.
 
 An unapproved PR head must never enter catalog/versions.json.
 Snapshots stay in candidates/, isolated from approved version archives.
@@ -15,6 +15,7 @@ import tempfile
 from pathlib import Path
 
 from version_maps import (
+    PRODUCT_NAME,
     REPOSITORY,
     ROOT,
     check_path,
@@ -99,7 +100,7 @@ def read_sources(item: dict) -> dict[str, str]:
 def build(output: Path, entries: list[dict]) -> None:
     output.mkdir(parents=True, exist_ok=True)
     lines = [
-        "# Blender-Agent release candidates",
+        f"# {PRODUCT_NAME} release candidates",
         "",
         "**These are proposed versions only, not approved releases.**",
         "Do not promote these maps to versions/ without an approved release and verified tag.",
@@ -114,7 +115,7 @@ def build(output: Path, entries: list[dict]) -> None:
         (dest / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
         info = dest / "README.md"
         data = info.read_text(encoding="utf-8")
-        data += "\n[Review the source PR](https://github.com/" + REPOSITORY + "/pull/" + str(item["source_pr"]) + ")\n"
+        data += "\n[Review the source PR](https://github.com/" + receipt["source_repository"] + "/pull/" + str(item["source_pr"]) + ")\n"
         info.write_text(data, encoding="utf-8")
         asyncio.run(verify_mcp(dest / "graph.json", receipt))
         lines.append("- [" + tag + "](" + tag + "/README.md) — PR #" +

@@ -1,4 +1,4 @@
-# Blender-Agent release candidates
+# Blender-Agent Refinement Toolkit release candidates
 
 **These are proposed versions only, not approved releases.**
 Do not promote these maps to versions/ without an approved release and verified tag.
