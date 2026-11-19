@@ -6,7 +6,7 @@
 - Recheck workspace containment before output publication and document remaining filesystem threat assumptions.
 - Bound Blender process logs, runtime and file sizes; add oversized-input/output and timeout tests.
 - Validate structural OBJ face references and strengthen malformed STL/OBJ inputs.
-- Add real MCP stdio handshake, discovery, tool call and failure tests on free GitHub-hosted Linux and Windows runners.
+- Verify the installed MCP launcher, handshake, tool schemas and workspace isolation on free GitHub-hosted Linux and Windows runners.
 - Expand real Blender format roundtrips and verify mesh geometry, not only output existence.
 - Correct version number and prior documentation claims; keep the six-audit-finding evidence explicit.
 

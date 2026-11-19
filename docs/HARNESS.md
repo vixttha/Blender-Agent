@@ -30,7 +30,7 @@ A generic host configuration (adapt to the host's schema):
 
 The adapter exposes inspect_model, create_primitive, convert_model, and repair_mesh. It does not expose arbitrary code execution, overwrite parameters, AI image generation, memory, or autonomous task scheduling.
 
-The pinned optional dependency supports the MCP SDK v1 API range mcp>=1.12,<2. A public CI client smoke test initializes a real session, lists the tools, invokes read-only inspection, and checks a denied filesystem traversal. Compatibility with individual hosts still requires host-specific validation.
+The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public CI on Linux and Windows starts the installed `blender-agent-mcp` command from a separate working directory, initializes a real stdio session, checks each tool's input schema, and verifies workspace isolation and read-only inspection. Individual MCP hosts may require different launch configuration.
 
 ## Trust and limits
 

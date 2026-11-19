@@ -5,46 +5,65 @@ Run only in the optional-MCP CI job with pip install -e ".[mcp]".
 import asyncio
 import json
 import os
-import sys
+import shutil
+import sysconfig
 import tempfile
-import unittest
 from pathlib import Path
+
 
 async def smoke():
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
+
+    launcher = shutil.which("blender-agent-mcp", path=sysconfig.get_path("scripts"))
+    assert launcher, "The installed blender-agent-mcp console script is missing"
+    required_arguments = {
+        "inspect_model": {"path"},
+        "create_primitive": {"kind", "output"},
+        "convert_model": {"source", "output"},
+        "repair_mesh": {"source", "output"},
+    }
     with tempfile.TemporaryDirectory() as directory:
-        workspace = Path(directory)
-        (workspace / "mesh.obj").write_text(
-            "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n", encoding="utf-8"
-        )
+        host_directory = Path(directory)
+        workspace = host_directory / "asset workspace"
+        workspace.mkdir()
+        mesh = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"
+        source = workspace / "mesh.obj"
+        source.write_text(mesh, encoding="utf-8")
+        (host_directory / "outside.obj").write_text(mesh, encoding="utf-8")
         params = StdioServerParameters(
-            command=sys.executable,
-            args=["-m", "blender_agent.mcp_server"],
+            command=launcher,
+            cwd=host_directory,
             env={**os.environ, "BLENDER_AGENT_WORKSPACE": str(workspace)},
         )
-        async with stdio_client(params) as (reader, writer):
+        async with asyncio.timeout(60), stdio_client(params) as (reader, writer):
             async with ClientSession(reader, writer) as session:
-                await asyncio.wait_for(session.initialize(), timeout=20)
-                available = await asyncio.wait_for(session.list_tools(), timeout=20)
-                names = {tool.name for tool in available.tools}
-                assert names == {"inspect_model", "create_primitive",
-                                 "convert_model", "repair_mesh"}, names
-                result = await asyncio.wait_for(
-                    session.call_tool("inspect_model", {"path": "mesh.obj"}),
-                    timeout=20,
-                )
+                initialized = await session.initialize()
+                assert initialized.serverInfo.name == "blender-agent", initialized
+                assert initialized.capabilities.tools is not None, initialized
+                available = await session.list_tools()
+                schemas = {tool.name: tool.inputSchema for tool in available.tools}
+                assert set(schemas) == set(required_arguments), schemas
+                for name, expected in required_arguments.items():
+                    assert set(schemas[name]["required"]) == expected, schemas[name]
+                    assert "overwrite" not in schemas[name]["properties"], schemas[name]
+
+                failure = await session.call_tool("inspect_model", {"path": "../outside.obj"})
+                assert failure.isError, failure
+                assert any(
+                    content.type == "text"
+                    and "Path must remain inside the configured workspace." in content.text
+                    for content in failure.content
+                ), failure
+
+                result = await session.call_tool("inspect_model", {"path": "mesh.obj"})
                 assert not result.isError, result
                 payload = result.structuredContent
                 if payload is None:
                     payload = json.loads(result.content[0].text)
                 assert payload["faces"] == 1, payload
-                failure = await asyncio.wait_for(
-                    session.call_tool("inspect_model", {"path": "../outside.obj"}),
-                    timeout=20,
-                )
-                assert failure.isError, failure
-                print("MCP stdio handshake, discovery, invocation and error response: PASS")
+                assert source.read_text(encoding="utf-8") == mesh
+                print("Installed MCP launcher handshake, tool schemas and workspace isolation: PASS")
 
 
 if __name__ == "__main__":
