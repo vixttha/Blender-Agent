@@ -9,6 +9,10 @@
     {
       "version": "v0.0.2",
       "source_commit": "48e0cc8fe73087b1ca497b5611314da4e1871705"
+    },
+    {
+      "version": "v0.0.3",
+      "source_commit": "fca913af67d08c9aec4f381997dcf6dc237018e3"
     }
   ]
 }
