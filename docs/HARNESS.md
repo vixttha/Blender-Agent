@@ -36,7 +36,7 @@ Each MCP server runs one Blender job at a time while it continues to respond to 
 
 Cancelling a queued request prevents it from publishing. An active Blender process may run until it finishes or reaches its timeout. The worker checks cancellation immediately before publication, which is the commit point. A cancellation received after that check lets publication finish, including any OBJ material-file update. The worker holds its slot until staging is cleaned up.
 
-The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public CI on Linux and Windows starts the installed `blender-agent-mcp` command from a separate working directory, initializes a real stdio session, checks each tool's input schema, and verifies workspace isolation and read-only inspection. Individual MCP hosts may require different launch configuration.
+The optional dependency requires `mcp>=1.30.0,<2`. Public CI on Linux and Windows starts the installed `blender-agent-mcp` command from a separate working directory, initializes a real stdio session, checks each tool's input schema, and verifies workspace isolation and read-only inspection. Individual MCP hosts may require different launch configuration.
 
 The Ubuntu jobs also run all four tools over MCP stdio with Blender 4.1.0 and 4.5.0. They check an STL → GLB → STL cube roundtrip, verify that repair welds a split edge, and confirm that in-place edits and overwrites are rejected while the existing files retain their original bytes.
 
@@ -44,7 +44,7 @@ The Ubuntu jobs also run all four tools over MCP stdio with Blender 4.1.0 and 4.
 | --- | --- | --- |
 | Python tests | Python 3.11 and 3.12 on Ubuntu and Windows | Unit and negative-path tests |
 | MCP stdio | Python 3.12 and MCP SDK 1.30.0 on Ubuntu and Windows | Built wheel, installed launchers, discovery, configuration, and inspection |
-| Blender workflow | Python 3.12, MCP SDK 1.30.0, and Blender 4.1.0 and 4.5.0 on Ubuntu 24.04 | CLI roundtrips and built-wheel MCP jobs with real Blender |
+| Blender workflow | Python 3.12 on Ubuntu 24.04, with Blender 4.1.0 at the SDK minimum and Blender 4.5.0 using the normal dependency resolver | CLI roundtrips and built-wheel MCP jobs with real Blender |
 
 CI records the interpreter patch version, platform, and installed MCP dependencies. The public MCP extra still declares the SDK v1 API range. Blender 4.1 is the worker's minimum version check. Other Blender versions, Blender execution on Windows or macOS, and named desktop MCP hosts need separate verification. Default output publication requires hard-link support on the workspace filesystem.
 

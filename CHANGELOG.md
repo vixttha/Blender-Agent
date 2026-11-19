@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.17 — v0.0.3 development checkpoint
+
+- Raise the MCP SDK minimum to 1.30.0 and verify both minimum and normal-resolver wheel installs with real Blender (#31).
+
 ## v0.0.2.16 — v0.0.3 development checkpoint
 
 - Restore the Blender 4.1 repair path and validate the full installed-wheel fixture on Blender 4.1.0 and 4.5.0 (#32).

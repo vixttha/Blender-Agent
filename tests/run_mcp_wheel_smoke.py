@@ -6,19 +6,21 @@ import platform
 import subprocess
 import sys
 import tempfile
+import tomllib
 import venv
 from pathlib import Path
-
-MCP_CI_VERSION = "1.30.0"
-
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--blender", type=Path)
+    parser.add_argument("--mcp-mode", choices=("minimum", "resolver"), default="minimum")
     args = parser.parse_args()
     blender = args.blender.resolve(strict=True) if args.blender is not None else None
 
     tests = Path(__file__).resolve().parent
+    project = tomllib.loads((tests.parent / "pyproject.toml").read_text(encoding="utf-8"))
+    specifier, = project["project"]["optional-dependencies"]["mcp"]
+    minimum = specifier.removeprefix("mcp>=").split(",", 1)[0]
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         environment = root / "environment"
@@ -31,12 +33,18 @@ def main():
             cwd=root, check=True,
         )
         wheel, = wheels.glob("blender_agent-*.whl")
+        requirements = [f"{wheel}[mcp]"]
+        if args.mcp_mode == "minimum":
+            requirements.append(f"mcp=={minimum}")
         subprocess.run(
-            [python, "-m", "pip", "install", f"{wheel}[mcp]", f"mcp=={MCP_CI_VERSION}"],
+            [python, "-m", "pip", "install", *requirements],
             cwd=root, check=True,
         )
         subprocess.run([python, "-m", "pip", "check"], cwd=root, check=True)
-        print(f"MCP wheel: {wheel.name}, Python {platform.python_version()}, {platform.platform()}", flush=True)
+        print(
+            f"MCP wheel: {wheel.name} ({args.mcp_mode}), Python {platform.python_version()}, {platform.platform()}",
+            flush=True,
+        )
         subprocess.run([python, "-m", "pip", "freeze"], cwd=root, check=True)
 
         command = [python, tests / "test_mcp_smoke.py"]

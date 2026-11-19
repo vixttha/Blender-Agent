@@ -96,9 +96,11 @@ jobs:
           - version: "4.1.0"
             series: "4.1"
             sha256: d2ac5390f4a9cb9416c8eb23bdd8fa8e49e68165a889575fd8f56563f5cccaf1
+            mcp-mode: minimum
           - version: "4.5.0"
             series: "4.5"
             sha256: 1188b95cc12321c770b631939f7c25a096910b6f884a990bf9c0f62d52b38aec
+            mcp-mode: resolver
     steps:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -165,4 +167,5 @@ jobs:
       - name: Exercise the installed MCP wheel with real Blender
         env:
           BLENDER_BIN: ${{ github.workspace }}/blender-dist/blender
-        run: python tests/run_mcp_wheel_smoke.py --blender "$BLENDER_BIN"
+          MCP_MODE: ${{ matrix.mcp-mode }}
+        run: python tests/run_mcp_wheel_smoke.py --blender "$BLENDER_BIN" --mcp-mode "$MCP_MODE"
