@@ -38,4 +38,4 @@ The version graph is a documentation and version-discovery aid, not a claim that
 - Store no personal information, credentials, private repositories, machine-specific paths, or invented version history.
 - The checked-in workflow validates artifacts but never automatically creates a release, promotes a tag, merges branches, or writes to the repository.
 
-**Current archive:** no approved Blender-Agent versions have been registered. The proposed v0.0.1 foundation has a separate candidate catalog, pending validation and release approval.
+**Current archive:** [Blender-Agent v0.0.2](versions/v0.0.2/README.md) maps the published pre-release. The v0.0.1 foundation remains in the historical candidate archive.

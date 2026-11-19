@@ -1,11 +1,8 @@
 # Blender-Agent version graphs
 
-No approved Blender-Agent release snapshots have been registered yet.
+Maps index public documentation at the exact source commit of each approved Blender-Agent version.
+Each map includes a Graphify graph, navigable outline, and verification receipt.
 
-Each accepted version receives a folder named vMAJOR.MINOR.PATCH containing:
+- [v0.0.2](v0.0.2/README.md) — cb945bd8531ee425615c1968612ab6503849369d
 
-- README.md — a browsable outline linked to the original public source documents.
-- graph.json — deterministic Graphify graph of that version's documentation.
-- receipt.json — exact source commit, release tag, source-file SHA-1 values, graph SHA-256, Graphify version, and node/edge counts.
-
-Version folders are created from the approved immutable catalog. See [Graphify guide](../tools/graphify/README.md) and [catalog](../catalog/versions.json).
+[Catalog](../catalog/versions.json) · [Generation guide](../tools/graphify/README.md)
