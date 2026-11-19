@@ -30,13 +30,14 @@ def main():
     graph.setdefault("graph", {})["scope"] = "chatgpt_project_instructions"
     for node in graph["nodes"]:
         if node["id"] == f"version:{version}":
-            node["label"] = f"Blender-Agent project instructions {version}"
+            node["label"] = f"Blender-Agent Refinement Toolkit project instructions {version}"
     graph["built_at_commit"] = source
     graph_path.write_text(json.dumps(graph, ensure_ascii=False, indent=2) + "\n")
     asyncio.run(verify_mcp(graph_path, receipt))
 
     receipt.update(
         scope="chatgpt_project_instructions",
+        source_repository=os.environ["GITHUB_REPOSITORY"],
         source_ref=os.environ["GITHUB_REF"],
         graph_sha256=hashlib.sha256(graph_path.read_bytes()).hexdigest(),
         graphify_hq_commit=os.environ["GRAPHIFY_HQ_SHA"],

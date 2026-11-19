@@ -11,25 +11,34 @@ class InstructionsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         version = json.loads(Path("graphify/versions.json").read_text())["graph"]["active_version"]
+        cls.version = version
         cls.draft = Path(version, "CHATGPT_PROJECT_INSTRUCTIONS.md").read_text()
 
     def test_active_instructions(self):
-        validate_instructions(self.draft)
+        validate_instructions(self.draft, self.version)
 
     def test_missing_worker_limit(self):
         with self.assertRaisesRegex(ValueError, "one active worker"):
-            validate_instructions(self.draft.replace("one active Worker", "a Worker"))
+            validate_instructions(self.draft.replace("one active Worker", "a Worker"), self.version)
 
     def test_missing_graphify_route(self):
         with self.assertRaisesRegex(ValueError, "Missing instruction policy"):
-            validate_instructions(self.draft.replace("/tree/graphify-hq", "/tree/unrelated"))
+            validate_instructions(self.draft.replace("/tree/graphify-hq", "/tree/unrelated"), self.version)
 
     def test_wrong_delivery_order(self):
         head = "Head — select one feature"
         worker = "Worker — implement"
         wrong = self.draft.replace(head, "[swap]").replace(worker, head).replace("[swap]", worker)
         with self.assertRaisesRegex(ValueError, "out of order"):
-            validate_instructions(wrong)
+            validate_instructions(wrong, self.version)
+
+    def test_new_versions_require_the_canonical_repository(self):
+        legacy, current = "vixttha/Blender-Agent", "vixttha/Blender-Agent-Refinement-Toolkit"
+        archived = Path("v0.0.2", "CHATGPT_PROJECT_INSTRUCTIONS.md").read_text()
+        canonical = archived.replace(legacy, current)
+        validate_instructions(canonical, "v0.0.3")
+        with self.assertRaisesRegex(ValueError, "Missing instruction policy"):
+            validate_instructions(archived, "v0.0.3")
 
 
 class ProvenanceTests(unittest.TestCase):

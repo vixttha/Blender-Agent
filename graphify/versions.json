@@ -4,7 +4,7 @@
   "graph": {
     "schema_version": 1,
     "kind": "instructions-version-lineage",
-    "repository": "vixttha/Blender-Agent",
+    "repository": "vixttha/Blender-Agent-Refinement-Toolkit",
     "archive_branch": "chatgpt-project-instructions",
     "generator": "manual archive handoff (not Graphify MCP)",
     "mcp_verified": false,
@@ -13,7 +13,7 @@
   "nodes": [
     {
       "id": "repo:main",
-      "label": "Blender-Agent main",
+      "label": "Blender-Agent Refinement Toolkit main",
       "kind": "engineering-baseline"
     },
     {
