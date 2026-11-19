@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "project": "Example project",
+  "source_commit": "0000000000000000000000000000000000000000",
+  "required_paths": [
+    "src/main.py"
+  ],
+  "reviewed_paths": [],
+  "overrides": {},
+  "sources": [
+    {
+      "id": "S1",
+      "url": "https://github.com/OWNER/REPO/blob/COMMIT/src/main.py",
+      "claim": "Replace this URL and claim with primary evidence."
+    }
+  ],
+  "technologies": [
+    {
+      "name": "Python",
+      "status": "active",
+      "role": "Replace this with the source-backed application role.",
+      "tracked_language": true,
+      "evidence": [
+        "S1"
+      ]
+    }
+  ],
+  "source_checks": {}
+}
