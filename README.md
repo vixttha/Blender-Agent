@@ -15,6 +15,7 @@ This branch is intentionally sparse. It is not the Blender add-on/runtime, a dis
 | [Version catalog](catalog/versions.json) | Approved Blender-Agent releases and their immutable source commits. |
 | [Version archive](versions/README.md) | One graph, navigable outline, and evidence receipt per approved release. |
 | [Release candidates](candidates/README.md) | Provisional source-pinned maps; never treated as approved releases. |
+| [OBJ/MTL export evidence](evidence/obj-mtl/v0.0.2.1/README.md) | Feature map for the v0.0.2.1 candidate, including exact source, regressions, and public Blender results. |
 | [Graphify workflow guide](tools/graphify/README.md) | How to build, query, review, and reproduce each version map. |
 | [Public-runner validation](.github/workflows/graphify-hq.yml) | Read-only verification on standard GitHub-hosted Ubuntu runners. |
 | [Security and operating rules](SECURITY.md) | No credentials, local execution requirements, or public personal details. |
