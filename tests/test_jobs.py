@@ -1,5 +1,6 @@
 import concurrent.futures
 import json
+import os
 import subprocess
 import sys
 import tempfile
@@ -9,8 +10,42 @@ from pathlib import Path
 from unittest.mock import patch
 
 from blender_agent.jobs import (
-    MAX_INPUT_BYTES, MAX_LOG_BYTES, MAX_OUTPUT_BYTES, _publish, _run_blender, execute,
+    MAX_INPUT_BYTES, MAX_LOG_BYTES, MAX_OUTPUT_BYTES, _obj_lock, _publish, _run_blender, execute,
 )
+
+TRIANGLE_STL = (
+    b"solid triangle\nfacet normal 0 0 1\nouter loop\nvertex 0 0 0\nvertex 1 0 0\n"
+    b"vertex 0 1 0\nendloop\nendfacet\nendsolid triangle\n"
+)
+TRIANGLE_OBJ = b"v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n"
+
+INTERRUPT_OBJ_PUBLICATION = """\
+import json
+import os
+import sys
+from pathlib import Path
+from unittest.mock import patch
+from blender_agent import jobs
+
+def fixture(command, *, cwd, timeout):
+    job = json.loads(Path(command[-1]).read_text())
+    output = Path(job["output"])
+    output.write_text("mtllib out.mtl\\nv 0 0 0\\nv 1 0 0\\nv 0 1 0\\nf 1 2 3\\n")
+    output.with_suffix(".mtl").write_bytes(b"interrupted material")
+    Path(job["report"]).write_text('{"mesh_objects": 1, "vertices": 3, "faces": 1}')
+
+publish = jobs._publish
+def interrupt_after_material(temporary, final, root, *, overwrite):
+    publish(temporary, final, root, overwrite=overwrite)
+    if final.suffix == ".mtl":
+        os._exit(37)
+
+with patch.object(jobs.shutil, "which", return_value="/bin/blender"), \\
+     patch.object(jobs, "_run_blender", side_effect=fixture), \\
+     patch.object(jobs, "_publish", side_effect=interrupt_after_material):
+    jobs.execute("convert", workspace=sys.argv[1], source="input.stl", output="out.obj",
+                 overwrite=sys.argv[2] == "overwrite")
+"""
 
 
 class JobTests(unittest.TestCase):
@@ -23,7 +58,8 @@ class JobTests(unittest.TestCase):
     @staticmethod
     def fake_success(command, *, cwd, timeout):
         job = json.loads(Path(command[-1]).read_text(encoding="utf-8"))
-        Path(job["output"]).write_bytes(b"mock-export")
+        output = Path(job["output"])
+        output.write_bytes({".stl": TRIANGLE_STL, ".obj": TRIANGLE_OBJ}.get(output.suffix, b"mock-export"))
         Path(job["report"]).write_text(
             json.dumps({"mesh_objects": 1, "vertices": 8, "faces": 6,
                         "boundary_edges": 0, "nonmanifold_edges": 0}),
@@ -37,7 +73,7 @@ class JobTests(unittest.TestCase):
         job = json.loads(Path(command[-1]).read_text(encoding="utf-8"))
         output = Path(job["output"])
         library = output.with_suffix(".mtl")
-        output.write_text(f"mtllib {library.name}\n", encoding="utf-8")
+        output.write_bytes(f"mtllib {library.name}\n".encode() + TRIANGLE_OBJ)
         library.write_bytes(b"new material")
         return "success"
 
@@ -59,6 +95,21 @@ class JobTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "did not produce the OBJ material library"):
                 execute("create", workspace=self.root, output="cube.obj", kind="cube")
         self.assertFalse((self.root / "cube.obj").exists())
+
+    def test_cancelled_worker_discards_both_staged_obj_files(self):
+        cancelled = threading.Event()
+
+        def cancel_after_export(command, *, cwd, timeout):
+            self.fake_obj(command, cwd=cwd, timeout=timeout)
+            cancelled.set()
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=cancel_after_export):
+            with self.assertRaisesRegex(RuntimeError, "cancelled before publication"):
+                execute("create", workspace=self.root, output="cancelled.obj", kind="cube", cancelled=cancelled)
+        self.assertFalse((self.root / "cancelled.obj").exists())
+        self.assertFalse((self.root / "cancelled.mtl").exists())
+        self.assertFalse(list(self.root.glob("*.pending")))
 
     def test_obj_overwrite_restores_previous_library_if_obj_replace_fails(self):
         obj = self.root / "out.obj"
@@ -97,13 +148,96 @@ class JobTests(unittest.TestCase):
                 self.assertEqual(material.read_bytes(), b"source material")
                 self.assertFalse((self.root / "out.obj").exists())
 
+    def interrupt_obj_publication(self, overwrite=False):
+        result = subprocess.run(
+            [sys.executable, "-c", INTERRUPT_OBJ_PUBLICATION, str(self.root),
+             "overwrite" if overwrite else "new"],
+            capture_output=True, timeout=15,
+        )
+        self.assertEqual(result.returncode, 37, result.stderr.decode(errors="replace"))
+        self.assertEqual((self.root / "out.mtl").read_bytes(), b"interrupted material")
+        self.assertEqual(len(list(self.root.glob(".blender-agent-obj-*.pending"))), 1)
+
+    def test_obj_retries_after_process_dies_between_publications(self):
+        self.interrupt_obj_publication()
+        self.assertFalse((self.root / "out.obj").exists())
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+            result = execute("create", workspace=self.root, output="out.obj", kind="cube")
+        self.assertTrue(result["ok"])
+        self.assertEqual((self.root / "out.mtl").read_bytes(), b"new material")
+        self.assertFalse(list(self.root.glob(".blender-agent-obj-*.pending")))
+
+    def test_obj_publication_respects_an_active_process_lock(self):
+        lock = self.root / "export.lock"
+        script = (
+            "import sys\nfrom pathlib import Path\nfrom blender_agent.jobs import _obj_lock\n"
+            "with _obj_lock(Path(sys.argv[1])):\n    raise SystemExit(0)\n"
+        )
+        with _obj_lock(lock):
+            result = subprocess.run(
+                [sys.executable, "-c", script, str(lock)], capture_output=True, timeout=15,
+            )
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(b"another OBJ export is publishing", result.stderr)
+            self.assertTrue(lock.is_file())
+
+    def test_interrupted_obj_overwrite_restores_previous_pair_without_overwriting_unrelated_files(self):
+        obj = self.root / "out.obj"
+        material = self.root / "out.mtl"
+        obj.write_bytes(b"previous OBJ")
+        material.write_bytes(b"previous MTL")
+        self.interrupt_obj_publication(overwrite=True)
+        replace = os.replace
+
+        def fail_if_replacing_obj(source, destination):
+            if destination == obj:
+                raise PermissionError("cannot replace OBJ")
+            return replace(source, destination)
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj), \
+             patch("blender_agent.jobs.os.replace", side_effect=fail_if_replacing_obj):
+            with self.assertRaisesRegex(PermissionError, "cannot replace OBJ"):
+                execute("convert", workspace=self.root, source="input.stl", output="out.obj", overwrite=True)
+        self.assertEqual(obj.read_bytes(), b"previous OBJ")
+        self.assertEqual(material.read_bytes(), b"previous MTL")
+
+        self.interrupt_obj_publication(overwrite=True)
+        unrelated = self.root / "unrelated.mtl"
+        unrelated.write_bytes(b"unrelated material")
+        os.replace(unrelated, material)
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_obj):
+            with self.assertRaisesRegex(RuntimeError, "Retain the journal"):
+                execute("convert", workspace=self.root, source="input.stl", output="out.obj", overwrite=True)
+        self.assertEqual(obj.read_bytes(), b"previous OBJ")
+        self.assertEqual(material.read_bytes(), b"unrelated material")
+        pending, = self.root.glob(".blender-agent-obj-*.pending")
+        self.assertEqual((pending / "previous.mtl").read_bytes(), b"previous MTL")
+
     def test_create_promotes_checked_output(self):
         with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
              patch("blender_agent.jobs._run_blender", side_effect=self.fake_success) as runner:
             info = execute("create", workspace=self.root, output="cube.stl", kind="cube")
         self.assertTrue(info["ok"])
-        self.assertEqual((self.root / "cube.stl").read_bytes(), b"mock-export")
+        self.assertEqual((self.root / "cube.stl").read_bytes(), TRIANGLE_STL)
+        self.assertEqual(info["size_bytes"], len(TRIANGLE_STL))
+        self.assertEqual(info["geometry_scope"], "pre_export_scene")
+        self.assertEqual(info["artifact_validation"], "structural_mesh")
         self.assertIn("--disable-autoexec", runner.call_args.args[0])
+
+    def test_invalid_exported_stl_is_rejected_despite_valid_scene_report(self):
+        def invalid_export(command, *, cwd, timeout):
+            self.fake_success(command, cwd=cwd, timeout=timeout)
+            job = json.loads(Path(command[-1]).read_text(encoding="utf-8"))
+            Path(job["output"]).write_bytes(b"nonempty, but not an STL")
+
+        with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
+             patch("blender_agent.jobs._run_blender", side_effect=invalid_export):
+            with self.assertRaisesRegex(ValueError, "STL"):
+                execute("create", workspace=self.root, output="cube.stl", kind="cube")
+        self.assertFalse((self.root / "cube.stl").exists())
 
     def test_convert_never_modifies_input(self):
         with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
@@ -115,6 +249,15 @@ class JobTests(unittest.TestCase):
         with patch("blender_agent.jobs.shutil.which", return_value=None):
             with self.assertRaises(FileNotFoundError):
                 execute("create", workspace=self.root, output="cube.obj", kind="cube")
+
+    def test_relative_executable_is_anchored_before_working_directory_changes(self):
+        blender = str(Path("tools", "blender"))
+        with patch("blender_agent.jobs.shutil.which", return_value=blender) as lookup, \
+             patch("blender_agent.jobs._run_blender", side_effect=self.fake_success) as runner:
+            execute("create", workspace=self.root, blender=blender, output="cube.stl", kind="cube")
+        lookup.assert_called_once_with(blender)
+        self.assertEqual(runner.call_args.args[0][0], str(Path.cwd() / blender))
+        self.assertEqual(runner.call_args.kwargs["cwd"], self.root)
 
     def test_failure_does_not_publish_output(self):
         with patch("blender_agent.jobs.shutil.which", return_value="/bin/blender"), \
@@ -175,9 +318,7 @@ class JobTests(unittest.TestCase):
         barrier = threading.Barrier(2)
 
         def fake_race(command, *, cwd, timeout):
-            job = json.loads(Path(command[-1]).read_text(encoding="utf-8"))
-            Path(job["output"]).write_bytes(threading.current_thread().name.encode())
-            Path(job["report"]).write_text('{"mesh_objects": 1}', encoding="utf-8")
+            self.fake_success(command, cwd=cwd, timeout=timeout)
             barrier.wait(timeout=10)
             return "ok"
 
@@ -195,7 +336,7 @@ class JobTests(unittest.TestCase):
                 results = [a.result(timeout=15), b.result(timeout=15)]
         self.assertEqual(sum(isinstance(result, dict) for result in results), 1)
         self.assertEqual(results.count("collision"), 1)
-        self.assertTrue((self.root / "shared.stl").read_bytes().startswith(b"ThreadPoolExecutor-"))
+        self.assertEqual((self.root / "shared.stl").read_bytes(), TRIANGLE_STL)
 
     def test_log_output_cap_terminates_noisy_process(self):
         code = "import sys;sys.stdout.write('x'*" + str(MAX_LOG_BYTES + 100000) + ");sys.stdout.flush()"
@@ -206,6 +347,26 @@ class JobTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "timeout"):
             _run_blender([sys.executable, "-c", "import time;time.sleep(30)"],
                          cwd=self.root, timeout=1)
+
+    def test_blender_does_not_inherit_the_host_input_pipe(self):
+        script = (
+            "import sys; from pathlib import Path; from blender_agent.jobs import _run_blender;"
+            "print(_run_blender([sys.executable, '-c', 'import sys; print(repr(sys.stdin.read()))'],"
+            " Path(sys.argv[1]), 2))"
+        )
+        with subprocess.Popen(
+            [sys.executable, "-c", script, str(self.root)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ) as process:
+            try:
+                process.wait(timeout=10)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+            output, error = process.communicate()
+        self.assertEqual(process.returncode, 0, error.decode(errors="replace"))
+        self.assertEqual(output.strip(), b"''")
 
     def test_subprocess_nonzero_exit_is_failure(self):
         with self.assertRaisesRegex(RuntimeError, "bad data"):

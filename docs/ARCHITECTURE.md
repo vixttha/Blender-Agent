@@ -23,7 +23,7 @@ future: skill orchestration, memory, more engines
 2. Output paths are resolved inside the workspace, checked again before publication, and existing outputs are protected by an atomic hard-link operation when overwrite is disabled.
 3. A caller must explicitly opt into overwrite using the CLI; the MCP adapter has no overwrite flag.
 4. No agent-provided Python or shell is executed. Blender receives a fixed worker with a job manifest containing an enumerated operation.
-5. Only Blender success plus an actual geometry report and nonempty bounded output permits promotion.
+5. Blender operations must finish successfully and leave a scene with mesh faces before exporting. The worker records the pre-export scene geometry. The host checks published size and structurally inspects staged STL and OBJ files up to 128 MiB. Other formats and larger files receive a nonempty-file check. The result records the check in `artifact_validation` and reports the size captured from the staged output.
 6. Blender subprocess output capture and execution time are bounded; inspection and import/export have explicit size caps.
 
 The file guard does not prevent a hostile process with simultaneous write access from renaming or swapping directories during operation. Trust or isolate the workspace at the OS level.

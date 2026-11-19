@@ -5,20 +5,25 @@ import hashlib
 import json
 import math
 import os
+import shlex
 import shutil
 import struct
+import subprocess
 import sysconfig
 import tempfile
 from pathlib import Path
 
 
 async def call_tool(session, name, **arguments):
+    subject = arguments.get("output", arguments.get("path", ""))
+    print(f"MCP tool start: {name} {subject}", flush=True)
     result = await session.call_tool(name, arguments)
     assert not result.isError, (name, arguments, result)
     payload = result.structuredContent
     if payload is None:
         payload = json.loads(result.content[0].text)
     assert isinstance(payload, dict), (name, payload)
+    print(f"MCP tool passed: {name} {subject}", flush=True)
     return payload
 
 
@@ -95,7 +100,7 @@ async def blender_roundtrip(session, workspace):
     for name, content in snapshots.items():
         assert (workspace / name).read_bytes() == content, name
 
-    print("MCP workflow: all four tools, STL → GLB → STL geometry, and repair passed.")
+    print("MCP workflow: all four tools, STL -> GLB -> STL geometry, and repair passed.")
     print("MCP repair: split-edge fixture welded 6 vertices to 4 and kept both faces.")
     print("MCP file safety: in-place repair and destination overwrite denied; original bytes unchanged.")
 
@@ -146,12 +151,144 @@ async def obj_material_roundtrip(session, workspace):
     print("MCP OBJ collisions: existing OBJ and MTL preserved, with no partial output.")
 
 
+async def reject_faceless_output(session, workspace):
+    wire = b"v 0 0 0\nv 1 0 0\nl 1 2\n"
+    (workspace / "wire.obj").write_bytes(wire)
+    await expect_error(
+        session, "convert_model", "No mesh faces are available for output.",
+        source="wire.obj", output="faceless.stl",
+    )
+    assert not (workspace / "faceless.stl").exists()
+    assert (workspace / "wire.obj").read_bytes() == wire
+    print("MCP geometry: Blender rejected a wire-only OBJ without publishing an output.")
+
+
+async def run_blender_fixture(blender, action, *paths):
+    fixture = Path(__file__).with_name("blender_linked_fixture.py").resolve()
+    command = [
+        str(blender.resolve(strict=True)), "--background", "--factory-startup",
+        "--disable-autoexec", "--python-exit-code", "17", "--python", str(fixture), "--",
+    ]
+    result = await asyncio.to_thread(
+        subprocess.run, [*command, action, *(str(path) for path in paths)],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, (action, result.stdout, result.stderr)
+
+
+async def verify_blend_dependency(session, workspace, blender):
+    project = workspace / "source project" / "linked.blend"
+    resource = project.parent / "deps" / "texture.png"
+    destination = workspace / "published" / "linked.blend"
+    destination.parent.mkdir()
+    await run_blender_fixture(blender, "create", project, resource)
+    original_project, original_resource = project.read_bytes(), resource.read_bytes()
+    await publish(
+        session, workspace, "convert_model", "convert",
+        source="source project/linked.blend", output="published/linked.blend",
+    )
+    await run_blender_fixture(blender, "verify", destination, resource)
+    assert project.read_bytes() == original_project and resource.read_bytes() == original_resource
+    print("MCP BLEND export: published project reopened and loaded its original relative image.")
+
+
+async def verify_shared_mesh_repair(session, workspace, blender):
+    source = workspace / "shared.blend"
+    output = workspace / "shared-repaired.blend"
+    await run_blender_fixture(blender, "create_shared", source)
+    original = source.read_bytes()
+    result = await call_tool(session, "repair_mesh", source=source.name, output=output.name)
+    assert result["ok"] and result["geometry"]["repaired_mesh_datablocks"] == 1, result
+    await run_blender_fixture(blender, "verify_shared", output)
+    assert source.read_bytes() == original
+    print("MCP shared repair: one datablock repaired; both transforms, UVs, and material survived.")
+
+
+async def verify_blender_scheduling(cli, blender, host_directory, workspace, env):
+    from mcp import ClientSession, StdioServerParameters
+    from mcp import types
+    from mcp.client.stdio import stdio_client
+
+    gate = host_directory / "allow-blender"
+    wrapper = host_directory / "gated-blender"
+    quoted_gate = shlex.quote(str(gate))
+    marker = shlex.quote(str(host_directory / "started-"))
+    executable = shlex.quote(str(blender.resolve(strict=True)))
+    wrapper.write_text(
+        f"#!/bin/sh\ntouch {marker}\"$$\"\n"
+        f"while [ ! -f {quoted_gate} ]; do sleep 0.05; done\n"
+        f"exec {executable} \"$@\"\n",
+        encoding="utf-8",
+    )
+    wrapper.chmod(0o755)
+    args = ["--workspace", str(workspace), "--blender", str(wrapper)]
+    params = StdioServerParameters(command=cli, args=[*args, "mcp"], cwd=host_directory, env=env)
+    async with asyncio.timeout(30), stdio_client(params) as (reader, writer):
+        async with ClientSession(reader, writer) as session:
+            await session.initialize()
+            async with asyncio.TaskGroup() as tasks:
+                first = tasks.create_task(call_tool(session, "create_primitive", kind="cube", output="first.stl"))
+                try:
+                    async with asyncio.timeout(10):
+                        while not list(host_directory.glob("started-*")):
+                            await asyncio.sleep(0.05)
+                    second = tasks.create_task(
+                        call_tool(session, "create_primitive", kind="cube", output="second.stl"),
+                    )
+                    info = await asyncio.wait_for(call_tool(session, "inspect_model", path="mesh.obj"), timeout=5)
+                    assert info["faces"] == 1 and not first.done() and not second.done()
+                    assert len(list(host_directory.glob("started-*"))) == 1
+                finally:
+                    gate.touch()
+            assert first.result()["ok"] and second.result()["ok"]
+            assert len(list(host_directory.glob("started-*"))) == 2
+
+            gate.unlink()
+            # This fixture uses the v1 SDK's next request ID for a protocol-level cancellation.
+            request_id = session._request_id
+            interrupted = asyncio.create_task(
+                call_tool(session, "create_primitive", kind="cube", output="cancelled.stl"),
+            )
+            try:
+                async with asyncio.timeout(10):
+                    while len(list(host_directory.glob("started-*"))) != 3:
+                        await asyncio.sleep(0.05)
+                await session.send_notification(types.ClientNotification(
+                    types.CancelledNotification(params=types.CancelledNotificationParams(requestId=request_id)),
+                ))
+                await asyncio.wait_for(session.send_ping(), timeout=5)
+            finally:
+                interrupted.cancel()
+                await asyncio.gather(interrupted, return_exceptions=True)
+                gate.touch()
+            afterward = await call_tool(session, "create_primitive", kind="cube", output="after-cancel.stl")
+            assert afterward["ok"] and (workspace / "after-cancel.stl").is_file()
+            assert not (workspace / "cancelled.stl").exists()
+    gate.unlink()
+
+    params = StdioServerParameters(command=cli, args=[*args, "--timeout", "1", "mcp"],
+                                    cwd=host_directory, env=env)
+    async with asyncio.timeout(20), stdio_client(params) as (reader, writer):
+        async with ClientSession(reader, writer) as session:
+            await session.initialize()
+            await expect_error(
+                session, "create_primitive", "Blender operation exceeded its timeout.",
+                kind="cube", output="timed-out.stl",
+            )
+            assert not (workspace / "timed-out.stl").exists()
+            assert not any(path.is_dir() for path in workspace.glob(".blender-agent-*"))
+    print("MCP scheduling: inspection replied during a blocked job, one Blender ran at a time, and timeout cleaned up.")
+    print("MCP cancellation: a cancelled active request left no output; the subsequent request succeeded.")
+
+
 async def smoke(blender):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
     launcher = shutil.which("blender-agent-mcp", path=sysconfig.get_path("scripts"))
     assert launcher, "The installed blender-agent-mcp console script is missing"
+    cli = shutil.which("blender-agent", path=sysconfig.get_path("scripts"))
+    assert cli, "The installed blender-agent console script is missing"
     required_arguments = {
         "inspect_model": {"path"},
         "create_primitive": {"kind", "output"},
@@ -167,6 +304,23 @@ async def smoke(blender):
         source.write_text(mesh, encoding="utf-8")
         (host_directory / "outside.obj").write_text(mesh, encoding="utf-8")
         env = {**os.environ, "BLENDER_AGENT_WORKSPACE": str(workspace)}
+        missing_env = {key: value for key, value in env.items() if key != "BLENDER_AGENT_WORKSPACE"}
+        for command in ([launcher], [cli, "mcp"]):
+            missing = subprocess.run(
+                command, env=missing_env, cwd=host_directory, stdin=subprocess.DEVNULL,
+                capture_output=True, text=True, timeout=15,
+            )
+            assert missing.returncode == 2 and "BLENDER_AGENT_WORKSPACE" in missing.stderr, missing
+            invalid = subprocess.run(
+                command, env={**env, "BLENDER_AGENT_WORKSPACE": str(source)}, cwd=host_directory,
+                stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=15,
+            )
+            assert invalid.returncode == 2 and "existing directory" in invalid.stderr, invalid
+        invalid_timeout = subprocess.run(
+            [cli, "--timeout", "0", "mcp"], env=env, cwd=host_directory, stdin=subprocess.DEVNULL,
+            capture_output=True, text=True, timeout=15,
+        )
+        assert invalid_timeout.returncode == 2 and "between 1 and 900" in invalid_timeout.stderr, invalid_timeout
         if blender is not None:
             env["BLENDER_AGENT_BLENDER"] = str(blender.resolve(strict=True))
         params = StdioServerParameters(
@@ -198,6 +352,22 @@ async def smoke(blender):
                 if blender is not None:
                     await blender_roundtrip(session, workspace)
                     await obj_material_roundtrip(session, workspace)
+                    await reject_faceless_output(session, workspace)
+                    await verify_blend_dependency(session, workspace, blender)
+                    await verify_shared_mesh_repair(session, workspace, blender)
+
+        cli_params = StdioServerParameters(
+            command=cli, args=["--workspace", str(workspace), "mcp"], cwd=host_directory,
+            env={**env, "BLENDER_AGENT_WORKSPACE": str(source)},
+        )
+        async with asyncio.timeout(30), stdio_client(cli_params) as (reader, writer):
+            async with ClientSession(reader, writer) as session:
+                await session.initialize()
+                payload = await call_tool(session, "inspect_model", path="mesh.obj")
+                assert payload["faces"] == 1, payload
+        print("MCP configuration: both launchers reject missing or invalid workspaces; CLI flags take precedence.")
+        if blender is not None and os.name == "posix":
+            await verify_blender_scheduling(cli, blender, host_directory, workspace, env)
 
 
 if __name__ == "__main__":

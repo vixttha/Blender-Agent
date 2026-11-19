@@ -13,4 +13,4 @@ This repository is a public, reusable toolkit. Keep its content project-focused:
 9. Use free, standard GitHub-hosted public runners only; never depend on paid or self-hosted runners.
 10. Work through PRs, preserve test provenance and do not automatically merge or release.
 
-v0.0.2 is the in-review repair candidate for six identified v0.0.1 findings, not a general autonomous asset creator.
+Blender-Agent is a pre-alpha toolkit for bounded asset inspection, conversion, primitive creation, and mesh repair.
