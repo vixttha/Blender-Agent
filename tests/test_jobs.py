@@ -348,6 +348,26 @@ class JobTests(unittest.TestCase):
             _run_blender([sys.executable, "-c", "import time;time.sleep(30)"],
                          cwd=self.root, timeout=1)
 
+    def test_blender_does_not_inherit_the_host_input_pipe(self):
+        script = (
+            "import sys; from pathlib import Path; from blender_agent.jobs import _run_blender;"
+            "print(_run_blender([sys.executable, '-c', 'import sys; print(repr(sys.stdin.read()))'],"
+            " Path(sys.argv[1]), 2))"
+        )
+        with subprocess.Popen(
+            [sys.executable, "-c", script, str(self.root)],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        ) as process:
+            try:
+                process.wait(timeout=10)
+            finally:
+                if process.poll() is None:
+                    process.kill()
+                    process.wait()
+            output, error = process.communicate()
+        self.assertEqual(process.returncode, 0, error.decode(errors="replace"))
+        self.assertEqual(output.strip(), b"''")
+
     def test_subprocess_nonzero_exit_is_failure(self):
         with self.assertRaisesRegex(RuntimeError, "bad data"):
             _run_blender([sys.executable, "-c",

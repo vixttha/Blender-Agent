@@ -15,12 +15,15 @@ from pathlib import Path
 
 
 async def call_tool(session, name, **arguments):
+    subject = arguments.get("output", arguments.get("path", ""))
+    print(f"MCP tool start: {name} {subject}", flush=True)
     result = await session.call_tool(name, arguments)
     assert not result.isError, (name, arguments, result)
     payload = result.structuredContent
     if payload is None:
         payload = json.loads(result.content[0].text)
     assert isinstance(payload, dict), (name, payload)
+    print(f"MCP tool passed: {name} {subject}", flush=True)
     return payload
 
 

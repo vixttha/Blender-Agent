@@ -45,8 +45,9 @@ The Ubuntu jobs also run all four tools over MCP stdio with Blender 4.1.0 and 4.
 | Python tests | Python 3.11 and 3.12 on Ubuntu and Windows | Unit and negative-path tests |
 | MCP stdio | Python 3.12 and MCP SDK 1.30.0 on Ubuntu and Windows | Built wheel, installed launchers, discovery, configuration, and inspection |
 | Blender workflow | Python 3.12 on Ubuntu 24.04, with Blender 4.1.0 at the SDK minimum and Blender 4.5.0 using the normal dependency resolver | CLI roundtrips and built-wheel MCP jobs with real Blender |
+| Windows Blender workflow | Python 3.12, SDK minimum, and Blender 4.5.0 on Windows | Installed-wheel MCP jobs with real Blender |
 
-CI records the interpreter patch version, platform, and installed MCP dependencies. The public MCP extra still declares the SDK v1 API range. Blender 4.1 is the worker's minimum version check. Other Blender versions, Blender execution on Windows or macOS, and named desktop MCP hosts need separate verification. Default output publication requires hard-link support on the workspace filesystem.
+CI records the interpreter patch version, platform, and installed MCP dependencies. The public MCP extra declares the SDK v1 API range. Blender 4.1 is the worker's minimum version check. The Windows Blender job verifies 4.5.0. Other versions on Windows, macOS, and named desktop MCP hosts need separate verification. Default output publication requires hard-link support on the workspace filesystem.
 
 OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries.
 

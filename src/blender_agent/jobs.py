@@ -31,7 +31,8 @@ def _run_blender(command: list[str], cwd: Path, timeout: int) -> str:
     used = 0
     exceeded = threading.Event()
     process = subprocess.Popen(
-        command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        command, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0,
     )
     assert process.stdout is not None
 

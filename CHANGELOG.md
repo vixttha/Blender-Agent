@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.18 — v0.0.3 development checkpoint
+
+- Detach the Blender child from the host stdin pipe and verify the installed-wheel MCP workflow with tool-level evidence on the Windows runner (#33).
+
 ## v0.0.2.17 — v0.0.3 development checkpoint
 
 - Raise the MCP SDK minimum to 1.30.0 and verify both minimum and normal-resolver wheel installs with real Blender (#31).

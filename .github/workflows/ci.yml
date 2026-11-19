@@ -169,3 +169,40 @@ jobs:
           BLENDER_BIN: ${{ github.workspace }}/blender-dist/blender
           MCP_MODE: ${{ matrix.mcp-mode }}
         run: python tests/run_mcp_wheel_smoke.py --blender "$BLENDER_BIN" --mcp-mode "$MCP_MODE"
+
+  blender-windows:
+    name: Blender 4.5.0 installed-wheel MCP / Windows
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Download and verify official Blender
+        shell: pwsh
+        run: |
+          $PSNativeCommandUseErrorActionPreference = $false
+          $release = 'release/Blender4.5/blender-4.5.0-windows-x64.zip'
+          $archive = Join-Path $env:RUNNER_TEMP 'blender.zip'
+          curl.exe --fail --location --retry 2 --silent --show-error "https://download.blender.org/$release" -o $archive
+          if ($LASTEXITCODE -ne 0) {
+            curl.exe --fail --location --retry 2 --silent --show-error "https://mirror.clarkson.edu/blender/$release" -o $archive
+            if ($LASTEXITCODE -ne 0) { throw 'Blender download failed' }
+          }
+          $expected = '2ee75e9466d293a784fdf020f60fe1309c1e0610ecf73c64f1fc09b01e5eec56'
+          if ((Get-FileHash -Algorithm SHA256 $archive).Hash -ne $expected) { throw 'Blender archive checksum mismatch' }
+          tar.exe -xf $archive -C $env:RUNNER_TEMP
+          if ($LASTEXITCODE -ne 0) { throw 'Blender extraction failed' }
+          $blender = Get-ChildItem (Join-Path $env:RUNNER_TEMP 'blender-4.5.0-windows-x64') -Filter blender.exe
+          if (!$blender) { throw 'Blender executable missing after extraction' }
+          & $blender.FullName --version
+          if ($LASTEXITCODE -ne 0) { throw 'Blender could not start' }
+          "BLENDER_BIN=$($blender.FullName)" >> $env:GITHUB_ENV
+      - name: Exercise the installed MCP wheel with real Blender
+        shell: pwsh
+        run: python tests/run_mcp_wheel_smoke.py --blender "$env:BLENDER_BIN"
