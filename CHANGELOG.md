@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.9 — v0.0.3 development checkpoint
+
+- Document the workspace policy for secondary asset dependencies and explicitly disable script execution when opening Blender projects (#20).
+
 ## v0.0.2.8 — v0.0.3 development checkpoint
 
 - Run Blender jobs on a single dedicated worker and verify protocol responsiveness and timeout cleanup on the public Blender runner (#21).

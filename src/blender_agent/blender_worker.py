@@ -19,7 +19,7 @@ def _clear():
 def _import(path):
     extension = path.suffix.lower()
     if extension == ".blend":
-        return bpy.ops.wm.open_mainfile(filepath=str(path), load_ui=False)
+        return bpy.ops.wm.open_mainfile(filepath=str(path), load_ui=False, use_scripts=False)
     elif extension == ".stl":
         return bpy.ops.wm.stl_import(filepath=str(path))
     elif extension == ".obj":

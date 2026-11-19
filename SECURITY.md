@@ -17,6 +17,8 @@ This project reads third-party 3D formats and may launch Blender. **Treat extern
 
 Operating system process memory, Blender add-ons and importer vulnerabilities, hostile directory rename races, and source mutations during import are not comprehensively sandboxed. Never run this process with elevated privileges or on a shared hostile workspace. Untrusted workloads should use a true OS/container boundary. No network service is provided.
 
+The workspace guard applies to the source and destination paths passed to Blender-Agent and the files it publishes. Blender resolves secondary resources such as OBJ material libraries and textures, project images, and linked Blender libraries with the filesystem permissions of its process. Keep those dependencies in a trusted workspace and use OS-level isolation to enforce a stricter read boundary. OBJ publication manages the matching MTL file. Other linked resources must remain available where the asset references them.
+
 ## Responsible reporting
 
 Use GitHub private vulnerability reporting if the repository enables it. If unavailable, request a private channel without posting exploit material in a public issue.
