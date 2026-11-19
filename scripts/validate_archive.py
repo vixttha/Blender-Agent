@@ -22,8 +22,6 @@ STAGES = (
     ("head.*merge approval and archive", ("authorization", "integrate once", "merged sha")),
 )
 POLICIES = (
-    "https://github.com/" + REPO,
-    "https://github.com/" + REPO + "/tree/graphify-hq",
     "archivewright", "solo", "public", "creator-identifying", "credentials",
     "$0", "local ci", "self-hosted", "$graphify", "graph checksum",
     "gpt-6.1-sol", "medium", "meta-prompts", "feature freezes",
@@ -41,6 +39,8 @@ def git(root, *args):
 
 
 def validate_instructions(doc):
+    for url in (f"https://github.com/{REPO}", f"https://github.com/{REPO}/tree/graphify-hq"):
+        require(any(line.endswith(" " + url) for line in doc.splitlines()), f"Missing instruction policy: {url}")
     normalized = doc.casefold()
     for token in POLICIES:
         require(token in normalized, f"Missing instruction policy: {token}")
