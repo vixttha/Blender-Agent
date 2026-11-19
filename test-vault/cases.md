@@ -1,4 +1,4 @@
-# Blender-Agent cases
+# Blender-Agent Refinement Toolkit cases
 
 The [test plan](PLAN.md) records implementation status, runner evidence, and upcoming work for these cases.
 

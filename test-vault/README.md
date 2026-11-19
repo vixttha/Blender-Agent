@@ -1,4 +1,4 @@
-# Blender-Agent Test Vault
+# Blender-Agent Refinement Toolkit Test Vault
 
 Based on [Test Vault v0.0.3](https://github.com/vixttha/AlderVale-Pact-of-Ten/tree/dafb72e042b61b5b24217d1f2fc1d3231d8c0f29/starter). Start with the [test plan and current status](PLAN.md). Use the [case catalog](cases.md) for case IDs, priorities, and expected outcomes.
 
