@@ -12,3 +12,5 @@ A reusable programming-language hub for software projects. **Start with [v0.0.1]
 | [Validation workflow](.github/workflows/code-stack-template.yml) | Public-runner tests against a synthetic multi-language repository |
 
 The [Blender-Agent Code Stack](https://github.com/vixttha/Blender-Agent/tree/code-stack) is a project-specific installation of this template. Copy a version directory's contents into your own documentation branch or folder. Keep each template version addressable and publish subsequent revisions in new folders.
+
+The portable template is available under the [MIT license](v0.0.1/LICENSE).

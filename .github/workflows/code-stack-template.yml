@@ -23,7 +23,7 @@ jobs:
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           python3 v0.0.1/tools/audit.py --help
-          for item in README.md STACK.md STACK_MEMORY.md AUDIT.md PROPOSAL.md registry.example.json; do
+          for item in README.md LICENSE STACK.md STACK_MEMORY.md AUDIT.md PROPOSAL.md registry.example.json; do
             test -s "v0.0.1/$item"
           done
           {
