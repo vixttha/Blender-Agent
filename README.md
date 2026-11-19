@@ -23,10 +23,10 @@ flowchart LR
 
 | Layer | Choice | Why it belongs |
 | --- | --- | --- |
-| **Core and host tooling** | Python | The CLI and MCP adapter share asset and job logic. The core declares no runtime dependencies, and MCP is optional. [Architecture](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/docs/ARCHITECTURE.md) · [Package](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/pyproject.toml) |
-| **Inside Blender** | Python with `bpy` and `bmesh` | These Blender APIs are already used by the worker for scene and mesh operations. [Worker](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/src/blender_agent/blender_worker.py) · [Blender API](https://docs.blender.org/api/main/info_overview.html) |
-| **Between processes** | JSON | The host writes explicit job data and the worker returns a geometry report. [Host](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/src/blender_agent/jobs.py) · [Worker](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/src/blender_agent/blender_worker.py) |
-| **Build, checks and documentation** | TOML, YAML, embedded Bash and Markdown | Package configuration, free public-runner CI and human-readable project documentation. [Workflow](https://github.com/vixttha/Blender-Agent/blob/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b/.github/workflows/ci.yml) · [GitHub runner billing](https://docs.github.com/en/actions/concepts/billing-and-usage) |
+| **Core and host tooling** | Python | The CLI and MCP adapter share asset and job logic. The core declares no runtime dependencies, and MCP is optional. [Architecture](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/docs/ARCHITECTURE.md) · [Package](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/pyproject.toml) |
+| **Inside Blender** | Python with `bpy` and `bmesh` | These Blender APIs are already used by the worker for scene and mesh operations. [Worker](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/src/blender_agent/blender_worker.py) · [Blender API](https://docs.blender.org/api/main/info_overview.html) |
+| **Between processes** | JSON | The host writes explicit job data and the worker returns a geometry report. [Host](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/src/blender_agent/jobs.py) · [Worker](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/src/blender_agent/blender_worker.py) |
+| **Build, checks and documentation** | TOML, YAML, embedded Bash and Markdown | Package configuration, free public-runner CI and human-readable project documentation. [Workflow](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/.github/workflows/ci.yml) · [GitHub runner billing](https://docs.github.com/en/actions/concepts/billing-and-usage) |
 
 ## Where the stack can grow
 
@@ -54,4 +54,4 @@ flowchart LR
 
 </details>
 
-**Audited application:** [v0.0.2 candidate `2f621fbd`](https://github.com/vixttha/Blender-Agent/commit/2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b) · **Review:** [Foundation PR #1](https://github.com/vixttha/Blender-Agent/pull/1)
+**Audited application:** [v0.0.2 foundation on `main` `25788c0`](https://github.com/vixttha/Blender-Agent/commit/25788c01234841693ce0605053798a39cda7ba9a) · **Merged from:** [Foundation PR #1](https://github.com/vixttha/Blender-Agent/pull/1)
