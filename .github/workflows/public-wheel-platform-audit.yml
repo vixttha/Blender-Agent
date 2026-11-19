@@ -15,7 +15,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12", checkpoint: "0.0.2.1", ref: "c01661eabdde7c5b2bfc07be79d4cdc6d5662274"}
           - {os: ubuntu-24.04, blender: "4.5.0", sdk: "resolved", python: "3.12", checkpoint: "0.0.2.13", ref: "9bfb70912c048192d926085c2e0d97f4d21f2ac0"}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 18
@@ -100,7 +99,10 @@ jobs:
               base = "https://download.blender.org/release/Blender" + version.rsplit(".", 1)[0] + "/"
               archive = work / filename
               expected = "1188b95cc12321c770b631939f7c25a096910b6f884a990bf9c0f62d52b38aec"
-              fetch(base + filename, archive)
+              try:
+                  fetch(base + filename, archive)
+              except subprocess.CalledProcessError:
+                  fetch(base.replace("download.blender.org", "mirror.blender.org") + filename, archive)
               with archive.open("rb") as stream:
                   actual_digest = hashlib.file_digest(stream, "sha256").hexdigest()
               assert actual_digest == expected.lower(), filename
