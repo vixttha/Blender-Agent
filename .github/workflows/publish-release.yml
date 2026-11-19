@@ -1,0 +1,71 @@
+name: Prepare or publish a Blender-Agent pre-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Final release tag
+        required: true
+        type: string
+      release_sha:
+        description: Full approved default-branch commit SHA
+        required: true
+        type: string
+      ci_run_id:
+        description: Successful application CI push run ID
+        required: true
+        type: string
+      publish:
+        description: Publish the verified pre-release
+        required: true
+        default: false
+        type: boolean
+
+permissions: {}
+
+concurrency:
+  group: blender-agent-release
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    if: github.event.repository.private == false
+    uses: ./.github/workflows/release-approval.yml
+    permissions:
+      contents: read
+      actions: read
+    with:
+      release_tag: ${{ inputs.release_tag }}
+      release_sha: ${{ inputs.release_sha }}
+      ci_run_id: ${{ inputs.ci_run_id }}
+
+  publish:
+    name: Publish the verified Blender-Agent pre-release
+    if: inputs.publish && needs.verify.result == 'success'
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - name: Create the approved tag and publish its pre-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.verify.outputs.release_tag }}
+          RELEASE_SHA: ${{ needs.verify.outputs.release_sha }}
+        shell: bash
+        run: |
+          [[ "$RELEASE_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          default_branch="$(gh api "repos/$GITHUB_REPOSITORY" --jq .default_branch)"
+          encoded_branch="$(jq -nr --arg branch "$default_branch" '$branch | @uri')"
+          current_sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$encoded_branch" --jq .sha)"
+          [[ "$current_sha" == "$RELEASE_SHA" ]]
+
+          # Create the tag at the approved SHA. The API rejects an existing ref.
+          gh api "repos/$GITHUB_REPOSITORY/git/refs" --method POST \
+            -f ref="refs/tags/$RELEASE_TAG" -f sha="$RELEASE_SHA" --silent
+          tag_sha="$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$RELEASE_TAG" --jq .object.sha)"
+          [[ "$tag_sha" == "$RELEASE_SHA" ]]
+          gh release create "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --verify-tag --prerelease --generate-notes --title "Blender-Agent $RELEASE_TAG"

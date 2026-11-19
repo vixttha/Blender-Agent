@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.21 — v0.0.3 development checkpoint
+
+- Wire the release verifier into an explicitly opted-in publisher and require a live pull-request event to be rejected on public CI.
+
 ## v0.0.2.20 — v0.0.3 development checkpoint
 
 - Force the download failure in the Blender 4.5 Ubuntu pull-request job, verify the mirrored archive, and distinguish download and checksum failures.

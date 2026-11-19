@@ -34,6 +34,20 @@ jobs:
         run: python -c "import platform; print(platform.python_version(), platform.platform())"
       - name: Unit and negative-path tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
+      - name: Verify a real pull-request event cannot approve a release
+        if: github.event_name == 'pull_request' && matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        shell: bash
+        env:
+          RELEASE_TAG: v0.0.0
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_CI_RUN_ID: ${{ github.run_id }}
+        run: |
+          if rejected="$(python scripts/verify_release_approval.py 2>&1)"; then
+            echo "::error::The verifier accepted a pull-request event."
+            exit 1
+          fi
+          printf '%s\n' "$rejected"
+          [[ "$rejected" == 'Release approval rejected. Release approval requires a manual workflow dispatch.' ]]
       - name: CLI version
         run: python -m blender_agent version
       - name: Build and verify a wheel with the minimum setuptools version
