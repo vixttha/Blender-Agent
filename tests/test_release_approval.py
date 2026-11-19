@@ -1,6 +1,8 @@
+import tempfile
 import unittest
+from pathlib import Path
 
-from scripts.verify_release_approval import validate_ci, validate_dispatch
+from scripts.verify_release_approval import read_release_notes, validate_ci, validate_dispatch
 
 
 class ReleaseApprovalTests(unittest.TestCase):
@@ -49,6 +51,26 @@ class ReleaseApprovalTests(unittest.TestCase):
         ):
             with self.subTest(jobs=jobs), self.assertRaisesRegex(ValueError, "Every application CI job"):
                 self.validate_run(self.run_info, jobs)
+
+    def test_reviewed_notes_load_only_for_the_requested_final_tag(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root)
+            content = "## Release notes\n\nA reviewed change.\n"
+            (directory / "v0.0.3.md").write_bytes(content.encode("utf-8"))
+            self.assertEqual(read_release_notes("v0.0.3", directory), content)
+            with self.assertRaisesRegex(ValueError, "notes are missing"):
+                read_release_notes("v0.0.4", directory)
+            with self.assertRaisesRegex(ValueError, "final vMAJOR"):
+                read_release_notes("v0.0.3.1", directory)
+
+    def test_blank_or_invalid_notes_are_rejected(self):
+        with tempfile.TemporaryDirectory() as root:
+            directory = Path(root)
+            path = directory / "v0.0.3.md"
+            for content, message in ((b"  \n", "notes are empty"), (b"\xff", "must be UTF-8")):
+                with self.subTest(content=content), self.assertRaisesRegex(ValueError, message):
+                    path.write_bytes(content)
+                    read_release_notes("v0.0.3", directory)
 
     def validate_run(self, run, jobs):
         validate_ci(run, jobs, sha=self.sha, default_branch="main", expected_run=456, expected_workflow=789)

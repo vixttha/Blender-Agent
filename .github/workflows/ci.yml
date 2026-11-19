@@ -259,12 +259,13 @@ jobs:
         shell: bash
         run: |
           python - <<'PY'
+          import hashlib
           import os
           import subprocess
           import tomllib
           from pathlib import Path
 
-          from scripts.verify_release_approval import FINAL_RELEASE_TAG
+          from scripts.verify_release_approval import FINAL_RELEASE_TAG, read_release_notes
 
           sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
           if sha != os.environ["GITHUB_SHA"]:
@@ -283,6 +284,12 @@ jobs:
               f"- CI run: `{run_id}` (`{event}`)",
           ]
           if FINAL_RELEASE_TAG.fullmatch(tag):
+              notes = read_release_notes(tag)
+              notes_digest = hashlib.sha256(notes.encode("utf-8")).hexdigest()
+              lines.extend([
+                  f"- Release notes: `docs/releases/{tag}.md`",
+                  f"- Release notes SHA-256: `{notes_digest}`",
+              ])
               listing = subprocess.check_output(
                   ["git", "ls-remote", "--refs", "origin", f"refs/tags/{tag}"],
                   text=True, timeout=30,
@@ -298,5 +305,8 @@ jobs:
           report = "\n".join(lines) + "\n"
           with Path(os.environ["GITHUB_STEP_SUMMARY"]).open("a", encoding="utf-8") as summary:
               summary.write(report)
+              if FINAL_RELEASE_TAG.fullmatch(tag):
+                  summary.write("\n### Release notes preview\n\n")
+                  summary.write(notes)
           print(report, end="")
           PY
