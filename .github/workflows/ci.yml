@@ -124,11 +124,13 @@ jobs:
               echo "Simulating a primary Blender download failure to test the mirror."
               return 22
             fi
-            curl --fail --location --retry 2 --silent --show-error "https://download.blender.org/$release" -o blender.tar.xz
+            curl --fail --location --connect-timeout 10 --max-time 90 --retry 2 --retry-max-time 100 \
+              --silent --show-error "https://download.blender.org/$release" -o blender.tar.xz
           }
           if ! download_primary; then
-            echo "Downloading Blender $BLENDER_VERSION from the official Clarkson mirror."
-            if ! curl --fail --location --retry 2 --silent --show-error "https://mirror.clarkson.edu/blender/$release" -o blender.tar.xz; then
+            echo "Downloading Blender $BLENDER_VERSION from the official Blender mirror service."
+            if ! curl --fail --location --connect-timeout 10 --max-time 90 --retry 2 --retry-max-time 100 \
+              --silent --show-error "https://mirror.blender.org/$release" -o blender.tar.xz; then
               echo "::error::Both Blender download attempts failed."
               exit 1
             fi
