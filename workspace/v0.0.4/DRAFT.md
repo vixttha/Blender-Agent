@@ -1,21 +1,21 @@
-# Blender-Agent Refinement Toolkit
-
-*Give shape to an idea.*
+<h1 align="center">Blender-Agent Refinement Toolkit</h1>
+<p align="center"><strong>BART</strong></p>
+<p align="center">Give shape to an idea.</p>
 
 **BART** is the agent for Blender-Agent Refinement Toolkit, an open-source Python toolkit for inspecting, creating, converting, and repairing 3D assets locally. Use the CLI or connect an MCP host. Inspection runs on Python alone. Creation, conversion, and repair run Blender in the background.
 
-**Published pre-alpha v0.0.3.** The walkthrough uses the exact [published release](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/releases/tag/v0.0.3). [Changelog](CHANGELOG.md) · [GitHub releases](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/releases)
+**Pre-alpha v0.0.3.** The quick start uses the tested source revision below. [Published v0.0.3](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/releases/tag/v0.0.3). [Changelog](CHANGELOG.md) · [GitHub releases](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/releases)
 
 [Quick start](#quick-start) · [Capabilities](#capabilities) · [MCP setup](#mcp-setup) · [Compatibility](#compatibility) · [Troubleshooting](#troubleshooting)
 
 ## Quick start
 
-Use Git and Python 3.11 or newer. Clone into a directory that does not already contain a `Blender-Agent` folder.
+Use Git and Python 3.11 or newer. The example creates a local `Blender-Agent` folder. Run it from a directory where that name is available.
 
 ```sh
 git clone --no-checkout https://github.com/vixttha/Blender-Agent-Refinement-Toolkit.git Blender-Agent
 cd Blender-Agent
-git checkout --detach 7febadd1d18bd15967e9eed6223098268dadfe2f
+git checkout --detach 0fa17fa9ba497696313f6af82ff1a6e43e2de8e7
 python -m venv .venv
 ```
 

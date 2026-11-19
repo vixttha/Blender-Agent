@@ -22,10 +22,6 @@ REQUIRED = (
     "workspace/v0.0.1/DRAFT.md",
     "workspace/v0.0.1/CHANGELOG.md",
     "workspace/v0.0.1/REVIEW.md",
-    "workspace/v0.0.4/README.md",
-    "workspace/v0.0.4/DRAFT.md",
-    "workspace/v0.0.4/CHANGELOG.md",
-    "workspace/v0.0.4/REVIEW.md",
     "graphify/README.md",
     ".github/workflows/readme-hq.yml",
 )
@@ -72,8 +68,6 @@ def validate(root: Path) -> list[str]:
             errors.append(f"credential-like assignment in {rel}")
         if PRIVATE_PATH.search(content):
             errors.append(f"personal home-directory path in {rel}")
-        if rel == "workspace/v0.0.4/DRAFT.md":
-            continue
         for raw in LINK.findall(content):
             dest = raw.strip().split(" ", 1)[0].strip("<>")
             parsed = urlsplit(dest)
