@@ -1,10 +1,11 @@
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from evidence_map import build, locate, validate_manifest
+from evidence_map import build, locate, publish_pair, validate_manifest
 from github_provenance import verify_pull_request
 
 class ManifestTests(unittest.TestCase):
@@ -156,6 +157,71 @@ class ProvenanceTests(unittest.TestCase):
         self.assertEqual(outcome["source_commit"], self.source)
         self.assertEqual(outcome["merge_commit"], "c" * 40)
         self.assertEqual(outcome["pr_state"], "merged")
+
+
+class PublicationTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.output = Path(temporary.name) / "evidence"
+        self.old = {"graph.json": b"old graph", "receipt.json": b"old receipt"}
+        self.new = {"graph.json": b"new graph", "receipt.json": b"new receipt"}
+
+    def assert_pair(self, expected):
+        self.assertEqual({p.name: p.read_bytes() for p in self.output.iterdir()}, expected)
+
+    def test_success_and_repeated_publication(self):
+        publish_pair(self.output, self.old)
+        self.assert_pair(self.old)
+        publish_pair(self.output, self.new)
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_replace_failure_restores_previous_pair(self):
+        publish_pair(self.output, self.old)
+        replace = os.replace
+
+        def fail_receipt(source, target):
+            if target.name == "receipt.json":
+                raise OSError("simulated receipt write failure")
+            replace(source, target)
+
+        with patch("evidence_map.os.replace", side_effect=fail_receipt):
+            with self.assertRaisesRegex(OSError, "simulated receipt write failure"):
+                publish_pair(self.output, self.new)
+        self.assert_pair(self.old)
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_first_publish_failure_does_not_leave_half_pair(self):
+        replace = os.replace
+
+        def fail_receipt(source, target):
+            if target.name == "receipt.json":
+                raise OSError("simulated receipt write failure")
+            replace(source, target)
+
+        with patch("evidence_map.os.replace", side_effect=fail_receipt):
+            with self.assertRaisesRegex(OSError, "simulated receipt write failure"):
+                publish_pair(self.output, self.new)
+        self.assert_pair({})
+
+    def test_unavailable_receipt_target_does_not_replace_graph(self):
+        self.output.mkdir()
+        (self.output / "graph.json").write_bytes(self.old["graph.json"])
+        (self.output / "receipt.json").mkdir()
+        with self.assertRaisesRegex(ValueError, "ordinary evidence file"):
+            publish_pair(self.output, self.new)
+        self.assertEqual((self.output / "graph.json").read_bytes(), self.old["graph.json"])
+
+    def test_contending_publisher_cannot_modify_previous_pair(self):
+        publish_pair(self.output, self.old)
+        lock = self.output / ".graphify-publish.lock"
+        lock.mkdir()
+        with self.assertRaises(FileExistsError):
+            publish_pair(self.output, self.new)
+        lock.rmdir()
+        self.assert_pair(self.old)
 
 
 if __name__ == "__main__":

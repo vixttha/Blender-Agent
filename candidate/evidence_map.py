@@ -4,6 +4,8 @@ import argparse
 import asyncio
 import hashlib
 import json
+import os
+import shutil
 import re
 import subprocess
 import sys
@@ -227,6 +229,37 @@ async def verify_mcp(graph, receipt):
                         raise ValueError(f"Graphify MCP {node} {relation}: expected {count}, found {found}")
 
 
+def publish_pair(output, files):
+    """Stage both files and restore the previous graph if receipt replacement fails."""
+    output.mkdir(parents=True, exist_ok=True)
+    lock = output / ".graphify-publish.lock"
+    lock.mkdir()
+    try:
+        graph = output / "graph.json"
+        receipt = output / "receipt.json"
+        for target in (graph, receipt):
+            if target.is_symlink() or (target.exists() and not target.is_file()):
+                raise ValueError(f"Expected an ordinary evidence file: {target}")
+        with tempfile.TemporaryDirectory(prefix=".graphify-stage-", dir=output) as staging:
+            stage = Path(staging)
+            for name, data in files.items():
+                (stage / name).write_bytes(data)
+            previous = stage / "previous-graph"
+            if graph.exists():
+                shutil.copy2(graph, previous)
+            os.replace(stage / graph.name, graph)
+            try:
+                os.replace(stage / receipt.name, receipt)
+            except OSError:
+                if previous.exists():
+                    os.replace(previous, graph)
+                else:
+                    graph.unlink()
+                raise
+    finally:
+        lock.rmdir()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
@@ -253,9 +286,7 @@ def main():
                 if (args.output / name).read_bytes() != expected:
                     raise ValueError("Deterministic rebuild differs: " + name)
         else:
-            args.output.mkdir(parents=True, exist_ok=True)
-            for name, data in files.items():
-                (args.output / name).write_bytes(data)
+            publish_pair(args.output, files)
     print(f"Graphify MCP verified {receipt['nodes']} nodes and {receipt['edges']} edges at {receipt['source_commit']}")
 
 
