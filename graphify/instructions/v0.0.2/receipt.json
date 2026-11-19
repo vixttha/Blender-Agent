@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "version": "v0.0.2",
+  "release_tag": null,
+  "source_repository": "vixttha/Blender-Agent",
+  "source_commit": "e8333817884da616565406c475d81e42e27aefb4",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "bbb6ff32a08bb7c848e292e79908719aee7c1c2e996458ee697080de8886d7a3",
+  "nodes": 16,
+  "edges": 17,
+  "documents": {
+    "v0.0.2/ACCEPTANCE.md": {
+      "source_commit": "e8333817884da616565406c475d81e42e27aefb4",
+      "source_path": "v0.0.2/ACCEPTANCE.md",
+      "blob_sha1": "6115e6a121c55a0ece9b97d372573fa81d89a955"
+    },
+    "v0.0.2/CHATGPT_PROJECT_INSTRUCTIONS.md": {
+      "source_commit": "e8333817884da616565406c475d81e42e27aefb4",
+      "source_path": "v0.0.2/CHATGPT_PROJECT_INSTRUCTIONS.md",
+      "blob_sha1": "6c7b75a5e45e5da93ea25f90d702d7d3eccb3b47"
+    },
+    "v0.0.2/README.md": {
+      "source_commit": "e8333817884da616565406c475d81e42e27aefb4",
+      "source_path": "v0.0.2/README.md",
+      "blob_sha1": "31452924b127d4127e58438cb3c472f2a19d3531"
+    }
+  },
+  "synthetic_fixture": false,
+  "archive_status": "candidate",
+  "scope": "chatgpt_project_instructions",
+  "source_ref": "refs/heads/chatgpt-project-instructions",
+  "graphify_hq_commit": "eeaa26d3cdc689beaec55baec78f1dc6bb732b06",
+  "workflow_run": "https://github.com/vixttha/Blender-Agent/actions/runs/44436825866",
+  "mcp_verified": true
+}
