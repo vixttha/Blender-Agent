@@ -1,33 +1,17 @@
-# Test Vault v0.0.3
+# Blender-Agent Refinement Toolkit Test Vault
 
-The Test Vault tracks what a project intends to test and the evidence for cases it has run. It works alongside your project's test commands.
+Based on [Test Vault v0.0.3](https://github.com/vixttha/AlderVale-Pact-of-Ten/tree/dafb72e042b61b5b24217d1f2fc1d3231d8c0f29/starter). Start with the [test plan and current status](PLAN.md). Use the [case catalog](cases.md) for case IDs, priorities, and expected outcomes.
 
-## Install in an existing repository
+A planned case describes what to build. An implemented case has a runnable assertion. A verified outcome has a case-specific result from the relevant runner and checkout. A catalog run checks the case definitions. A smoke job can succeed while an individual case records a known mismatch.
 
-From the source kit's `starter/` directory, copy both `test-vault/` and `.github/workflows/test-vault.yml` into the same paths in your target repository. Review any filename collisions before copying. The five base files provide catalog validation:
-
-- `test-vault/README.md`
-- `test-vault/cases.md`
-- `test-vault/validate_catalog.py`
-- `test-vault/case-and-receipt.md`
-- `.github/workflows/test-vault.yml`
-
-Optional execution evidence is documented in [Verify execution receipts](evidence.md). See the [upgrade guide](UPGRADE.md) and [changelog](CHANGELOG.md).
-
-Run this from the repository root with Python 3.12:
-
-```sh
-python3 test-vault/validate_catalog.py
-```
-
-The command runs with Python's standard library. It should find the cases listed in the [Blender-Agent catalog](cases.md). To exercise the failing path locally, change its priority from `P0` to `P9`, rerun the command, then restore the valid priority. Open a pull request in a repository with Actions enabled to see the same check and the exact checkout in the job summary.
+Use [Case and run receipt](case-and-receipt.md) to record results. [Execution receipts](evidence.md) describes the optional JSON format. See the [upgrade guide](UPGRADE.md) and [changelog](CHANGELOG.md) for template history.
 
 ## Build tests for the target project
 
 1. Read the repository's contributor instructions, existing tests and CI. Identify the entry point, supported environments and the behavior or failure you want to protect.
 2. Give the case a stable ID and record the expected result. Choose a test layer and framework that exercise the real entry point. Use fixtures for controlled state and known failure cases.
 3. Put the executable test in the target project's normal test directory and add it to that project's test command. Use separate test data and environments for tests that need a service.
-4. Run the project's test command and the Vault catalog validator in development or CI. Record the test command, target checkout, result and any coverage limits in the [case and receipt form](case-and-receipt.md).
+4. Run the project's test command and the Vault catalog validator on standard public GitHub-hosted runners. Record the test command, target checkout, result and any coverage limits in the [case and receipt form](case-and-receipt.md).
 
 The starter checks your catalog. The target project's test commands execute its tests. Both can run with the project's existing CI.
 
