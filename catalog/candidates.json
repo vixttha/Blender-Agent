@@ -19,6 +19,25 @@
         "skills/mesh-repair/SKILL.md",
         "skills/procedural-primitives/SKILL.md"
       ]
+    },
+    {
+      "version": "v0.0.3",
+      "source_commit": "38e8f63c3fe2e372784276acdbb602cb7409b100",
+      "source_branch": "main",
+      "source_pr": 57,
+      "source_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/HARNESS.md",
+        "docs/RELEASE.md",
+        "docs/ROADMAP.md",
+        "docs/SKILL_POLICY.md",
+        "skills/asset-conversion/SKILL.md",
+        "skills/asset-inspection/SKILL.md",
+        "skills/mesh-repair/SKILL.md",
+        "skills/procedural-primitives/SKILL.md"
+      ]
     }
   ]
 }
