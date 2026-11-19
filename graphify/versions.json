@@ -1,0 +1,43 @@
+{
+  "directed": true,
+  "multigraph": false,
+  "graph": {
+    "schema_version": 1,
+    "kind": "instructions-version-lineage",
+    "repository": "vixttha/Blender-Agent",
+    "archive_branch": "chatgpt-project-instructions",
+    "generator": "manual archive handoff (not Graphify MCP)",
+    "mcp_verified": false
+  },
+  "nodes": [
+    {
+      "id": "repo:main",
+      "label": "Blender-Agent main",
+      "kind": "engineering-baseline"
+    },
+    {
+      "id": "branch:chatgpt-project-instructions",
+      "label": "ChatGPT project instructions archive",
+      "kind": "permanent-branch"
+    },
+    {
+      "id": "version:v0.0.1",
+      "label": "v0.0.1 — candidate",
+      "kind": "instructions-version",
+      "directory": "v0.0.1",
+      "status": "candidate"
+    }
+  ],
+  "links": [
+    {
+      "source": "repo:main",
+      "target": "branch:chatgpt-project-instructions",
+      "relation": "branched-from"
+    },
+    {
+      "source": "branch:chatgpt-project-instructions",
+      "target": "version:v0.0.1",
+      "relation": "contains"
+    }
+  ]
+}

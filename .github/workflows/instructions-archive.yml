@@ -1,0 +1,67 @@
+name: Instructions Archive - Public SHA Validation
+
+on:
+  push:
+    branches:
+      - chatgpt-project-instructions
+  pull_request:
+    branches:
+      - chatgpt-project-instructions
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate / public Ubuntu / exact SHA
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      REPO_VISIBILITY: ${{ github.event.repository.visibility }}
+      RUNNER_KIND: ${{ runner.environment }}
+    steps:
+      - name: Enforce public repository and free GitHub-hosted runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$REPO_VISIBILITY" = "public"
+          test "$RUNNER_KIND" = "github-hosted"
+          echo "PUBLIC_RUNNER_POLICY=PASS"
+      - name: Fetch exact triggering commit without marketplace actions
+        shell: bash
+        env:
+          REPO_FULL_NAME: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          git init --quiet .
+          git remote add origin "https://github.com/${REPO_FULL_NAME}.git"
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          git checkout --quiet --detach "$GITHUB_SHA"
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          echo "CHECKED_OUT_SHA=$GITHUB_SHA"
+      - name: Validate instructions and Graphify handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_archive.py --root . --sha "$GITHUB_SHA" --output-dir "$RUNNER_TEMP/agent-instructions"
+      - name: Emit SHA-bound verification receipt
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Blender-Agent instructions archive"
+            echo ""
+            echo "- Repository: https://github.com/vixttha/Blender-Agent"
+            echo "- Exact candidate SHA: \`$GITHUB_SHA\`"
+            echo "- Runner: \`$RUNNER_KIND\`"
+            echo "- Run: https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+            echo ""
+            if test -f "$RUNNER_TEMP/agent-instructions/receipt.json"; then
+              echo "### Receipt"
+              echo "\`\`\`json"
+              cat "$RUNNER_TEMP/agent-instructions/receipt.json"
+              echo "\`\`\`"
+            else
+              echo "**Validation receipt unavailable: examine failed step logs.**"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
