@@ -1,0 +1,72 @@
+name: OBJ/MTL evidence map
+
+on:
+  push:
+    branches: [graphify-hq]
+    paths:
+      - '.github/workflows/obj-mtl-evidence.yml'
+      - 'evidence/obj-mtl/**'
+  pull_request:
+    branches: [graphify-hq]
+    paths:
+      - '.github/workflows/obj-mtl-evidence.yml'
+      - 'evidence/obj-mtl/**'
+
+permissions:
+  contents: read
+  pull-requests: read
+
+env:
+  EVIDENCE_PATH: evidence/obj-mtl/v0.0.2.1
+  TEMPLATE_COMMIT: 062fb633838daa42204289d889850c03e89d45eb
+  PIP_DISABLE_PIP_VERSION_CHECK: '1'
+  PYTHONHASHSEED: '0'
+
+jobs:
+  verify:
+    name: Verify pinned OBJ/MTL evidence through Graphify MCP
+    if: github.event.repository.private == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+      - name: Fetch the source commit and extract the pinned Graphify HQ kit
+        shell: bash
+        run: |
+          source_sha="$(python - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          manifest = json.loads((Path(os.environ["EVIDENCE_PATH"]) / "manifest.json").read_text())
+          source = manifest["source_commit"]
+          if not re.fullmatch(r"[0-9a-f]{40}", source) or manifest["repository"] != os.environ["GITHUB_REPOSITORY"]:
+              raise SystemExit("The evidence must pin a SHA in this repository.")
+          print(source)
+          PY
+          )"
+          git fetch --no-tags origin "$TEMPLATE_COMMIT" "$source_sha"
+          git archive "$TEMPLATE_COMMIT" versions/v0.0.8 | tar -x -C "$RUNNER_TEMP"
+          printf 'HQ checkout SHA: %s\nApplication source SHA: %s\nTemplate source SHA: %s\n' \
+            "$(git rev-parse HEAD)" "$source_sha" "$TEMPLATE_COMMIT"
+      - name: Install hash-locked Graphify wheels
+        shell: bash
+        run: |
+          python -m pip install --require-hashes --no-cache-dir --no-deps --only-binary=:all: \
+            -r "$RUNNER_TEMP/versions/v0.0.8/requirements.txt"
+          python -m pip check
+      - name: Rebuild graph and verify the archived bytes and PR provenance
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          kit="$RUNNER_TEMP/versions/v0.0.8"
+          python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$EVIDENCE_PATH" --verify-pr --check

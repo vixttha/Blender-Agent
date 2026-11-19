@@ -1,0 +1,193 @@
+{
+  "repository": "vixttha/Blender-Agent",
+  "source_commit": "d7886009b5121fc8a94f4f56d8209c3d04800d54",
+  "title": "Blender-Agent OBJ/MTL export evidence at v0.0.2.1",
+  "pull_request": {
+    "number": 17,
+    "source_branch": "fix/obj-material-export"
+  },
+  "source_files": [
+    ".github/workflows/ci.yml",
+    "CHANGELOG.md",
+    "docs/HARNESS.md",
+    "src/blender_agent/blender_worker.py",
+    "src/blender_agent/jobs.py",
+    "src/blender_agent/obj_records.py",
+    "tests/test_jobs.py",
+    "tests/test_mcp_smoke.py"
+  ],
+  "features": [
+    {
+      "id": "material-roundtrip",
+      "label": "Publish the OBJ and MTL and preserve the assigned color",
+      "documented_in": [
+        {
+          "path": "docs/HARNESS.md",
+          "anchor": "OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries."
+        }
+      ],
+      "changed_in": [
+        {
+          "path": "CHANGELOG.md",
+          "anchor": "- Preserve the matching MTL file when publishing an OBJ. CLI and MCP results include its workspace-relative path."
+        }
+      ],
+      "implemented_in": [
+        {
+          "path": "src/blender_agent/blender_worker.py",
+          "anchor": "bpy.ops.wm.obj_export(filepath=str(path), export_materials=True)"
+        },
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool) -> Path:"
+        },
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "result[\"material_library\"] = str(material.relative_to(root))"
+        }
+      ],
+      "tested_by": [
+        {
+          "path": "tests/test_mcp_smoke.py",
+          "anchor": "async def obj_material_roundtrip(session, workspace):"
+        },
+        {
+          "path": ".github/workflows/ci.yml",
+          "anchor": "- name: Exercise create, convert, repair and inspect over MCP stdio"
+        }
+      ]
+    },
+    {
+      "id": "destination-collisions",
+      "label": "Preserve independently existing OBJ and MTL destinations",
+      "documented_in": [
+        {
+          "path": "docs/HARNESS.md",
+          "anchor": "OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries."
+        }
+      ],
+      "changed_in": [
+        {
+          "path": "CHANGELOG.md",
+          "anchor": "- Exercise create, convert, repair, and inspect through MCP with Blender, including a colored OBJ roundtrip and separate OBJ and MTL collision checks."
+        }
+      ],
+      "implemented_in": [
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool) -> Path:"
+        },
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "if not overwrite or not material.is_file():"
+        }
+      ],
+      "tested_by": [
+        {
+          "path": "tests/test_mcp_smoke.py",
+          "anchor": "for suffix, missing_suffix in ((\".obj\", \".mtl\"), (\".mtl\", \".obj\")):"
+        }
+      ]
+    },
+    {
+      "id": "missing-library",
+      "label": "Reject OBJ output with a missing staged material library",
+      "documented_in": [
+        {
+          "path": "docs/HARNESS.md",
+          "anchor": "OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries."
+        }
+      ],
+      "changed_in": [
+        {
+          "path": "CHANGELOG.md",
+          "anchor": "- Preserve the matching MTL file when publishing an OBJ. CLI and MCP results include its workspace-relative path."
+        }
+      ],
+      "implemented_in": [
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "if not staged.is_file():"
+        }
+      ],
+      "tested_by": [
+        {
+          "path": "tests/test_jobs.py",
+          "anchor": "def test_obj_refuses_missing_material_library(self):"
+        }
+      ]
+    },
+    {
+      "id": "publication-rollback",
+      "label": "Undo MTL publication after a reported OBJ failure",
+      "documented_in": [
+        {
+          "path": "docs/HARNESS.md",
+          "anchor": "OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries."
+        }
+      ],
+      "changed_in": [
+        {
+          "path": "CHANGELOG.md",
+          "anchor": "- Preserve the matching MTL file when publishing an OBJ. CLI and MCP results include its workspace-relative path."
+        }
+      ],
+      "implemented_in": [
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, overwrite: bool) -> Path:"
+        },
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "if material.exists() and os.path.samestat(published, material.stat()):"
+        }
+      ],
+      "tested_by": [
+        {
+          "path": "tests/test_jobs.py",
+          "anchor": "def test_obj_rolls_back_material_when_obj_appears_late(self):"
+        },
+        {
+          "path": "tests/test_jobs.py",
+          "anchor": "def test_obj_overwrite_restores_previous_library_if_obj_replace_fails(self):"
+        }
+      ]
+    },
+    {
+      "id": "continued-source-material",
+      "label": "Protect original MTL files referenced by continued OBJ records",
+      "documented_in": [
+        {
+          "path": "docs/HARNESS.md",
+          "anchor": "OBJ exports publish the matching MTL beside the OBJ and return its path in `material_library`. Keep both files together when moving the asset. External texture images remain separate. MCP and default CLI calls protect both destination names. Explicit CLI `--overwrite` applies to both output files while protecting the source model and its material libraries."
+        }
+      ],
+      "changed_in": [
+        {
+          "path": "CHANGELOG.md",
+          "anchor": "## v0.0.2.1 \u2014 v0.0.3 development checkpoint"
+        }
+      ],
+      "implemented_in": [
+        {
+          "path": "src/blender_agent/obj_records.py",
+          "anchor": "def obj_records(lines):"
+        },
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "def _material_libraries(obj: Path):"
+        },
+        {
+          "path": "src/blender_agent/jobs.py",
+          "anchor": "raise ValueError(\"Source material libraries cannot be modified in place.\")"
+        }
+      ],
+      "tested_by": [
+        {
+          "path": "tests/test_jobs.py",
+          "anchor": "def test_obj_overwrite_preserves_material_referenced_by_source(self):"
+        }
+      ]
+    }
+  ]
+}
