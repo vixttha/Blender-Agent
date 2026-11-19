@@ -11,7 +11,7 @@ These are research or conditional proposals. Record owner decisions with the sco
 
 ## CS-001 · Version the job boundary
 
-**Status:** proposed. Explore adding explicit request/result types to the shared Python core while preserving the existing CLI/MCP contract. Compare against simply adding one operation and its tests first. Validate default behavior, failed inputs and result parity on free public runners. Keep earlier accepted input and result readers working so the change can be backed out without losing assets. [Existing job runner](https://github.com/vixttha/Blender-Agent/blob/25788c01234841693ce0605053798a39cda7ba9a/src/blender_agent/jobs.py)
+**Status:** proposed. Explore adding explicit request/result types to the shared Python core while preserving the existing CLI/MCP contract. Compare against simply adding one operation and its tests first. Validate default behavior, failed inputs and result parity on free public runners. Keep earlier accepted input and result readers working so the change can be backed out without losing assets. [Existing job runner](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/25788c01234841693ce0605053798a39cda7ba9a/src/blender_agent/jobs.py)
 
 ## CS-002 · Browser asset viewer
 

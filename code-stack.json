@@ -1,7 +1,7 @@
 {
   "schema_version": 2,
-  "project": "Blender-Agent",
-  "source_repository": "vixttha/Blender-Agent",
+  "project": "Blender-Agent Refinement Toolkit",
+  "source_repository": "vixttha/Blender-Agent-Refinement-Toolkit",
   "source_ref": "refs/heads/main",
   "source_commit": "cb945bd8531ee425615c1968612ab6503849369d",
   "template_commit": "48e0cc8fe73087b1ca497b5611314da4e1871705",
@@ -136,7 +136,7 @@
   "sources": [
     {
       "id": "BA-01",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/pyproject.toml",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/pyproject.toml",
       "claim": "Python 3.11+ package, standard-library core with no declared runtime dependencies, optional MCP v1 API range, and two console entry points.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -146,7 +146,7 @@
     },
     {
       "id": "BA-02",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/docs/ARCHITECTURE.md",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/docs/ARCHITECTURE.md",
       "claim": "The host CLI and MCP adapter share the Python core. A fixed headless Blender worker produces geometry and output.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -156,7 +156,7 @@
     },
     {
       "id": "BA-03",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/src/blender_agent/blender_worker.py",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/src/blender_agent/blender_worker.py",
       "claim": "Blender-side Python imports bpy and bmesh, implements known operations and writes a JSON report.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -166,7 +166,7 @@
     },
     {
       "id": "BA-04",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/src/blender_agent/jobs.py",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/src/blender_agent/jobs.py",
       "claim": "Host-side Python invokes Blender with fixed flags, writes a JSON job, and publishes a validated temporary output.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -176,7 +176,7 @@
     },
     {
       "id": "BA-05",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/.github/workflows/ci.yml",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/.github/workflows/ci.yml",
       "claim": "GitHub Actions workflow YAML tests Python, MCP, and Linux Blender 4.5.0. Bash supports the Blender installation and roundtrip steps.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -186,7 +186,7 @@
     },
     {
       "id": "BA-06",
-      "url": "https://github.com/vixttha/Blender-Agent/actions/runs/44438741759",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44438741759",
       "claim": "All seven application jobs passed on the published Blender-Agent v0.0.2 release commit.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -195,7 +195,7 @@
     },
     {
       "id": "BA-07",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/tests/test_mcp_smoke.py",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/tests/test_mcp_smoke.py",
       "claim": "The installed MCP console script is exercised for discovery, schema and read-only invocation with workspace rejection.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
@@ -205,7 +205,7 @@
     },
     {
       "id": "BA-08",
-      "url": "https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/README.md",
+      "url": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/cb945bd8531ee425615c1968612ab6503849369d/README.md",
       "claim": "Markdown carries public capability, install and limitation documentation.",
       "review": "reviewed",
       "reviewed_on": "2026-11-18",
