@@ -185,8 +185,11 @@ def inspect_asset(path: str | Path, workspace: str | Path = ".") -> dict:
     root = root_path(workspace)
     source = source_path(path, root)
     suffix = source.suffix.lower()
+    initial_path = source.stat()
     with source.open("rb") as stream:
         initial = os.fstat(stream.fileno())
+        if initial.st_size != initial_path.st_size or initial.st_mtime_ns != initial_path.st_mtime_ns:
+            raise ValueError("Source file changed during inspection.")
         size = initial.st_size
         if size > 512 * 1024 * 1024:
             raise ValueError("File exceeds the metadata inspection size limit.")
@@ -209,6 +212,7 @@ def inspect_asset(path: str | Path, workspace: str | Path = ".") -> dict:
             current = source.stat()
         except FileNotFoundError as exc:
             raise ValueError("Source file changed during inspection.") from exc
-        if _signature(initial) != _signature(os.fstat(stream.fileno())) or _signature(initial) != _signature(current):
+        # Windows may report different identity fields for path and descriptor stats.
+        if _signature(initial) != _signature(os.fstat(stream.fileno())) or _signature(initial_path) != _signature(current):
             raise ValueError("Source file changed during inspection.")
     return info
