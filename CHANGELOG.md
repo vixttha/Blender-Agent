@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.4 — v0.0.3 development checkpoint
+
+- Require setuptools 77.0.3 or later and verify an MIT-licensed wheel built with the minimum backend (#25).
+
 ## v0.0.2.3 — v0.0.3 development checkpoint
 
 - Require an explicit MCP workspace and honor the CLI workspace, Blender executable, and timeout flags (#12).

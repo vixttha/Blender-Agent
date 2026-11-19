@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=69,<85"]
+requires = ["setuptools>=77.0.3,<85"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "blender-agent"
-version = "0.0.2.3"
+version = "0.0.2.4"
 description = "Harness-neutral tools for safe Blender asset workflows"
 readme = "README.md"
 requires-python = ">=3.11"

@@ -34,6 +34,33 @@ jobs:
         run: python -m unittest discover -s tests -p "test_*.py" -v
       - name: CLI version
         run: python -m blender_agent version
+      - name: Build and verify a wheel with the minimum setuptools version
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+        shell: bash
+        run: |
+          minimum=$(python - <<'PY'
+          import tomllib
+          from pathlib import Path
+          build = tomllib.loads(Path("pyproject.toml").read_text())["build-system"]
+          requirement = next(item for item in build["requires"] if item.startswith("setuptools>="))
+          print(requirement.removeprefix("setuptools>=").split(",")[0])
+          PY
+          )
+          python -m venv "$RUNNER_TEMP/minimum-build"
+          minimum_python="$RUNNER_TEMP/minimum-build/bin/python"
+          "$minimum_python" -m pip install "setuptools==$minimum" wheel
+          "$minimum_python" -m pip wheel --no-deps --no-build-isolation --wheel-dir "$RUNNER_TEMP/wheels" .
+          "$minimum_python" -m pip install --no-deps "$RUNNER_TEMP"/wheels/blender_agent-*.whl
+          cd "$RUNNER_TEMP"
+          "$minimum_python" - <<'PY'
+          from importlib.metadata import metadata, version
+          from blender_agent import __version__
+          package = metadata("blender-agent")
+          assert package["License-Expression"] == "MIT", package
+          assert "LICENSE" in package.get_all("License-File"), package
+          assert package["Version"] == __version__, package
+          print(f"setuptools {version('setuptools')} wheel: SPDX MIT and installed {__version__} verified.")
+          PY
 
   mcp-stdio:
     name: Real MCP stdio / ${{ matrix.os }}
