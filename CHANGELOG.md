@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.0.3 — unreleased
+## v0.0.2.1 — v0.0.3 development checkpoint
 
 - Preserve the matching MTL file when publishing an OBJ. CLI and MCP results include its workspace-relative path.
 - Exercise create, convert, repair, and inspect through MCP with Blender, including a colored OBJ roundtrip and separate OBJ and MTL collision checks.
