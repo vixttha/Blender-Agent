@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.0.3 — pre-alpha
+
+- Publish OBJ files with their matching material libraries. Preserve source assets and handle destination collisions and interrupted publication.
+- Keep linked Blender resources accessible when saving a project. Repair shared editable meshes once, and reject empty or invalid mesh results.
+- Improve structural STL and OBJ inspection, executable resolution, and explicit MCP workspace configuration. Keep MCP responsive while Blender runs and prevent cancelled jobs from publishing when cancellation takes effect before publication.
+- Verify installed-wheel MCP workflows on public Ubuntu runners with Blender 4.1.0 and 4.5.0, and on Windows with Blender 4.5.0. The optional MCP adapter requires SDK 1.30 or later in the v1 series.
+- Verify the release tag, final default-branch commit, and successful push CI before publishing.
+
 ## v0.0.2.21 — v0.0.3 development checkpoint
 
 - Wire the release verifier into an explicitly opted-in publisher and require a live pull-request event to be rejected on public CI.

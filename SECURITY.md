@@ -23,4 +23,4 @@ The workspace guard applies to the source and destination paths passed to Blende
 
 Use GitHub private vulnerability reporting if the repository enables it. If unavailable, request a private channel without posting exploit material in a public issue.
 
-The v0.0.2 candidate is pre-alpha and carries no established security-support commitment.
+Blender-Agent is pre-alpha and carries no established security-support commitment.
