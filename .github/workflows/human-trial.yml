@@ -1,4 +1,4 @@
-name: Human trial readiness
+name: Human still-image pilot
 
 on:
   push:
@@ -12,9 +12,9 @@ permissions:
 
 jobs:
   readiness:
-    name: Verify the pilot walkthrough on public Ubuntu
+    name: Verify and render the pilot on public Ubuntu
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
     steps:
       - name: Check out the Human candidate
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -30,5 +30,61 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test -s docs/human/README.md
           printf 'Checkout %s\nEvent %s\nRunner %s\n' "$GITHUB_SHA" "$GITHUB_EVENT_NAME" "$RUNNER_OS"
-      - name: Run the established README CLI and MCP walkthrough
-        run: python tools/check_readme_walkthrough.py
+      - name: Set up Node.js
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: "22"
+          package-manager-cache: false
+      - name: Verify source image and capture CLI and MCP evidence
+        run: |
+          echo '89681e65085b3878c371d176a682d9cc4924125708dfa826d051af6559caf910  docs/human/pilot/assets/mira-vale-mist-base-headshot.png' | sha256sum --check
+          python docs/human/pilot/prepare.py
+      - name: Install the pinned renderer and its browser
+        working-directory: docs/human/pilot
+        run: |
+          if ! command -v ffmpeg >/dev/null || ! command -v ffprobe >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          npm install --no-save --package-lock=false --no-audit --no-fund hyperframes@0.9.69 gsap@3.14.2
+          cp node_modules/gsap/dist/gsap.min.js assets/gsap.min.js
+          npx --no-install hyperframes browser ensure
+      - name: Check layout, timing, and browser playback
+        working-directory: docs/human/pilot
+        run: |
+          npx --no-install hyperframes lint
+          npx --no-install hyperframes check --samples 12
+      - name: Render and verify the silent MP4
+        working-directory: docs/human/pilot
+        run: |
+          npx --no-install hyperframes render --fps 30 --workers 2 --strict --output evidence/bart-mira-mist-still-pilot.mp4
+          video=evidence/bart-mira-mist-still-pilot.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,nb_frames:format=duration -of json "$video" > evidence/media-probe.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          media = json.loads(Path("evidence/media-probe.json").read_text())
+          video, = media["streams"]
+          expected = {
+              "codec_type": "video", "codec_name": "h264", "width": 1920,
+              "height": 1080, "r_frame_rate": "30/1", "nb_frames": "540",
+          }
+          for field, value in expected.items():
+              assert video[field] == value, (field, video[field])
+          assert float(media["format"]["duration"]) == 18.0, media
+          print("Verified H.264, 1920×1080, 30 fps, 540 frames, 18 seconds, with no audio stream.")
+          PY
+          ffmpeg -v error -xerror -i "$video" -f null -
+          for second in 1 4 7 11 16; do
+            ffmpeg -v error -ss "$second" -i "$video" -frames:v 1 -vf scale=960:-1 "evidence/frame-$second.png"
+          done
+          (cd evidence && sha256sum bart-mira-mist-still-pilot.mp4 > SHA256SUMS)
+      - name: Upload the pilot and verification evidence
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: bart-mira-mist-still-pilot
+          path: docs/human/pilot/evidence/
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0

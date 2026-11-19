@@ -48,4 +48,4 @@ Use the documented `blender-agent --workspace readme-demo inspect triangle.obj` 
 - **Render:** record the tested checkout, event, runner, job link, dependency versions, filenames and media checks. For the 16:9 pilot check duration, dimensions, expected audio, caption alignment and readable output at playback size. Use test assets suitable for a public runner and keep the proof within $0 incremental spend.
 - **Solo audit:** verify the avatar and capture are labeled accurately, dialogue matches captions, the edit contains no creator information or private media, and all public evidence is suitable for disclosure. Review the single pilot before wider use.
 
-This setup plans the trial. Avatar, voice, footage and render evidence are pending.
+The owner selected **Mira Vale · Mist** and approved the locked headshot for the [$0 still-image pilot](pilot/README.md). The HeyGen screen test reached the monthly Avatar IV allowance. The pilot uses timed text for the exact audition script and a single HyperFrames edit on a public runner.
