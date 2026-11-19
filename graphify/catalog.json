@@ -2,7 +2,14 @@
   "latest": "v0.0.8",
   "versions": {
     "v0.0.8": {
-      "source_commit": null
+      "source_commit": "062fb633838daa42204289d889850c03e89d45eb",
+      "generation": {
+        "event": "push",
+        "runner": "ubuntu-latest",
+        "result": "success",
+        "run": "https://github.com/vixttha/Blender-Agent/actions/runs/44453058234",
+        "job": "https://github.com/vixttha/Blender-Agent/actions/runs/44453058234/job/135321421965"
+      }
     }
   }
 }

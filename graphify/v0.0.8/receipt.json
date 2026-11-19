@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "template_version": "v0.0.8",
+  "repository": "vixttha/Blender-Agent",
+  "source_commit": "062fb633838daa42204289d889850c03e89d45eb",
+  "pull_request": null,
+  "scope": "feature-evidence",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "fd515ee4e4ac49aef8f1fb19a0463de79addccbe03edb4de75096ac0f5317405",
+  "nodes": 33,
+  "edges": 51,
+  "feature_links": {
+    "feature:archive-verification": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 1,
+      "implemented_in": 3
+    },
+    "feature:feature-evidence": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 3,
+      "implemented_in": 2
+    },
+    "feature:source-provenance": {
+      "documented_in": 1,
+      "changed_in": 1,
+      "tested_by": 2,
+      "implemented_in": 2
+    }
+  },
+  "source_files": [
+    ".github/workflows/graphify-hq-template.yml",
+    "README.md",
+    "tools/verify_archive.py",
+    "versions/v0.0.8/CHANGELOG.md",
+    "versions/v0.0.8/README.md",
+    "versions/v0.0.8/evidence_map.py",
+    "versions/v0.0.8/github_provenance.py",
+    "versions/v0.0.8/requirements.txt",
+    "versions/v0.0.8/self-map.json",
+    "versions/v0.0.8/test_evidence_map.py"
+  ],
+  "source_sha256": {
+    ".github/workflows/graphify-hq-template.yml": "cb79ab86333289c7dba062a6b852e3fc13cbf9d7963bc5bebcaf16d54143a9fe",
+    "README.md": "9c5f80b2541b15557def750b24de20c8530c0c6b23c30e4a16b4272f2a5c5bde",
+    "tools/verify_archive.py": "62a6353d2a5878d6663aabfacc11e788f07668976106ff1a0bbd38fd31293436",
+    "versions/v0.0.8/CHANGELOG.md": "b20d85da4ee03acb163f3af836b78604d8672849de59e5466c94cdf7eb7a14ef",
+    "versions/v0.0.8/README.md": "94c691daa084dd48613c90f6a9291aa1ffea9479c529a3eb6311ea82f5e8f2cf",
+    "versions/v0.0.8/evidence_map.py": "df1219cae2c5272abb46b7c8d112a0c3e7133c0ed694692031308079b0824ada",
+    "versions/v0.0.8/github_provenance.py": "8b50fd6ab50766cd9df91fc26f9170ffc631b59c562f9c872a12433c07947944",
+    "versions/v0.0.8/requirements.txt": "2faa3d35b1275e494393ef00aa9f16cdd1ab3afe89cd255749069e5dd86df370",
+    "versions/v0.0.8/self-map.json": "c4822a021dd474241c596ff9f185377c62e86fe3ea6bd402d36b226f3f6a9843",
+    "versions/v0.0.8/test_evidence_map.py": "e1d2e3662c95bd27568234954d128dd996103e1e5c8308a571b66db0ed6cd133"
+  },
+  "mcp_verified": true
+}
