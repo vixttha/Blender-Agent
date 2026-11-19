@@ -10,7 +10,7 @@
 | Owner direction | Establish the language hub, durable handoff, portable template, and a run-backed Blender-Agent audit. |
 | Open architecture ideas | [Language proposals](PROPOSALS.md). Conditional choices require a demonstrated project need and review. |
 | Validation environment | Free standard GitHub-hosted runners on the public repository. [Runner policy at the source commit](https://github.com/vixttha/Blender-Agent/blob/cb945bd8531ee425615c1968612ab6503849369d/AGENTS.md) |
-| Open evidence | Real MCP-to-Blender operation, material-bearing OBJ publication, and broader Blender/host runtime compatibility |
+| Open evidence | Real MCP-to-Blender operation on the published release, material-bearing OBJ publication, and broader Blender/host runtime compatibility |
 | Delivery cadence | Head → Worker → Validate exact SHA → Internal Auditor → Head |
 
 ## Handoff

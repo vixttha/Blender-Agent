@@ -138,6 +138,8 @@ def validate_config(config):
             raise ValueError(f"{label}.kind is unsupported")
         if kind in {"language", "format"}:
             text_field(rule.get("name"), label + ".name")
+        elif "name" in rule:
+            raise ValueError(f"{label}.name is only allowed for language and format overrides")
         text_field(rule.get("reason"), label + ".reason")
     for path, fragments in path_entries(config, "source_checks"):
         if not text_list(fragments, f"source_checks[{path}]"):

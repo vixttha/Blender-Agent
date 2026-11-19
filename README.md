@@ -43,7 +43,7 @@ flowchart LR
 | [Foundation audit](AUDIT.md) | Exact application revision, observed stack, tested scope and open checks |
 | [Technology registry](code-stack.json) | Status, role and primary evidence for every registered technology |
 | [Code Stack Actions](https://github.com/vixttha/Blender-Agent/actions/workflows/code-stack.yml) | Run results for the branch's audit against the pinned application |
-| [Portable template v0.0.2](https://github.com/vixttha/Blender-Agent/tree/53418d6c0fdfc821dc1778c4325e8a3082f7d38c/v0.0.2) | Copyable setup, workflow, validator and proposal form. [Original kit](https://github.com/vixttha/Blender-Agent/tree/042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f/v0.0.1). |
+| [Portable template v0.0.2](https://github.com/vixttha/Blender-Agent/tree/48e0cc8fe73087b1ca497b5611314da4e1871705/v0.0.2) | Copyable setup, workflow, validator and proposal form. [Original kit](https://github.com/vixttha/Blender-Agent/tree/042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f/v0.0.1). |
 
 <details>
 <summary>Documentation patterns we borrowed</summary>

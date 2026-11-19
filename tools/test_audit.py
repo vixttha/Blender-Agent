@@ -195,6 +195,16 @@ class AuditTests(unittest.TestCase):
         del self.config["reviewed_paths"]["build.gradle"]
         self.assertEqual(run(self.repo, self.config)["languages"]["Groovy"], ["build.gradle"])
 
+    def test_generated_and_vendored_overrides_disallow_a_name(self):
+        for kind, path in (("generated", "generated/bindings.rs"), ("vendored", "vendor/lib.go")):
+            with self.subTest(kind=kind):
+                override = {"kind": kind, "reason": "Reviewed source", "name": "Leftover"}
+                self.config["overrides"] = {path: override}
+                with self.assertRaisesRegex(ValueError, r"\.name is only allowed for language and format"):
+                    run(self.repo, self.config)
+                del override["name"]
+                self.assertEqual(run(self.repo, self.config)[kind], [path])
+
     def test_dirty_work_is_excluded(self):
         self.write("untracked.rb", "puts 'fixture'\n")
         self.assertNotIn("Ruby", run(self.repo, self.config)["languages"])

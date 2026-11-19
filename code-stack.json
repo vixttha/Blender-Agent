@@ -4,7 +4,7 @@
   "source_repository": "vixttha/Blender-Agent",
   "source_ref": "refs/heads/main",
   "source_commit": "cb945bd8531ee425615c1968612ab6503849369d",
-  "template_commit": "53418d6c0fdfc821dc1778c4325e8a3082f7d38c",
+  "template_commit": "48e0cc8fe73087b1ca497b5611314da4e1871705",
   "source_state": "Published Blender-Agent v0.0.2 pre-release",
   "required_paths": [
     "pyproject.toml",
