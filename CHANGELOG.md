@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.8 — v0.0.3 development checkpoint
+
+- Run Blender jobs on a single dedicated worker and verify protocol responsiveness and timeout cleanup on the public Blender runner (#21).
+
 ## v0.0.2.7 — v0.0.3 development checkpoint
 
 - Require successful Blender operations and mesh faces, validate staged STL and OBJ files within the inspection limit, and label scene geometry and staged artifact metadata (#14).

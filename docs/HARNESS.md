@@ -32,6 +32,8 @@ The adapter exposes inspect_model, create_primitive, convert_model, and repair_m
 
 MCP startup requires an existing workspace configured by `BLENDER_AGENT_WORKSPACE` or an explicit CLI flag. With `blender-agent --workspace DIR --blender PATH --timeout SECONDS mcp`, the flags take precedence over the environment. The default Blender timeout is 180 seconds, and the supported range is 1 to 900 seconds.
 
+Each MCP server runs one Blender job at a time while it continues to respond to inspection and protocol requests. The Blender timeout starts when the job runs.
+
 The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public CI on Linux and Windows starts the installed `blender-agent-mcp` command from a separate working directory, initializes a real stdio session, checks each tool's input schema, and verifies workspace isolation and read-only inspection. Individual MCP hosts may require different launch configuration.
 
 The Ubuntu job also runs all four tools over MCP stdio with Blender 4.5.0. It checks an STL → GLB → STL cube roundtrip, verifies that repair welds a split edge, and confirms that in-place edits and overwrites are rejected while the existing files retain their original bytes.

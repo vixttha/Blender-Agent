@@ -5,6 +5,7 @@ import hashlib
 import json
 import math
 import os
+import shlex
 import shutil
 import struct
 import subprocess
@@ -159,6 +160,59 @@ async def reject_faceless_output(session, workspace):
     print("MCP geometry: Blender rejected a wire-only OBJ without publishing an output.")
 
 
+async def verify_blender_scheduling(cli, blender, host_directory, workspace, env):
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    gate = host_directory / "allow-blender"
+    wrapper = host_directory / "gated-blender"
+    quoted_gate = shlex.quote(str(gate))
+    marker = shlex.quote(str(host_directory / "started-"))
+    executable = shlex.quote(str(blender.resolve(strict=True)))
+    wrapper.write_text(
+        f"#!/bin/sh\ntouch {marker}\"$$\"\n"
+        f"while [ ! -f {quoted_gate} ]; do sleep 0.05; done\n"
+        f"exec {executable} \"$@\"\n",
+        encoding="utf-8",
+    )
+    wrapper.chmod(0o755)
+    args = ["--workspace", str(workspace), "--blender", str(wrapper)]
+    params = StdioServerParameters(command=cli, args=[*args, "mcp"], cwd=host_directory, env=env)
+    async with asyncio.timeout(30), stdio_client(params) as (reader, writer):
+        async with ClientSession(reader, writer) as session:
+            await session.initialize()
+            async with asyncio.TaskGroup() as tasks:
+                first = tasks.create_task(call_tool(session, "create_primitive", kind="cube", output="first.stl"))
+                try:
+                    async with asyncio.timeout(10):
+                        while not list(host_directory.glob("started-*")):
+                            await asyncio.sleep(0.05)
+                    second = tasks.create_task(
+                        call_tool(session, "create_primitive", kind="cube", output="second.stl"),
+                    )
+                    info = await asyncio.wait_for(call_tool(session, "inspect_model", path="mesh.obj"), timeout=5)
+                    assert info["faces"] == 1 and not first.done() and not second.done()
+                    assert len(list(host_directory.glob("started-*"))) == 1
+                finally:
+                    gate.touch()
+            assert first.result()["ok"] and second.result()["ok"]
+    assert len(list(host_directory.glob("started-*"))) == 2
+    gate.unlink()
+
+    params = StdioServerParameters(command=cli, args=[*args, "--timeout", "1", "mcp"],
+                                    cwd=host_directory, env=env)
+    async with asyncio.timeout(20), stdio_client(params) as (reader, writer):
+        async with ClientSession(reader, writer) as session:
+            await session.initialize()
+            await expect_error(
+                session, "create_primitive", "Blender operation exceeded its timeout.",
+                kind="cube", output="timed-out.stl",
+            )
+            assert not (workspace / "timed-out.stl").exists()
+            assert not list(workspace.glob(".blender-agent-*"))
+    print("MCP scheduling: inspection replied during a blocked job, one Blender ran at a time, and timeout cleaned up.")
+
+
 async def smoke(blender):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
@@ -242,6 +296,8 @@ async def smoke(blender):
                 payload = await call_tool(session, "inspect_model", path="mesh.obj")
                 assert payload["faces"] == 1, payload
         print("MCP configuration: both launchers reject missing or invalid workspaces; CLI flags take precedence.")
+        if blender is not None and os.name == "posix":
+            await verify_blender_scheduling(cli, blender, host_directory, workspace, env)
 
 
 if __name__ == "__main__":
