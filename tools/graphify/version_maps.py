@@ -8,7 +8,6 @@ import hashlib
 import json
 import posixpath
 import re
-import shutil
 import subprocess
 import sys
 import tempfile
@@ -129,6 +128,25 @@ def reference_path(source: str, raw: str) -> str | None:
     return candidate
 
 
+def prose_lines(body: str):
+    """Yield Markdown lines outside fenced code blocks, retaining source line numbers."""
+    fence = None
+    for line_number, line in enumerate(body.splitlines(), 1):
+        stripped = line.lstrip(" ")
+        indent = len(line) - len(stripped)
+        if indent <= 3 and stripped[:1] in ("`", "~"):
+            marker = stripped[0]
+            marker_length = len(stripped) - len(stripped.lstrip(marker))
+            if marker_length >= 3:
+                if fence is None:
+                    fence = (marker, marker_length)
+                    continue
+                if fence[0] == marker and marker_length >= fence[1] and not stripped[marker_length:].strip():
+                    fence = None
+                    continue
+        if fence is None:
+            yield line_number, line
+
 def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bool = False, candidate: bool = False) -> dict:
     nodes: dict[str, dict] = {}
     edges: dict[tuple, dict] = {}
@@ -155,7 +173,8 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
         stack: list[tuple[int, str]] = []
         outline: list[tuple[str, str]] = []
         slug_counts: dict[str, int] = {}
-        for line_no, line in enumerate(body.splitlines(), 1):
+        visible_lines = list(prose_lines(body))
+        for line_no, line in visible_lines:
             match = HEADING.match(line)
             if not match:
                 continue
@@ -171,7 +190,7 @@ def make_map(tag: str, sha: str, docs: dict[str, str], folder: Path, fixture: bo
             slug_counts[slug] = index + 1
             outline.append((heading, slug + (f"-{index}" if index else "")))
         outlines[path] = outline
-        for raw in LINK.findall(body):
+        for raw in LINK.findall("\n".join(line for _, line in visible_lines)):
             dest = reference_path(path, raw)
             if dest is None or dest == path:
                 continue
@@ -322,6 +341,8 @@ def self_test() -> None:
         second = Path(temp) / "second"
         receipt = make_map("v0.0.0", "0" * 40, {"README.md": raw}, first, fixture=True)
         again = make_map("v0.0.0", "0" * 40, {"README.md": raw}, second, fixture=True)
+        if receipt['nodes'] != 6 or receipt['edges'] != 5:
+            raise ValueError('Code-fence injection polluted the synthetic heading/link graph')
         if generated_files(first) != generated_files(second) or receipt != again:
             raise ValueError("Graphify fixture is not byte-for-byte deterministic")
         asyncio.run(verify_mcp(first / "graph.json", receipt))

@@ -18,7 +18,6 @@ from version_maps import (
     REPOSITORY,
     ROOT,
     check_path,
-    compare as compare_approved,
     generated_files,
     git,
     make_map,
