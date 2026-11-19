@@ -19,6 +19,7 @@ permissions:
 env:
   EVIDENCE_PATH: evidence/obj-mtl/v0.0.2.1
   TEMPLATE_COMMIT: 062fb633838daa42204289d889850c03e89d45eb
+  PROVENANCE_COMMIT: f08ce76a3ea2c906202fefaab7b5b2171b065a03
   PIP_DISABLE_PIP_VERSION_CHECK: '1'
   PYTHONHASHSEED: '0'
 
@@ -48,15 +49,14 @@ jobs:
 
           manifest = json.loads((Path(os.environ["EVIDENCE_PATH"]) / "manifest.json").read_text())
           source = manifest["source_commit"]
-          if (not re.fullmatch(r"[0-9a-f]{40}", source)
-              or os.environ["GITHUB_REPOSITORY"] != "vixttha/Blender-Agent-Refinement-Toolkit"
-              or manifest["repository"] != "vixttha/Blender-Agent"):
-              raise SystemExit("The evidence must pin a SHA in this repository.")
+          if not re.fullmatch(r"[0-9a-f]{40}", source):
+              raise SystemExit("The evidence must pin a full source SHA.")
           print(source)
           PY
           )"
-          git fetch --no-tags origin "$TEMPLATE_COMMIT" "$source_sha"
+          git fetch --no-tags origin "$TEMPLATE_COMMIT" "$PROVENANCE_COMMIT" "$source_sha"
           git archive "$TEMPLATE_COMMIT" versions/v0.0.8 | tar -x -C "$RUNNER_TEMP"
+          git archive "$PROVENANCE_COMMIT" candidate/github_provenance.py | tar -x -C "$RUNNER_TEMP"
           printf 'HQ checkout SHA: %s\nApplication source SHA: %s\nTemplate source SHA: %s\n' \
             "$(git rev-parse HEAD)" "$source_sha" "$TEMPLATE_COMMIT"
       - name: Install hash-locked Graphify wheels
@@ -71,7 +71,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           kit="$RUNNER_TEMP/versions/v0.0.8"
-          PYTHONPATH="$kit" python - <<'PY'
+          PYTHONPATH="$RUNNER_TEMP/candidate" python - <<'PY'
           import json
           import os
           from pathlib import Path
@@ -80,8 +80,11 @@ jobs:
 
           manifest = json.loads((Path(os.environ["EVIDENCE_PATH"]) / "manifest.json").read_text())
           observation = verify_pull_request(
-              os.environ["GITHUB_REPOSITORY"], manifest["source_commit"], manifest["pull_request"],
+              manifest["repository"], manifest["source_commit"], manifest["pull_request"],
           )
+          expected_prefix = f"https://github.com/{os.environ['GITHUB_REPOSITORY']}/pull/"
+          if not observation["pull_request"].lower().startswith(expected_prefix.lower()):
+              raise SystemExit("The evidence PR belongs to a different repository.")
           print("GitHub pull request provenance:\n" + json.dumps(observation, indent=2))
           PY
           python "$kit/evidence_map.py" "$EVIDENCE_PATH/manifest.json" "$EVIDENCE_PATH" --check
