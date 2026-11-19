@@ -18,10 +18,11 @@ jobs:
     timeout-minutes: 8
     env:
       REPO_VISIBILITY: ${{ github.event.repository.visibility }}
-      RUNNER_KIND: ${{ runner.environment }}
     steps:
       - name: Enforce public repository and free GitHub-hosted runner
         shell: bash
+        env:
+          RUNNER_KIND: ${{ runner.environment }}
         run: |
           set -euo pipefail
           test "$REPO_VISIBILITY" = "public"
@@ -41,12 +42,16 @@ jobs:
           echo "CHECKED_OUT_SHA=$GITHUB_SHA"
       - name: Validate instructions and Graphify handoff
         shell: bash
+        env:
+          RUNNER_KIND: ${{ runner.environment }}
         run: |
           set -euo pipefail
           python3 scripts/validate_archive.py --root . --sha "$GITHUB_SHA" --output-dir "$RUNNER_TEMP/agent-instructions"
       - name: Emit SHA-bound verification receipt
         if: always()
         shell: bash
+        env:
+          RUNNER_KIND: ${{ runner.environment }}
         run: |
           {
             echo "## Blender-Agent instructions archive"
