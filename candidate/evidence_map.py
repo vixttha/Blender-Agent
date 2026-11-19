@@ -2,12 +2,16 @@
 
 import argparse
 import asyncio
+import fcntl
 import hashlib
 import json
+import os
+import shutil
 import re
 import subprocess
 import sys
 import tempfile
+from contextlib import contextmanager
 from importlib.metadata import version
 from pathlib import Path, PurePosixPath
 
@@ -227,6 +231,88 @@ async def verify_mcp(graph, receipt):
                         raise ValueError(f"Graphify MCP {node} {relation}: expected {count}, found {found}")
 
 
+PAIR_NAMES = ("graph.json", "receipt.json")
+PUBLICATION_STAGE = ".graphify-publish.staging"
+PUBLICATION_PENDING = ".graphify-publish.pending"
+
+
+@contextmanager
+def publication_lock(output):
+    # Lock the directory inode so a terminated process cannot leave a stale lock.
+    directory = os.open(output, os.O_RDONLY | os.O_DIRECTORY)
+    try:
+        fcntl.flock(directory, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+    finally:
+        os.close(directory)
+
+
+def recover_publication(output):
+    stage = output / PUBLICATION_STAGE
+    pending = output / PUBLICATION_PENDING
+    if stage.exists() or stage.is_symlink():
+        shutil.rmtree(stage)
+    if pending.is_symlink() or (pending.exists() and not pending.is_dir()):
+        raise ValueError(f"Expected an evidence journal directory: {pending}")
+    if not pending.exists():
+        return
+
+    # A staged file disappears only when its replacement reaches the live path.
+    # Keep the backups in place until rollback finishes so it can be interrupted too.
+    for name in PAIR_NAMES:
+        if (pending / "next" / name).exists():
+            continue
+        target = output / name
+        previous = pending / "previous" / name
+        if previous.exists():
+            restore = pending / ("restore-" + name)
+            shutil.copy2(previous, restore)
+            os.replace(restore, target)
+        else:
+            target.unlink(missing_ok=True)
+    pending.rename(stage)
+    shutil.rmtree(stage)
+
+
+def publish_pair(output, files):
+    """Publish both files with recovery on the next use if interrupted."""
+    output.mkdir(parents=True, exist_ok=True)
+    with publication_lock(output):
+        recover_publication(output)
+        for name in PAIR_NAMES:
+            target = output / name
+            if target.is_symlink() or (target.exists() and not target.is_file()):
+                raise ValueError(f"Expected an ordinary evidence file: {target}")
+
+        stage = output / PUBLICATION_STAGE
+        pending = output / PUBLICATION_PENDING
+        (stage / "next").mkdir(parents=True)
+        (stage / "previous").mkdir()
+        for name in PAIR_NAMES:
+            (stage / "next" / name).write_bytes(files[name])
+            target = output / name
+            if target.exists():
+                shutil.copy2(target, stage / "previous" / name)
+
+        # Activate the journal before either replacement, then retire it only
+        # after both replacements succeed.
+        stage.rename(pending)
+        try:
+            for name in PAIR_NAMES:
+                os.replace(pending / "next" / name, output / name)
+            pending.rename(stage)
+        except OSError:
+            recover_publication(output)
+            raise
+        shutil.rmtree(stage)
+
+
+def read_published_pair(output):
+    with publication_lock(output):
+        recover_publication(output)
+        return {name: (output / name).read_bytes() for name in PAIR_NAMES}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("manifest", type=Path)
@@ -249,13 +335,12 @@ def main():
         receipt["mcp_verified"] = True
         files = {"graph.json": path.read_bytes(), "receipt.json": (json.dumps(receipt, indent=2) + "\n").encode()}
         if args.check:
+            published = read_published_pair(args.output)
             for name, expected in files.items():
-                if (args.output / name).read_bytes() != expected:
+                if published[name] != expected:
                     raise ValueError("Deterministic rebuild differs: " + name)
         else:
-            args.output.mkdir(parents=True, exist_ok=True)
-            for name, data in files.items():
-                (args.output / name).write_bytes(data)
+            publish_pair(args.output, files)
     print(f"Graphify MCP verified {receipt['nodes']} nodes and {receipt['edges']} edges at {receipt['source_commit']}")
 
 

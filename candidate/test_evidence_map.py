@@ -1,10 +1,14 @@
 import json
+import os
+import signal
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from evidence_map import build, locate, validate_manifest
+from evidence_map import build, locate, publication_lock, publish_pair, read_published_pair, validate_manifest
 from github_provenance import verify_pull_request
 
 class ManifestTests(unittest.TestCase):
@@ -156,6 +160,135 @@ class ProvenanceTests(unittest.TestCase):
         self.assertEqual(outcome["source_commit"], self.source)
         self.assertEqual(outcome["merge_commit"], "c" * 40)
         self.assertEqual(outcome["pr_state"], "merged")
+
+
+class PublicationTests(unittest.TestCase):
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.output = Path(temporary.name) / "evidence"
+        self.old = {"graph.json": b"old graph", "receipt.json": b"old receipt"}
+        self.new = {"graph.json": b"new graph", "receipt.json": b"new receipt"}
+
+    def assert_pair(self, expected):
+        self.assertEqual({p.name: p.read_bytes() for p in self.output.iterdir()}, expected)
+
+    def test_success_and_repeated_publication(self):
+        publish_pair(self.output, self.old)
+        self.assert_pair(self.old)
+        publish_pair(self.output, self.new)
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_replace_failure_restores_previous_pair(self):
+        publish_pair(self.output, self.old)
+        replace = os.replace
+
+        def fail_receipt(source, target):
+            if target.name == "receipt.json":
+                raise OSError("simulated receipt write failure")
+            replace(source, target)
+
+        with patch("evidence_map.os.replace", side_effect=fail_receipt):
+            with self.assertRaisesRegex(OSError, "simulated receipt write failure"):
+                publish_pair(self.output, self.new)
+        self.assert_pair(self.old)
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_first_publish_failure_does_not_leave_half_pair(self):
+        replace = os.replace
+
+        def fail_receipt(source, target):
+            if target.name == "receipt.json":
+                raise OSError("simulated receipt write failure")
+            replace(source, target)
+
+        with patch("evidence_map.os.replace", side_effect=fail_receipt):
+            with self.assertRaisesRegex(OSError, "simulated receipt write failure"):
+                publish_pair(self.output, self.new)
+        self.assert_pair({})
+
+    def test_unavailable_receipt_target_does_not_replace_graph(self):
+        self.output.mkdir()
+        (self.output / "graph.json").write_bytes(self.old["graph.json"])
+        (self.output / "receipt.json").mkdir()
+        with self.assertRaisesRegex(ValueError, "ordinary evidence file"):
+            publish_pair(self.output, self.new)
+        self.assertEqual((self.output / "graph.json").read_bytes(), self.old["graph.json"])
+
+    def test_contending_publisher_cannot_modify_previous_pair(self):
+        publish_pair(self.output, self.old)
+        with publication_lock(self.output), self.assertRaises(BlockingIOError):
+            publish_pair(self.output, self.new)
+        self.assert_pair(self.old)
+
+    def interrupt_after_replacement(self, operation, name="graph.json"):
+        worker = """
+import os
+import signal
+import sys
+from pathlib import Path
+from evidence_map import publish_pair, read_published_pair
+
+replace = os.replace
+
+def interrupt(source, target):
+    replace(source, target)
+    if target.name == sys.argv[3]:
+        os.kill(os.getpid(), signal.SIGKILL)
+
+os.replace = interrupt
+output = Path(sys.argv[1])
+if sys.argv[2] == "publish":
+    publish_pair(output, {"graph.json": b"new graph", "receipt.json": b"new receipt"})
+else:
+    read_published_pair(output)
+"""
+        completed = subprocess.run(
+            [sys.executable, "-c", worker, str(self.output), operation, name],
+            cwd=Path(__file__).resolve().parent, capture_output=True, timeout=15, check=False,
+        )
+        self.assertEqual(completed.returncode, -signal.SIGKILL, completed.stderr.decode())
+
+    def test_read_recovers_pair_after_publisher_is_killed(self):
+        publish_pair(self.output, self.old)
+        self.interrupt_after_replacement("publish")
+        self.assertEqual((self.output / "graph.json").read_bytes(), self.new["graph.json"])
+        self.assertEqual((self.output / "receipt.json").read_bytes(), self.old["receipt.json"])
+        self.assertEqual(read_published_pair(self.output), self.old)
+        self.assert_pair(self.old)
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_retry_recovers_after_first_publisher_is_killed(self):
+        self.interrupt_after_replacement("publish")
+        self.assertFalse((self.output / "receipt.json").exists())
+        with self.assertRaises(FileNotFoundError):
+            read_published_pair(self.output)
+        self.assert_pair({})
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_retry_republishes_after_interruption(self):
+        publish_pair(self.output, self.old)
+        self.interrupt_after_replacement("publish")
+        publish_pair(self.output, self.new)
+        self.assert_pair(self.new)
+
+    def test_interruption_before_journal_retirement_restores_previous_pair(self):
+        publish_pair(self.output, self.old)
+        self.interrupt_after_replacement("publish", "receipt.json")
+        self.assertEqual((self.output / "receipt.json").read_bytes(), self.new["receipt.json"])
+        self.assertEqual(read_published_pair(self.output), self.old)
+        self.assert_pair(self.old)
+
+    def test_recovery_can_be_interrupted_and_repeated(self):
+        publish_pair(self.output, self.old)
+        self.interrupt_after_replacement("publish")
+        self.interrupt_after_replacement("recover")
+        self.assertEqual(read_published_pair(self.output), self.old)
+        self.assert_pair(self.old)
 
 
 if __name__ == "__main__":
