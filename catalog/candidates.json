@@ -19,6 +19,102 @@
         "skills/mesh-repair/SKILL.md",
         "skills/procedural-primitives/SKILL.md"
       ]
+    },
+    {
+      "version": "v0.0.2",
+      "source_commit": "2f621fbd5ad0e3e6a96bc9037a9d7cd28edda65b",
+      "source_branch": "feature/v0.0.1-foundation",
+      "source_pr": 1,
+      "source_files": [
+        "CHANGELOG.md",
+        "README.md",
+        "docs/ARCHITECTURE.md",
+        "docs/HARNESS.md",
+        "docs/ROADMAP.md",
+        "docs/SKILL_POLICY.md",
+        "skills/asset-conversion/SKILL.md",
+        "skills/asset-inspection/SKILL.md",
+        "skills/mesh-repair/SKILL.md",
+        "skills/procedural-primitives/SKILL.md"
+      ],
+      "features": [
+        {
+          "id": "atomic-output",
+          "label": "Atomic output publication",
+          "document": "docs/ARCHITECTURE.md",
+          "change": "- Repair the default output overwrite race using atomic no-clobber publication; add simultaneous-writer negative regression tests.",
+          "tests": [
+            {
+              "path": "tests/test_jobs.py",
+              "line": "def test_atomic_no_overwrite_even_when_destination_appears_late(self):"
+            },
+            {
+              "path": "tests/test_jobs.py",
+              "line": "def test_parallel_writers_exactly_one_wins(self):"
+            }
+          ]
+        },
+        {
+          "id": "bounded-blender-jobs",
+          "label": "Blender process and file limits",
+          "document": "docs/ARCHITECTURE.md",
+          "change": "- Bound Blender process logs, runtime and file sizes; add oversized-input/output and timeout tests.",
+          "tests": [
+            {
+              "path": "tests/test_jobs.py",
+              "line": "def test_log_output_cap_terminates_noisy_process(self):"
+            },
+            {
+              "path": "tests/test_jobs.py",
+              "line": "def test_subprocess_timeout_is_enforced(self):"
+            },
+            {
+              "path": "tests/test_jobs.py",
+              "line": "def test_oversized_output_never_promoted(self):"
+            },
+            {
+              "path": "tests/test_jobs.py",
+              "line": "def test_input_size_cap(self):"
+            }
+          ]
+        },
+        {
+          "id": "mcp-stdio",
+          "label": "MCP stdio host integration",
+          "document": "docs/HARNESS.md",
+          "change": "- Verify the installed MCP launcher, handshake, tool schemas and workspace isolation on free GitHub-hosted Linux and Windows runners.",
+          "tests": [
+            {
+              "path": "tests/test_mcp_smoke.py",
+              "line": "async def smoke():"
+            }
+          ]
+        },
+        {
+          "id": "mesh-inspection",
+          "label": "Structural mesh inspection",
+          "document": "skills/asset-inspection/SKILL.md",
+          "change": "- Validate structural OBJ face references and strengthen malformed STL/OBJ inputs.",
+          "tests": [
+            {
+              "path": "tests/test_inspect.py",
+              "line": "def test_obj_valid_positive_and_negative_references(self):"
+            },
+            {
+              "path": "tests/test_inspect.py",
+              "line": "def test_obj_bad_face_reference(self):"
+            },
+            {
+              "path": "tests/test_inspect.py",
+              "line": "def test_empty_binary_stl_rejected(self):"
+            },
+            {
+              "path": "tests/test_inspect.py",
+              "line": "def test_empty_obj_rejected(self):"
+            }
+          ]
+        }
+      ]
     }
   ]
 }

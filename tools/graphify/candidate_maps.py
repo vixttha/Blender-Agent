@@ -14,6 +14,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from github_provenance import report_provenance
+from traceability import validate_features
 from version_maps import (
     REPOSITORY,
     ROOT,
@@ -21,6 +23,7 @@ from version_maps import (
     generated_files,
     git,
     make_map,
+    read_source,
     semver,
     verify_mcp,
 )
@@ -41,7 +44,7 @@ def validate_catalog(payload: object) -> list[dict]:
         raise ValueError("Candidates must be a list")
     tags: set[str] = set()
     for item in entries:
-        if not isinstance(item, dict) or set(item) != {
+        if not isinstance(item, dict) or set(item) - {"features"} != {
             "version", "source_commit", "source_branch", "source_pr", "source_files"
         }:
             raise ValueError("Invalid candidate record")
@@ -71,6 +74,8 @@ def validate_catalog(payload: object) -> list[dict]:
             check_path(path)
         if len(set(paths)) != len(paths) or paths != sorted(paths):
             raise ValueError("Candidate source documents must be unique and sorted")
+        if "features" in item:
+            validate_features(item["features"], paths)
     return entries
 
 
@@ -79,21 +84,9 @@ def read_sources(item: dict) -> dict[str, str]:
     try:
         if git("cat-file", "-t", sha).decode().strip() != "commit":
             raise ValueError("Candidate source is not a commit")
-        if not git("merge-base", "--is-ancestor", sha,
-                   "refs/remotes/origin/" + item["source_branch"]) == b"":
-            raise ValueError("Cannot locate candidate source")
     except subprocess.CalledProcessError as exc:
-        raise ValueError("Pinned candidate commit not on source branch: " + sha) from exc
-    docs: dict[str, str] = {}
-    for path in item["source_files"]:
-        try:
-            contents = git("show", sha + ":" + path)
-        except subprocess.CalledProcessError as exc:
-            raise ValueError("Candidate source document not found: " + path) from exc
-        if not (0 < len(contents) <= 1_000_000):
-            raise ValueError("Candidate source document exceeds size limits")
-        docs[path] = contents.decode("utf-8")
-    return docs
+        raise ValueError("Pinned candidate commit missing from checkout: " + sha) from exc
+    return {path: read_source(sha, path) for path in item["source_files"]}
 
 
 def build(output: Path, entries: list[dict]) -> None:
@@ -108,7 +101,10 @@ def build(output: Path, entries: list[dict]) -> None:
     for item in entries:
         tag = item["version"]
         dest = output / tag
-        receipt = make_map(tag, item["source_commit"], read_sources(item), dest, candidate=True)
+        receipt = make_map(
+            tag, item["source_commit"], read_sources(item), dest,
+            candidate=True, features=item.get("features"),
+        )
         receipt["source_pr"] = item["source_pr"]
         receipt["source_branch"] = item["source_branch"]
         (dest / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
@@ -155,14 +151,21 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--check", action="store_true")
+    group.add_argument("--generate", action="store_true", help="Write reviewed candidate maps")
     group.add_argument("--emit", action="store_true", help="Print generated files in bounded JSON chunks")
     args = parser.parse_args()
     entries = validate_catalog(json.loads(CATALOG.read_text(encoding="utf-8")))
+    report_provenance(entries)
     with tempfile.TemporaryDirectory() as tmp:
         out = Path(tmp) / "candidates"
         build(out, entries)
         if args.emit:
             export(out)
+        elif args.generate:
+            for path, data in generated_files(out).items():
+                target = ARCHIVE / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(data)
         else:
             verify(out)
 
