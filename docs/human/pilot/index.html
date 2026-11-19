@@ -70,7 +70,7 @@
       </div>
     </div>
   </section>
-  <section id="inspect" class="scene clip" data-start="8.2" data-duration="6.9" data-track-index="1">
+  <section id="inspect" class="scene clip" data-hold data-start="8.2" data-duration="6.9" data-track-index="1">
     <div class="mesh">
       <p class="label">Wireframe illustration</p>
       <h2>One triangle.</h2>
@@ -124,6 +124,7 @@
   timeline.from(".mesh h2", { x: -20, opacity: 0, duration: 0.45, ease: "power2.out" }, 8.35);
   timeline.from("#triangle", { opacity: 0, duration: 0.55, ease: "sine.out" }, 8.57);
   timeline.from(".vertices", { opacity: 0, duration: 0.45, ease: "power2.out" }, 8.98);
+  timeline.from(".evidence .label, .command, .evidence-note", { opacity: 0, duration: 0.24, ease: "sine.out" }, 8.8);
   timeline.from(".measurements", { y: 16, opacity: 0, duration: 0.5, ease: "power3.out" }, 8.84);
   timeline.from("#outro", { opacity: 0, duration: 0.55, ease: "sine.inOut" }, 14.55);
   timeline.from(".outro-grid h2", { y: 17, opacity: 0, duration: 0.6, ease: "power2.out" }, 14.71);
