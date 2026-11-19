@@ -4,16 +4,22 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from blender_agent.cli import main
 
 
 class CliTests(unittest.TestCase):
+    def test_mcp_flags_are_forwarded(self):
+        with patch("blender_agent.mcp_server.main", return_value=0) as start:
+            self.assertEqual(main(["--workspace", "assets", "--blender", "custom", "--timeout", "7", "mcp"]), 0)
+        start.assert_called_once_with(workspace="assets", blender="custom", timeout=7)
+
     def test_version_and_skills(self):
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
             self.assertEqual(main(["version"]), 0)
-        self.assertEqual(json.loads(buffer.getvalue())["version"], "0.0.2.2")
+        self.assertEqual(json.loads(buffer.getvalue())["version"], "0.0.2.3")
         buffer = io.StringIO()
         with contextlib.redirect_stdout(buffer):
             self.assertEqual(main(["skills"]), 0)

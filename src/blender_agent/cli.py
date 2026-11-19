@@ -7,7 +7,7 @@ import sys
 
 from . import __version__
 from .inspect import inspect_asset
-from .jobs import PRIMITIVES, execute
+from .jobs import DEFAULT_TIMEOUT, PRIMITIVES, execute
 
 SKILLS = [
     {"id": "asset-inspection", "status": "implemented"},
@@ -19,9 +19,9 @@ SKILLS = [
 
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="blender-agent")
-    parser.add_argument("--workspace", default=os.environ.get("BLENDER_AGENT_WORKSPACE", "."))
+    parser.add_argument("--workspace", default=os.environ.get("BLENDER_AGENT_WORKSPACE"))
     parser.add_argument("--blender", default=os.environ.get("BLENDER_AGENT_BLENDER", "blender"))
-    parser.add_argument("--timeout", type=int, default=180)
+    parser.add_argument("--timeout", type=int, default=DEFAULT_TIMEOUT)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("version", help="Display the package version")
     sub.add_parser("skills", help="List shipped skills and their implementation status")
@@ -38,19 +38,20 @@ def main(argv=None) -> int:
         command.add_argument("--overwrite", action="store_true")
     sub.add_parser("mcp", help="Run optional MCP stdio server")
     args = parser.parse_args(argv)
+    workspace = args.workspace if args.workspace is not None else "."
     try:
         if args.command == "version":
             result = {"version": __version__}
         elif args.command == "skills":
             result = {"skills": SKILLS}
         elif args.command == "inspect":
-            result = inspect_asset(args.source, workspace=args.workspace)
+            result = inspect_asset(args.source, workspace=workspace)
         elif args.command == "mcp":
             from .mcp_server import main as start_mcp
-            return start_mcp()
+            return start_mcp(workspace=args.workspace, blender=args.blender, timeout=args.timeout)
         else:
             result = execute(
-                args.command, workspace=args.workspace, blender=args.blender,
+                args.command, workspace=workspace, blender=args.blender,
                 timeout=args.timeout, source=getattr(args, "source", None),
                 output=args.output, kind=getattr(args, "kind", None),
                 size=getattr(args, "size", 1.0),

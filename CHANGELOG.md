@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.0.2.3 — v0.0.3 development checkpoint
+
+- Require an explicit MCP workspace and honor the CLI workspace, Blender executable, and timeout flags (#12).
+
 ## v0.0.2.2 — v0.0.3 development checkpoint
 
 - Resolve the Blender executable against the launch directory before entering the configured workspace (#18).

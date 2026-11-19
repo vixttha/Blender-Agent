@@ -159,6 +159,11 @@ def _publish_obj(temp: Path, final: Path, root: Path, *, source: Path | None, ov
     return material
 
 
+def validate_timeout(timeout: int) -> None:
+    if not isinstance(timeout, int) or isinstance(timeout, bool) or not 1 <= timeout <= MAX_TIMEOUT:
+        raise ValueError("Timeout must be between 1 and 900 seconds.")
+
+
 def execute(
     operation: str,
     *,
@@ -173,8 +178,7 @@ def execute(
 ) -> dict:
     if operation not in {"create", "convert", "repair"}:
         raise ValueError("Unknown operation.")
-    if not isinstance(timeout, int) or isinstance(timeout, bool) or not 1 <= timeout <= MAX_TIMEOUT:
-        raise ValueError("Timeout must be between 1 and 900 seconds.")
+    validate_timeout(timeout)
     root = root_path(workspace)
     if operation == "create":
         if kind not in PRIMITIVES:

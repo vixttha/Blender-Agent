@@ -7,6 +7,7 @@ import math
 import os
 import shutil
 import struct
+import subprocess
 import sysconfig
 import tempfile
 from pathlib import Path
@@ -152,6 +153,8 @@ async def smoke(blender):
 
     launcher = shutil.which("blender-agent-mcp", path=sysconfig.get_path("scripts"))
     assert launcher, "The installed blender-agent-mcp console script is missing"
+    cli = shutil.which("blender-agent", path=sysconfig.get_path("scripts"))
+    assert cli, "The installed blender-agent console script is missing"
     required_arguments = {
         "inspect_model": {"path"},
         "create_primitive": {"kind", "output"},
@@ -167,6 +170,23 @@ async def smoke(blender):
         source.write_text(mesh, encoding="utf-8")
         (host_directory / "outside.obj").write_text(mesh, encoding="utf-8")
         env = {**os.environ, "BLENDER_AGENT_WORKSPACE": str(workspace)}
+        missing_env = {key: value for key, value in env.items() if key != "BLENDER_AGENT_WORKSPACE"}
+        for command in ([launcher], [cli, "mcp"]):
+            missing = subprocess.run(
+                command, env=missing_env, cwd=host_directory, stdin=subprocess.DEVNULL,
+                capture_output=True, text=True, timeout=15,
+            )
+            assert missing.returncode == 2 and "BLENDER_AGENT_WORKSPACE" in missing.stderr, missing
+            invalid = subprocess.run(
+                command, env={**env, "BLENDER_AGENT_WORKSPACE": str(source)}, cwd=host_directory,
+                stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=15,
+            )
+            assert invalid.returncode == 2 and "existing directory" in invalid.stderr, invalid
+        invalid_timeout = subprocess.run(
+            [cli, "--timeout", "0", "mcp"], env=env, cwd=host_directory, stdin=subprocess.DEVNULL,
+            capture_output=True, text=True, timeout=15,
+        )
+        assert invalid_timeout.returncode == 2 and "between 1 and 900" in invalid_timeout.stderr, invalid_timeout
         if blender is not None:
             env["BLENDER_AGENT_BLENDER"] = str(blender.resolve(strict=True))
         params = StdioServerParameters(
@@ -198,6 +218,17 @@ async def smoke(blender):
                 if blender is not None:
                     await blender_roundtrip(session, workspace)
                     await obj_material_roundtrip(session, workspace)
+
+        cli_params = StdioServerParameters(
+            command=cli, args=["--workspace", str(workspace), "mcp"], cwd=host_directory,
+            env={**env, "BLENDER_AGENT_WORKSPACE": str(source)},
+        )
+        async with asyncio.timeout(30), stdio_client(cli_params) as (reader, writer):
+            async with ClientSession(reader, writer) as session:
+                await session.initialize()
+                payload = await call_tool(session, "inspect_model", path="mesh.obj")
+                assert payload["faces"] == 1, payload
+        print("MCP configuration: both launchers reject missing or invalid workspaces; CLI flags take precedence.")
 
 
 if __name__ == "__main__":
