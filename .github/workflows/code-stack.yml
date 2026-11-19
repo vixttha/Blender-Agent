@@ -1,4 +1,4 @@
-name: Audit Blender-Agent Code Stack
+name: Review Blender-Agent Code Stack
 
 on:
   push:
@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  audit:
+  review:
     if: github.event.repository.private == false
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -18,15 +18,15 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
           persist-credentials: false
-      - name: Resolve the pinned revisions
-        id: registry
+      - name: Read review settings and record the hub checkout
+        id: review
         env:
           EXPECTED_REPOSITORY: ${{ github.repository }}
           PR_HEAD: ${{ github.event.pull_request.head.sha }}
           PR_BASE: ${{ github.event.pull_request.base.sha }}
         run: |
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
-          printf 'Checkout %s\nPR head %s\nPR base %s\nRunner %s %s\n' \
+          printf 'Hub checkout %s\nPR head %s\nPR base %s\nRunner %s %s\n' \
             "$GITHUB_SHA" "$PR_HEAD" "$PR_BASE" "$RUNNER_ENVIRONMENT" "$RUNNER_OS"
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import json
@@ -34,34 +34,90 @@ jobs:
           import re
           from pathlib import Path
 
+          settings = json.loads(Path("language-review.json").read_text(encoding="utf-8"))
           registry = json.loads(Path("code-stack.json").read_text(encoding="utf-8"))
           if registry["source_repository"].casefold() != os.environ["EXPECTED_REPOSITORY"].casefold():
-              raise SystemExit("The registry must audit this repository")
-          for key in ("source_commit", "template_commit"):
-              revision = registry[key]
-              if not re.fullmatch(r"[0-9a-f]{40}", revision):
-                  raise SystemExit(f"Invalid GitHub {key}")
-              print(f"{key}={revision}")
+              raise SystemExit("The registry must review this repository")
+          settings["release_commit"] = registry["source_commit"]
+          patterns = {
+              "template_version": r"v\d+\.\d+\.\d+",
+              "template_commit": r"[0-9a-f]{40}",
+              "application_branch": r"[A-Za-z0-9][A-Za-z0-9._/-]*",
+              "release_tag": r"v\d+\.\d+\.\d+",
+              "release_commit": r"[0-9a-f]{40}",
+          }
+          for key, pattern in patterns.items():
+              if not re.fullmatch(pattern, settings[key]):
+                  raise SystemExit(f"Invalid {key}")
+              print(f"{key}={settings[key]}")
           PY
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
+        with:
+          python-version: '3.12'
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
         with:
-          ref: ${{ steps.registry.outputs.source_commit }}
+          ref: ${{ steps.review.outputs.template_commit }}
+          path: audited-template
+          persist-credentials: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          ref: ${{ steps.review.outputs.application_branch }}
           path: audited-source
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
-        with:
-          ref: ${{ steps.registry.outputs.template_commit }}
-          path: audited-template
-          persist-credentials: false
-      - name: Verify the kit and audit the release
+      - name: Generate the release baseline and current language review
         env:
-          TEMPLATE_SHA: ${{ steps.registry.outputs.template_commit }}
+          TEMPLATE_VERSION: ${{ steps.review.outputs.template_version }}
+          TEMPLATE_SHA: ${{ steps.review.outputs.template_commit }}
+          APP_BRANCH: ${{ steps.review.outputs.application_branch }}
+          RELEASE_TAG: ${{ steps.review.outputs.release_tag }}
+          RELEASE_SHA: ${{ steps.review.outputs.release_commit }}
         run: |
           test "$(git -C audited-template rev-parse HEAD)" = "$TEMPLATE_SHA"
-          cmp tools/audit.py audited-template/v0.0.2/tools/audit.py
-          cmp tools/test_audit.py audited-template/v0.0.2/tools/test_audit.py
-          cmp STACK.md audited-template/v0.0.2/STACK.md
-          python3 tools/audit.py --repo audited-source --config code-stack.json \
-            --live-ref refs/remotes/origin/main --release-ref refs/tags/v0.0.2 \
-            --summary "$GITHUB_STEP_SUMMARY"
+          release_ref="refs/tags/$RELEASE_TAG"
+          test "$(git -C audited-source rev-parse --verify "$release_ref^{commit}")" = "$RELEASE_SHA"
+          app_ref="refs/heads/$APP_BRANCH"
+          app_sha="$(git -C audited-source rev-parse HEAD)"
+          test "$(git -C audited-source rev-parse --verify "$app_ref^{commit}")" = "$app_sha"
+          printf 'Template %s %s\nRelease %s\nCurrent application %s\n' \
+            "$TEMPLATE_VERSION" "$TEMPLATE_SHA" "$RELEASE_SHA" "$app_sha"
+
+          kit="audited-template/$TEMPLATE_VERSION/tools/stack.py"
+          python3 "$kit" --repo audited-source --ref "$release_ref" \
+            --template-commit "$TEMPLATE_SHA" --out reports/release
+          previous=reports/release/code-stack.json
+          if test -f approved-code-stack.json; then
+            previous=approved-code-stack.json
+          fi
+          python3 "$kit" --repo audited-source --ref "$app_ref" \
+            --template-commit "$TEMPLATE_SHA" --previous "$previous" --out reports/current
+          export APP_SHA="$app_sha"
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+
+          for report, sha in (("release", os.environ["RELEASE_SHA"]), ("current", os.environ["APP_SHA"])):
+              directory = Path("reports") / report
+              receipt = json.loads((directory / "receipt.json").read_text(encoding="utf-8"))
+              if (receipt["source_commit"], receipt["template_commit"], receipt["template_version"]) != (
+                  sha, os.environ["TEMPLATE_SHA"], os.environ["TEMPLATE_VERSION"]
+              ):
+                  raise SystemExit(f"Incorrect provenance in the {report} receipt")
+              if set(receipt["outputs_sha256"]) != {"REPORT.md", "code-stack.json"}:
+                  raise SystemExit(f"Missing output digests in the {report} receipt")
+              for name, expected in receipt["outputs_sha256"].items():
+                  if hashlib.sha256((directory / name).read_bytes()).hexdigest() != expected:
+                      raise SystemExit(f"Digest mismatch for {report}/{name}")
+          PY
+          {
+            printf 'Published baseline `%s`\n\n' "$RELEASE_SHA"
+            cat reports/current/REPORT.md
+          } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: blender-agent-language-reviews
+          path: reports/
+          if-no-files-found: error
+          retention-days: 3

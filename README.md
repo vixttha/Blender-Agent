@@ -4,7 +4,7 @@
 
 **Programming language architecture for Blender automation**
 
-[Stack](STACK.md) · [Memory](STACK_MEMORY.md) · [Audit](AUDIT.md) · [Proposals](PROPOSALS.md) · [Registry](code-stack.json)
+[Stack](STACK.md) · [Memory](STACK_MEMORY.md) · [Audit](AUDIT.md) · [Proposals](PROPOSALS.md) · [Release registry](code-stack.json)
 
 </div>
 
@@ -40,10 +40,10 @@ flowchart LR
 
 | Record | What it tells you |
 | --- | --- |
-| [Foundation audit](AUDIT.md) | Exact application revision, observed stack, tested scope and open checks |
-| [Technology registry](code-stack.json) | Status, role and primary evidence for every registered technology |
-| [Code Stack Actions](https://github.com/vixttha/Blender-Agent/actions/workflows/code-stack.yml) | Run results for the branch's audit against the pinned application |
-| [Portable template v0.0.2](https://github.com/vixttha/Blender-Agent/tree/48e0cc8fe73087b1ca497b5611314da4e1871705/v0.0.2) | Copyable setup, workflow, validator and proposal form. [Original kit](https://github.com/vixttha/Blender-Agent/tree/042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f/v0.0.1). |
+| [Language review](AUDIT.md) | Current application review, published baseline, and evidence limits |
+| [Release technology registry](code-stack.json) | Recorded roles and primary evidence for the published application |
+| [Code Stack Actions](https://github.com/vixttha/Blender-Agent/actions/workflows/code-stack.yml) | Latest language report in the job summary and downloadable current and release review packages |
+| [Portable template v0.0.3](https://github.com/vixttha/Blender-Agent/tree/8dd56cdd53897b5a78f3a59d9ca2549f1c08f885/v0.0.3) | One-run inventory, language recommendations, and exact-commit evidence. [Hub settings](language-review.json). |
 
 <details>
 <summary>Documentation patterns we borrowed</summary>
@@ -56,4 +56,4 @@ flowchart LR
 
 **Audited release:** [Blender-Agent v0.0.2 pre-release](https://github.com/vixttha/Blender-Agent/releases/tag/v0.0.2) · [Source commit cb945bd](https://github.com/vixttha/Blender-Agent/commit/cb945bd8531ee425615c1968612ab6503849369d)
 
-The audit receipt compares the pinned source to fetched main and release refs. It records the observed language inventory, declared supporting formats, and which evidence references were structurally checked. See the [audit](https://github.com/vixttha/Blender-Agent/blob/code-stack/AUDIT.md) for runtime coverage and earlier baselines.
+The hub reviews the current application branch on every hub pull request and push. Each run generates a release baseline and a current report with tradeoffs, source links, and decisions to revisit. See the [audit](AUDIT.md) for refresh instructions and runtime evidence.
