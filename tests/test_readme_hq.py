@@ -31,6 +31,18 @@ class ReadmeHQTests(unittest.TestCase):
         (self.root / "readme-hq/versions/v0.0.1/README.md").write_text("# Wrong\n", encoding="utf-8")
         self.assertTrue(any("drift" in x for x in validate(self.root)))
 
+    def test_published_readme_drift_rejected(self):
+        p = self.root / "versions/v0.0.4/README.md"
+        p.write_text("# Changed\n", encoding="utf-8")
+        self.assertIn("frozen README archive drift: versions/v0.0.4/README.md", validate(self.root))
+
+    def test_draft_image_link_rejected(self):
+        p = self.root / "workspace/v0.0.5/DRAFT.md"
+        p.write_text(p.read_text(encoding="utf-8") + "\n![Missing](assets/missing.webp)\n", encoding="utf-8")
+        self.assertIn(
+            "missing draft image: workspace/v0.0.5/DRAFT.md -> assets/missing.webp", validate(self.root),
+        )
+
     def test_missing_draft_rejected(self):
         (self.root / "workspace/v0.0.1/DRAFT.md").unlink()
         self.assertTrue(any("missing required" in x for x in validate(self.root)))

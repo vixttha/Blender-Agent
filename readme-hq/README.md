@@ -1,49 +1,18 @@
 # README HQ operating guide
 
-**HQ baseline:** `v0.0.1`, adapted for the Blender-Agent Refinement Toolkit public repository.
+This BART workspace adapts the [standalone v0.0.6 guide](https://github.com/vixttha/README-HQ/blob/f50e3749dab90ddfe35894284d1660097a1fb1a8/README-GUIDE.md). The [adoption record](workspace/v0.0.6/README.md) identifies the source and what this branch applies.
 
-## Branches and ownership
+## Write for the first useful action
 
-- `main` is the public application branch.
-- `readme-hq` is the permanent documentation workspace. It is intentionally separate from `main`.
-- `graphify-hq` is the independent release/version mapping branch. Documentation snapshots never substitute for release validation.
+Lead with what Blender-Agent Refinement Toolkit does and what readers can try today. For the CLI route, show the minimum install, a reproducible sample, and a recognizable result. Follow with the optional MCP route, Blender requirements, common failures, and the maintainer paths. Use the full product name and call the agent BART. Keep the installed command names and configuration keys as implemented.
 
-## Two version sequences
+Back up claims with the package manifest, the relevant documentation, and public runner evidence. Put the tested release and its limits beside the command. Treat the published release and current development checkpoint as separate facts. Use [the upstream audit guide](https://github.com/vixttha/README-HQ/blob/f50e3749dab90ddfe35894284d1660097a1fb1a8/audits/README.md) to check scope and [the technique catalog](https://github.com/vixttha/README-HQ/blob/f50e3749dab90ddfe35894284d1660097a1fb1a8/techniques/README.md) when selecting changes.
 
-**HQ templates:** `readme-hq/workspace/vX.Y.Z/` is the development folder; `readme-hq/versions/vX.Y.Z/` is the accepted snapshot. Freeze landing page, guide, and changelog together.
+## Draft, verify, archive, and publish
 
-**Public homepage:** `workspace/vX.Y.Z/` holds proposed text, scope, and review evidence. After approval, retain `versions/vX.Y.Z/README.md` and `CHANGELOG.md`, then publish from a *separate branch and PR* to `main`. A draft has no release authority.
+1. Resolve the full application commit and record the proposed homepage version in a new [draft workspace](../workspace/README.md). Record the intended reader, acceptance checks, and any open issues the draft touches.
+2. Use one descriptive heading hierarchy, short entry points, and alternative text for meaningful images. Check rendered navigation and relative assets in the destination tree. Verify the documented commands and outcomes on standard public runners. Record the source SHA, platforms, workflow, and actual checkout. Record unsupported hosts and checks that were unavailable.
+3. Keep draft and published status visible. On approval, preserve the exact page and associated assets, note the source commit and evidence, and add the version to the [homepage history](../versions/README.md).
+4. Publish only through a separate scoped PR to `main` with owner approval. Verify the destination page and CI. Keep `readme-hq` as the permanent documentation branch and `graphify-hq` as the independent evidence branch.
 
-## Required candidate review
-
-1. Confirm the implementation branch at a full commit SHA; verify commands, requirements, and link targets against that exact source.
-2. Validate relative Markdown links, HQ snapshots, indexes, and absent private identifying data.
-3. Check that the README clearly distinguishes available features, limitations, planned features, and unverified integration tests.
-4. Run [README HQ validation](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/readme-hq/.github/workflows/readme-hq.yml) on the exact documentation commit using standard free GitHub-hosted public runners.
-5. Review the publication PR against current `main` for conflicting changes and ensure any linked application files exist there before merging.
-6. Obtain explicit publication approval. Never merge the HQ branch wholesale.
-
-## Baseline and immutability
-
-The initial HQ `v0.0.1` landing and guide are frozen under [versions](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/readme-hq/readme-hq/versions/README.md). The validator checks the frozen v0.0.1 baseline against its recorded Git blob hashes. The live landing page and guide point to the current workspace.
-
-Public README v0.0.4 is the active draft. Archive the exact public homepage after its approval and publication.
-
-## Validator scope
-
-`tools/check_readme_hq.py` enforces:
-- Frozen HQ v0.0.1 files retain their original Git blob hashes.
-- Expected indexes, source record, changelogs, draft, and workflow exist.
-- HQ documentation's repository-relative links resolve locally, including percent-encoded paths.
-- The original public README draft retains its source pin and status. The v0.0.4 workspace and its review files are present.
-- No obvious personal-email, credential assignment, or home-directory path is introduced into the HQ Markdown.
-
-The draft README targets the future application root, so its relative links are reviewed against the pinned implementation branch, **not** resolved against this documentation branch. External destinations and GitHub Actions execution are separate verification steps; a local validator pass is not a claim that all remote links or the app work.
-
-## Graphify
-
-Reuse the existing [Blender-Agent Refinement Toolkit Graphify HQ](https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/tree/graphify-hq) rather than copying AlderVale's game map. The Graphify archive has its own version source and receipts. A future HQ template map must have independently generated and verified evidence before any Graphify certification claim.
-
-## Privacy and cost boundaries
-
-Do not include creator biographies, private directories, private repository references, account secrets, or personal contact information. Use standard GitHub-hosted runners on this **public** repository. No required local agent runner, paid CI, or automatic release.
+[Template versions](versions/README.md) · [Branch validation](../.github/workflows/readme-hq.yml) · [Graphify integration](../graphify/README.md)
