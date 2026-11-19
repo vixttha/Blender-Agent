@@ -19,7 +19,8 @@ class ReadmeHQTests(unittest.TestCase):
             target = self.root / rel
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / rel, target)
-        shutil.copytree(ROOT / "versions", self.root / "versions", dirs_exist_ok=True)
+        for area in ("versions", "workspace"):
+            shutil.copytree(ROOT / area, self.root / area, dirs_exist_ok=True)
 
     def tearDown(self):
         self.tmp.cleanup()
@@ -39,6 +40,14 @@ class ReadmeHQTests(unittest.TestCase):
         p = self.root / "graphify/README.md"
         p.write_text(p.read_text() + "\n[Missing](../no-such-file.md)\n")
         self.assertTrue(any("broken local link" in x for x in validate(self.root)))
+
+    def test_broken_workspace_image_rejected(self):
+        image = self.root / "workspace/v0.0.3/assets/triangle-inspection.webp"
+        image.unlink()
+        self.assertIn(
+            "broken local link: workspace/v0.0.3/DRAFT.md -> assets/triangle-inspection.webp",
+            validate(self.root),
+        )
 
     def test_secret_rejected(self):
         p = self.root / "graphify/README.md"
