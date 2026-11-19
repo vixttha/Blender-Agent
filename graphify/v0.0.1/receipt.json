@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "version": "v0.0.1",
+  "scope": "code_stack_template",
+  "source_repository": "vixttha/Blender-Agent",
+  "source_commit": "042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f",
+  "graphify_version": "0.9.109",
+  "graph_sha256": "99fab85592da2492a5bcd72fd0982101847e1cd731050fc7e9334679ff3a8da0",
+  "nodes": 50,
+  "edges": 53,
+  "source_blobs": {
+    "v0.0.1/AUDIT.md": "7d1ca99dc25dcad81da6abb9af37e7d7be313318",
+    "v0.0.1/LICENSE": "3a31b6b1dcedea9bb0ca27243d3d7b0cb504a4f5",
+    "v0.0.1/PROPOSAL.md": "66e0837336a198d0c1f0c4da4f6fa2582d787ac8",
+    "v0.0.1/README.md": "5280fe088fd28f6d2cc49aea55e6cef9985ad70c",
+    "v0.0.1/STACK.md": "a8200014bbf993ceb20e43f825961ee615afebd5",
+    "v0.0.1/STACK_MEMORY.md": "b4da9da9f21e24d3e508230d33c975904c18108e",
+    "v0.0.1/registry.example.json": "7271ab10eebe127495893debb28a885e736f4fd8",
+    "v0.0.1/tools/audit.py": "0c51f9f70b4e57b481677698bbdf56346fc04555",
+    "v0.0.1/tools/test_audit.py": "2a2ca3fc38d91e4ebfc48fd74dba56f254ceff1b"
+  }
+}

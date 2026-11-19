@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "repository": "vixttha/Blender-Agent",
+  "versions": [
+    {
+      "version": "v0.0.1",
+      "source_commit": "042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f"
+    },
+    {
+      "version": "v0.0.2",
+      "source_commit": "48e0cc8fe73087b1ca497b5611314da4e1871705"
+    }
+  ]
+}
