@@ -43,7 +43,7 @@ flowchart LR
 | [Foundation audit](AUDIT.md) | Exact application revision, observed stack, tested scope and open checks |
 | [Technology registry](code-stack.json) | Status, role and primary evidence for every registered technology |
 | [Code Stack Actions](https://github.com/vixttha/Blender-Agent/actions/workflows/code-stack.yml) | Run results for the branch's audit against the pinned application |
-| [Portable template v0.0.1](https://github.com/vixttha/Blender-Agent/tree/042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f/v0.0.1) | Copyable files for any Git project, with a validator and proposal format |
+| [Portable template v0.0.2](https://github.com/vixttha/Blender-Agent/tree/53418d6c0fdfc821dc1778c4325e8a3082f7d38c/v0.0.2) | Copyable setup, workflow, validator and proposal form. [Original kit](https://github.com/vixttha/Blender-Agent/tree/042390d63e72dc3e1fbb0c87387ea9f8d42f1d6f/v0.0.1). |
 
 <details>
 <summary>Documentation patterns we borrowed</summary>
@@ -54,4 +54,6 @@ flowchart LR
 
 </details>
 
-**Audited application:** [v0.0.2 foundation on `main` `25788c0`](https://github.com/vixttha/Blender-Agent/commit/25788c01234841693ce0605053798a39cda7ba9a) · **Merged from:** [Foundation PR #1](https://github.com/vixttha/Blender-Agent/pull/1)
+**Audited release:** [Blender-Agent v0.0.2 pre-release](https://github.com/vixttha/Blender-Agent/releases/tag/v0.0.2) · [Source commit cb945bd](https://github.com/vixttha/Blender-Agent/commit/cb945bd8531ee425615c1968612ab6503849369d)
+
+The audit receipt compares the pinned source to fetched main and release refs. It records the observed language inventory, declared supporting formats, and which evidence references were structurally checked. See the [audit](https://github.com/vixttha/Blender-Agent/blob/code-stack/AUDIT.md) for runtime coverage and earlier baselines.
