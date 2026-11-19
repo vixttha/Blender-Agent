@@ -32,6 +32,8 @@ The adapter exposes inspect_model, create_primitive, convert_model, and repair_m
 
 The optional dependency supports the MCP SDK v1 API range `mcp>=1.12,<2`. Public CI on Linux and Windows starts the installed `blender-agent-mcp` command from a separate working directory, initializes a real stdio session, checks each tool's input schema, and verifies workspace isolation and read-only inspection. Individual MCP hosts may require different launch configuration.
 
+The Ubuntu job also runs all four tools over MCP stdio with Blender 4.5.0. It checks an STL → GLB → STL cube roundtrip, verifies that repair welds a split edge, and confirms that in-place edits and overwrites are rejected while the existing files retain their original bytes.
+
 ## Trust and limits
 
 - Users configure the allowed workspace; keep it away from hostile or untrusted concurrent filesystem writers.
