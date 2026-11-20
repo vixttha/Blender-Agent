@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000002",
+  "title": "Detect the execution mode",
+  "summary": "Route a public GitHub run to hosted Ubuntu, support a local checkout, and use an opt-in self-hosted runner for trusted private or internal GitHub pushes. BART draft #74 is the integration candidate.",
+  "kind": "workflow",
+  "lifecycle_status": "in_progress",
+  "implementation_status": "in_progress",
+  "idea_ids": [],
+  "acceptance_criteria": [
+    "Pass the public workflow on the exact candidate SHA.",
+    "Rebuild the archive from a clean compatible local checkout.",
+    "Verify scheduling and rebuild on a real opted-in private runner."
+  ],
+  "testing": {
+    "status": "in_progress",
+    "refs": [
+      "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44480392682",
+      "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/pull/74"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "test",
+      "claim": "Public CI passed at this draft commit. Live private runner scheduling remains pending.",
+      "source_sha": "2780136a546bbaf88ba3e6d679c31343e9bd32f3",
+      "source_path": ".github/workflows/graphify-hq-template.yml",
+      "receipt": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44480392682"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

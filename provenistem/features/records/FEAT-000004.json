@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000004",
+  "title": "Review impact across exact refs",
+  "summary": "Compare scoped graph relationships against the base and candidate commits and confirm the important changes in source before using them in review.",
+  "kind": "capability",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000003"
+  ],
+  "acceptance_criteria": [
+    "Record exact base and candidate SHAs.",
+    "Show an affected path that a previous candidate check no longer covers after the base changes.",
+    "Validate the finding against the proposed merge and keep the evidence discoverable."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "First Spark provides a candidate case in which a later base dropped a required verifier from the proposed merge.",
+      "source_sha": "d3eb63ddb04163bdb8771f2c60fe6df23d753e7a",
+      "source_path": "tools/graphify/first-spark.sh",
+      "receipt": "https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

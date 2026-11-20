@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000005",
+  "title": "Index branch refs and graph coverage",
+  "summary": "Build a read-only lookup keyed by repository, branch, graph kind and full source commit.",
+  "kind": "workflow",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000005"
+  ],
+  "acceptance_criteria": [
+    "Show the source SHA and state for main, a feature map, a version archive and a branch without a graph.",
+    "Group identical Graphify file sets while keeping every branch independently addressable.",
+    "Flag mismatched source SHAs without labeling them invalid when the snapshot is explicitly historical."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "AlderVale's main and feature snapshots are published under different paths and pin different source commits.",
+      "source_sha": "ae544b6f6fffe511374404addb53e665ffe8a5c5",
+      "source_path": "main/receipt.json",
+      "receipt": "https://github.com/vixttha/AlderVale-Pact-of-Ten/blob/ae544b6f6fffe511374404addb53e665ffe8a5c5/main/receipt.json"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

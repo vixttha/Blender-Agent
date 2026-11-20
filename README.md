@@ -18,3 +18,7 @@ commit, and queries the rebuilt graph through Graphify MCP.
 
 Use a new version folder when changing a published kit. Keep each archived
 graph, receipt, and source pin together in the version catalog.
+
+## Project development
+
+Use [Graphify HQ Ideas and Features](provenistem/) to plan how the kit helps discover code, test, and documentation relationships during development.

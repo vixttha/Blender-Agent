@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000009",
+  "title": "Publish the graph and receipt as a verified pair",
+  "summary": "Stage a complete pair and preserve the prior pair when a write fails before the new map is ready.",
+  "kind": "capability",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000009"
+  ],
+  "acceptance_criteria": [
+    "Force an output failure after graph generation and confirm the previous graph and receipt remain usable together.",
+    "Retry the same inputs and confirm that the final pair is reproducible.",
+    "Test populated and empty destinations."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The kit writes output files individually after verification.",
+      "source_sha": "6af3c2025be3f51e02dca4e4502088c526aae6d1",
+      "source_path": "versions/v0.0.8/evidence_map.py",
+      "receipt": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/75"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000002",
+  "title": "Find uncovered behavior across feature boundaries",
+  "summary": "Follow a feature from its entry point through storage, UI and tests. Investigate meaningful paths whose behavior lacks a matching check.",
+  "kind": "research",
+  "origin": {
+    "created_by": "assistant",
+    "source": "Suggested use of Graphify HQ during feature development."
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "testing",
+    "discovery"
+  ],
+  "benefits": [
+    "Expose coverage gaps such as a reward displayed in the UI but never checked after reload."
+  ],
+  "risks": [
+    "A graph relationship alone cannot establish coverage. Confirm assertions and runtime behavior."
+  ],
+  "related_ideas": [
+    "IDEA-000001"
+  ],
+  "evidence": []
+}

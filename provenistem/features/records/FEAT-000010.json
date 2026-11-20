@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000010",
+  "title": "Resolve current GitHub identity for historical receipts",
+  "summary": "Use verified GitHub repository identity for live lookups and preserve the original repository name inside frozen receipts.",
+  "kind": "integration",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000010"
+  ],
+  "acceptance_criteria": [
+    "Rebuild the kit and OBJ/MTL archives under the current repo name without changing their stored bytes.",
+    "Verify live review evidence for an exact PR commit under the current identity.",
+    "Cover an incorrect repository alias."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The OBJ/MTL receipt identifies the repository by its historical name.",
+      "source_sha": "2faf3674a5470c369b30f0d55b6fd5ef56e1e710",
+      "source_path": "evidence/obj-mtl/v0.0.2.1/receipt.json",
+      "receipt": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/66"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

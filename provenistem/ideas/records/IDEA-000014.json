@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000014",
+  "title": "Connect Provenistem feature decisions to inspected graph evidence",
+  "summary": "Explore links from an idea or feature record to the exact graph relationship that changed the plan, with the source and review outcome visible.",
+  "kind": "process",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/ae9e55cd388de4b605945cd2a3871d55a2838e95/provenistem/features/records/FEAT-000003.json"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "planning",
+    "discovery"
+  ],
+  "benefits": [
+    "Keep findings actionable when another session or repository picks up the same feature."
+  ],
+  "risks": [
+    "Spurious edges must remain leads until someone checks the underlying source."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The tracker already proposes a graph-guided implementation brief.",
+      "repository": "vixttha/Blender-Agent-Refinement-Toolkit",
+      "commit": "ae9e55cd388de4b605945cd2a3871d55a2838e95",
+      "path": "provenistem/features/records/FEAT-000003.json"
+    }
+  ]
+}

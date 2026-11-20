@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000013",
+  "title": "Resolve project and archive versions by kind",
+  "summary": "Define a catalog view that returns graph type, product namespace, version label, source commit, engine, and evidence status.",
+  "kind": "capability",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000013"
+  ],
+  "acceptance_criteria": [
+    "Resolve BART v0.0.3 application release and candidate as separate entries.",
+    "Distinguish the Graphify HQ v0.0.8 toolkit from AlderVale and Lydite versioned docs and starter maps.",
+    "Retain the original archive locations and statuses."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "AlderVale uses v0.0.x labels for its README HQ archive independently of Graphify HQ kit versions.",
+      "source_sha": "007617884c75b9f422fc0feda031042da62962eb",
+      "source_path": "Graphify HQ/README.md",
+      "receipt": "https://github.com/vixttha/AlderVale-Pact-of-Ten/blob/007617884c75b9f422fc0feda031042da62962eb/Graphify HQ/README.md"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

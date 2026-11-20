@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000006",
+  "title": "Follow a feature from code to runtime checks",
+  "summary": "Join implementation, documentation and test relationships so the developer can find the concrete code path behind a test result.",
+  "kind": "feature",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/2faf3674a5470c369b30f0d55b6fd5ef56e1e710/evidence/obj-mtl/v0.0.2.1/graph.json"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "discovery",
+    "testing"
+  ],
+  "benefits": [
+    "Reveal which functions are reused and which test proves the user-visible behavior."
+  ],
+  "risks": [
+    "A workflow link and a test definition have different meanings from a passed run."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The OBJ/MTL roundtrip links three implementation anchors and references both a smoke test and CI workflow.",
+      "repository": "vixttha/Blender-Agent-Refinement-Toolkit",
+      "commit": "2faf3674a5470c369b30f0d55b6fd5ef56e1e710",
+      "path": "evidence/obj-mtl/v0.0.2.1/graph.json"
+    }
+  ]
+}

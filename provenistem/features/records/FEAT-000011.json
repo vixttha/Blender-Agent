@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000011",
+  "title": "Rebuild Lydite graphs from a clean checkout",
+  "summary": "PR #22 adds pinned upstream fetch, graph rebuild, and archive and graph change checks. Its candidate checks passed and the PR remains open.",
+  "kind": "integration",
+  "lifecycle_status": "in_progress",
+  "implementation_status": "in_progress",
+  "idea_ids": [
+    "IDEA-000011"
+  ],
+  "acceptance_criteria": [
+    "Fetch only explicitly pinned upstream commits for the existing archive entries.",
+    "Rebuild all three historical maps on a standard public runner and check their committed bytes.",
+    "Recheck on the accepted destination commit after integration."
+  ],
+  "testing": {
+    "status": "tested",
+    "outcome": "pass",
+    "refs": [
+      "https://github.com/vixttha/Lydite-Test-Vault-Template/actions/runs/44489163985"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "test",
+      "claim": "The hardening branch checks for each pinned public AlderVale commit and fetches the missing object.",
+      "source_sha": "fbcf265dd72cd5e626204c6d99bfa2556771b09c",
+      "source_path": "tools/graphify/version_maps.py",
+      "receipt": "https://github.com/vixttha/Lydite-Test-Vault-Template/actions/runs/44489163985"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

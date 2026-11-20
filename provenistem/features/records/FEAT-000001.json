@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000001",
+  "title": "Rebuild and verify a commit-pinned graph archive",
+  "summary": "The v0.0.8 kit rebuilds its self-map from the pinned source and checks the graph and receipt through Graphify MCP.",
+  "kind": "capability",
+  "lifecycle_status": "verified",
+  "implementation_status": "implemented",
+  "idea_ids": [],
+  "acceptance_criteria": [
+    "Check out the recorded source, rebuild the graph, confirm graph and receipt bytes, and query the map through MCP."
+  ],
+  "testing": {
+    "status": "tested",
+    "outcome": "pass",
+    "refs": [
+      "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44453058234"
+    ]
+  },
+  "evidence": [
+    {
+      "kind": "test",
+      "claim": "Public GitHub runner generated the verified self-map for this source commit.",
+      "source_sha": "062fb633838daa42204289d889850c03e89d45eb",
+      "source_path": "versions/v0.0.8/self-map.json",
+      "receipt": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/actions/runs/44453058234"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000006",
+  "title": "Build a feature-to-code-and-test query",
+  "summary": "Provide one query that traces a feature to implementation anchors, test definitions and available exact-commit runner evidence.",
+  "kind": "capability",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000006"
+  ],
+  "acceptance_criteria": [
+    "Use First Spark and OBJ/MTL as independent examples.",
+    "List definitions separately from run results and show the source SHA for each.",
+    "For each example, verify a relationship that changes an implementation or test decision."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The OBJ/MTL roundtrip links three implementation anchors and references both a smoke test and CI workflow.",
+      "source_sha": "2faf3674a5470c369b30f0d55b6fd5ef56e1e710",
+      "source_path": "evidence/obj-mtl/v0.0.2.1/graph.json",
+      "receipt": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/blob/2faf3674a5470c369b30f0d55b6fd5ef56e1e710/evidence/obj-mtl/v0.0.2.1/graph.json"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

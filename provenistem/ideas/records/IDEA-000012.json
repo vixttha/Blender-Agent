@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000012",
+  "title": "Keep branch checks tied to the proposed merged source",
+  "summary": "Use the intended destination tree and exact pinned dependencies when validating a feature map for an integration.",
+  "kind": "process",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "review",
+    "ci"
+  ],
+  "benefits": [
+    "Find dependencies lost by a merge that still resolves cleanly."
+  ],
+  "risks": [
+    "An old green candidate run may describe a different integration tree."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The First Spark draft runs a verifier and dependency lock removed by the rollback from main.",
+      "repository": "vixttha/AlderVale-Pact-of-Ten",
+      "commit": "d3eb63ddb04163bdb8771f2c60fe6df23d753e7a",
+      "path": ".github/workflows/graphify.yml"
+    }
+  ]
+}

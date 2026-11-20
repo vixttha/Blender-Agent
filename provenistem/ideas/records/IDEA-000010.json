@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000010",
+  "title": "Preserve exact evidence through repository renames",
+  "summary": "Record historical source identity separately from the repository name used for current GitHub lookups.",
+  "kind": "architecture",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/66"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "provenance",
+    "portability"
+  ],
+  "benefits": [
+    "Reproduce a historical receipt and still locate candidate review evidence under the current repo name."
+  ],
+  "risks": [
+    "Unverified aliases or redirects can lead to provenance for the wrong repository."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The OBJ/MTL receipt identifies the repository by its historical name.",
+      "repository": "vixttha/Blender-Agent-Refinement-Toolkit",
+      "commit": "2faf3674a5470c369b30f0d55b6fd5ef56e1e710",
+      "path": "evidence/obj-mtl/v0.0.2.1/receipt.json"
+    }
+  ]
+}

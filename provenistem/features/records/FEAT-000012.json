@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "id": "FEAT-000012",
+  "title": "Verify First Spark at the intended merge base",
+  "summary": "Make the First Spark workflow build and read back its evidence map against the intended integration tree, including its pinned verifier and dependency lock.",
+  "kind": "integration",
+  "lifecycle_status": "proposed",
+  "implementation_status": "not_planned",
+  "idea_ids": [
+    "IDEA-000012"
+  ],
+  "acceptance_criteria": [
+    "Use the intended destination and expected base SHA.",
+    "Build and independently verify the First Spark graph on standard hosted public runners.",
+    "Rehearse archive publication and preserve the archived historical files."
+  ],
+  "testing": {
+    "status": "untested"
+  },
+  "evidence": [
+    {
+      "kind": "audit",
+      "claim": "The First Spark draft runs a verifier and dependency lock removed by the rollback from main.",
+      "source_sha": "d3eb63ddb04163bdb8771f2c60fe6df23d753e7a",
+      "source_path": ".github/workflows/graphify.yml",
+      "receipt": "https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159"
+    }
+  ],
+  "release_membership": "NOT_ASSERTED"
+}

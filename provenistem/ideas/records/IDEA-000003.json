@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000003",
+  "title": "Compare candidate and baseline graphs before review",
+  "summary": "Explore differences between exact base and candidate refs to surface changed dependencies, verifier paths, or test relationships for review.",
+  "kind": "architecture",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/AlderVale-Pact-of-Ten/issues/159"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "review",
+    "provenance"
+  ],
+  "benefits": [
+    "Focus review on affected areas and on evidence invalidated by a base change."
+  ],
+  "risks": [
+    "Graph changes can reflect extraction noise. Verify meaningful changes against the diff."
+  ],
+  "related_ideas": [
+    "IDEA-000001"
+  ],
+  "evidence": []
+}

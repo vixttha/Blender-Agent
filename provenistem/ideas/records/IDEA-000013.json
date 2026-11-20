@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000013",
+  "title": "Make version namespaces explicit across products",
+  "summary": "Record map type and owner alongside the version so a toolkit version, application version, and template-version snapshot can be queried reliably.",
+  "kind": "product",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/AlderVale-Pact-of-Ten/blob/007617884c75b9f422fc0feda031042da62962eb/Graphify HQ/README.md"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "inventory",
+    "portability"
+  ],
+  "benefits": [
+    "Queries can distinguish the BART application version from its candidate and auxiliary templates using the same number."
+  ],
+  "risks": [
+    "Legacy paths and status descriptions vary between repositories."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "AlderVale uses v0.0.x labels for its README HQ archive independently of Graphify HQ kit versions.",
+      "repository": "vixttha/AlderVale-Pact-of-Ten",
+      "commit": "007617884c75b9f422fc0feda031042da62962eb",
+      "path": "Graphify HQ/README.md"
+    }
+  ]
+}

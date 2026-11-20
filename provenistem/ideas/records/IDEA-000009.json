@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000009",
+  "title": "Keep an evidence map and its receipt consistent",
+  "summary": "Preserve the last valid map and receipt when a write fails mid-publication.",
+  "kind": "architecture",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/Blender-Agent-Refinement-Toolkit/issues/75"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "archive",
+    "reliability"
+  ],
+  "benefits": [
+    "A failed update cannot make readers trust a graph paired with the wrong receipt."
+  ],
+  "risks": [
+    "Publishing to an already-populated output directory needs a defined update strategy."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The kit writes output files individually after verification.",
+      "repository": "vixttha/Blender-Agent-Refinement-Toolkit",
+      "commit": "6af3c2025be3f51e02dca4e4502088c526aae6d1",
+      "path": "versions/v0.0.8/evidence_map.py"
+    }
+  ]
+}

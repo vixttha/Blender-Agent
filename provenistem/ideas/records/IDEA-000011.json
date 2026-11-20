@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000011",
+  "title": "Carry pinned upstream source into a standalone rebuild",
+  "summary": "Make transferred archives reproducible from a clean adopter checkout by resolving only their declared source pins.",
+  "kind": "process",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/Lydite-Test-Vault-Template/pull/22"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "portability",
+    "archive"
+  ],
+  "benefits": [
+    "Cross-repo archive moves can be checked without a pre-seeded checkout."
+  ],
+  "risks": [
+    "A remote object can be unavailable; document the failure and preserve the original pin."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The hardening branch checks for each pinned public AlderVale commit and fetches the missing object.",
+      "repository": "vixttha/Lydite-Test-Vault-Template",
+      "commit": "fbcf265dd72cd5e626204c6d99bfa2556771b09c",
+      "path": "tools/graphify/version_maps.py"
+    }
+  ]
+}

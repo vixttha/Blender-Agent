@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "id": "IDEA-000008",
+  "title": "Detect archive drift when Git metadata changes",
+  "summary": "Check executable modes alongside byte content when verifying a frozen source archive.",
+  "kind": "process",
+  "origin": {
+    "created_by": "assistant",
+    "source": "https://github.com/vixttha/Lydite-Test-Vault-Template/issues/17"
+  },
+  "lifecycle_status": "captured",
+  "implementation_status": "not_planned",
+  "testing": {
+    "status": "untested"
+  },
+  "importance": "unknown",
+  "complexity": "unknown",
+  "categories": [
+    "archive",
+    "verification"
+  ],
+  "benefits": [
+    "Find mode-only changes that leave graph JSON and file bytes unchanged."
+  ],
+  "risks": [
+    "The Git index and tree are the relevant mode sources on platforms with differing filesystem behavior."
+  ],
+  "related_ideas": [],
+  "evidence": [
+    {
+      "relation": "context",
+      "claim": "The candidate accepts both regular Git modes but stores just the blob ID for archive comparison.",
+      "repository": "vixttha/Lydite-Test-Vault-Template",
+      "commit": "fbcf265dd72cd5e626204c6d99bfa2556771b09c",
+      "path": "tools/graphify/version_maps.py"
+    }
+  ]
+}
