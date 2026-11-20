@@ -1,0 +1,25 @@
+name: Veraphify v0.0.9 adoption
+
+on:
+  push:
+    branches: ["graphify-hq", "chore/veraphify-v0.0.9"]
+    paths:
+      - ".github/workflows/veraphify-adoption.yml"
+      - "tools/graphify/README.md"
+  pull_request:
+    branches: ["graphify-hq"]
+    paths:
+      - ".github/workflows/veraphify-adoption.yml"
+      - "tools/graphify/README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  adoption:
+    if: github.event.repository.private == false
+    uses: vixttha/Veraphify/.github/workflows/verify-adopter-v0.0.9.yml@156331636fab4fafdd4ca8d05c5047cb14e5385e
+    with:
+      source_sha: "3e7f9e02e61739825b56bcafecebbd0221cc9657"
+      source_file: "src/blender_agent/inspect.py"
+      source_anchor: "def inspect_asset("

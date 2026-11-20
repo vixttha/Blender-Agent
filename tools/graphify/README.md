@@ -54,3 +54,11 @@ Unmerged or draft PRs go into catalog/candidates.json, **not** catalog/versions.
 `python tools/graphify/candidate_maps.py --emit` builds and verifies the Graphify MCP graph, then emits bounded JSON chunks into public runner logs for review and commit. After the snapshot is committed, `python tools/graphify/candidate_maps.py --check` independently rebuilds and compares every byte. GitHub Actions should run `--check` during ordinary ongoing maintenance.
 
 Promotion requires a separately approved and immutable main-line release: update catalog/versions.json with the real release commit and matching tag, generate the approved map under versions/vX.Y.Z, and independently verify it. Never rename or silently relabel the candidate receipt as approved.
+
+## Veraphify v0.0.9 adoption
+
+Use [Veraphify v0.0.9 at `ed56500`](https://github.com/vixttha/Veraphify/commit/ed5650085e33cf142a37de695757a4df999a7cf3) to import, verify, and look up source-linked archives. This Git SHA is the merged mechanical revision. The [adopter walkthrough](https://github.com/vixttha/Veraphify/blob/ed5650085e33cf142a37de695757a4df999a7cf3/docs/adopter-walkthrough.md) documents the archive commands and limits. The Graphify producer and the Veraphify archive reader have separate version pins.
+
+The public adoption check archives a pinned BART source checkout and verifies the `inspect_asset` implementation citation. The BART Graphify workspace keeps producing and rebuilding its existing version maps.
+
+The [public workflow](../../.github/workflows/veraphify-adoption.yml) checks the source pin, runs the Graphify MCP check, compares the archive SHA-256, and verifies the citation against the exact Git blob. The disposable archive version `v0.0.0.1` identifies the probe. Each public run retains a small receipt with the adopter SHA, Veraphify SHA, and citation.
