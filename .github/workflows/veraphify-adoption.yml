@@ -28,6 +28,7 @@ jobs:
       ADOPTER_SHA: "3e7f9e02e61739825b56bcafecebbd0221cc9657"
       ADOPTER_FILE: "src/blender_agent/inspect.py"
       ADOPTER_ANCHOR: "def inspect_asset("
+      ADOPTER_REFERENCES: "{\"documented_in\":[{\"path\":\"README.md\",\"anchor\":\"The inspection JSON includes these fields:\"}],\"changed_in\":[{\"path\":\"CHANGELOG.md\",\"anchor\":\"Improve structural STL and OBJ inspection\"}],\"tested_by\":[{\"path\":\"tests/test_inspect.py\",\"anchor\":\"def test_obj_valid_positive_and_negative_references(\"}]}"
       GRAPHIFY_QUERY_LOG_DISABLE: '1'
       PYTHONHASHSEED: '0'
     steps:
@@ -66,7 +67,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: vixttha/Veraphify
-          ref: 99cc0240fa2b2847da74467f94834141625442bb
+          ref: bd04eddb54006bc0f7a155405fe87241903343de
           path: adoption-tools
           persist-credentials: false
       - name: Build the pinned evidence map and verify the archive and citation
